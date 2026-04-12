@@ -35,7 +35,7 @@ class EventController extends Controller
     public function show(string $slug): Response
     {
         $event = Event::where('slug', $slug)
-            ->with('media')
+            ->with(['media', 'venueMap', 'zones', 'tickets.zone'])
             ->firstOrFail();
 
         // Append RSVP computed attributes for the frontend
@@ -50,6 +50,7 @@ class EventController extends Controller
         return Inertia::render('Public/Events/Show', [
             'event'   => $event,
             'related' => $related,
+            'ogUrl'   => route('events.show', $slug),
         ]);
     }
 }

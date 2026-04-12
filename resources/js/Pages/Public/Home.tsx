@@ -3,12 +3,15 @@ import EventCard from '@/Components/EventCard';
 import PostCard from '@/Components/PostCard';
 import VideoModal from '@/Components/VideoModal';
 import SectionHeader from '@/Components/SectionHeader';
+import HeroCarousel from '@/Components/HeroCarousel';
 import { Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { BookOpen, Users, Lightbulb } from 'lucide-react';
-import { type Event, type Page, type Post } from '@/types';
+import { type Banner, type Event, type Page, type Post } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
 interface Props {
+    banners: Banner[];
     upcomingEvents: Event[];
     pastEvents: Event[];
     aboutPage: Page | null;
@@ -17,12 +20,17 @@ interface Props {
     agent360: Post[];
 }
 
-export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, webinars, agent360 }: Props) {
+export default function Home({ banners, upcomingEvents, pastEvents, aboutPage, podcasts, webinars, agent360 }: Props) {
     const [activePost, setActivePost] = useState<Post | null>(null);
+    const { t } = useTranslation();
     return (
         <PublicLayout>
             <VideoModal post={activePost} onClose={() => setActivePost(null)} />
-            {/* ── Hero ── */}
+
+            {/* ── Hero: Carousel if banners exist, otherwise static hero ── */}
+            {banners.length > 0 ? (
+                <HeroCarousel banners={banners} />
+            ) : (
             <section className="relative bg-brand-light overflow-hidden">
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 pb-40 md:py-32 md:pb-48">
                     <div className="max-w-3xl">
@@ -30,23 +38,23 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
                             Malaysian Takaful Association
                         </p>
                         <p className="text-brand text-2xl sm:text-3xl italic mb-2" style={{ fontFamily: 'Georgia, serif' }}>
-                            The Leading Platform for
+                            {t('home.hero_subtitle')}
                         </p>
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-brand-navy leading-tight mb-8">
-                            Takaful Meet Up &amp; Conferences
+                            {t('home.hero_title')}
                         </h1>
                         <div className="flex flex-wrap gap-3">
                             <Link
                                 href="/events"
                                 className="bg-brand text-white font-semibold px-6 py-3 rounded-lg hover:bg-brand-dark transition-colors"
                             >
-                                View All Events
+                                {t('home.view_all_events')}
                             </Link>
                             <Link
                                 href="/about"
                                 className="border-2 border-brand text-brand font-semibold px-6 py-3 rounded-lg hover:bg-brand hover:text-white transition-colors"
                             >
-                                About MTA
+                                {t('home.about_mta')}
                             </Link>
                         </div>
                     </div>
@@ -61,17 +69,18 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
                     </svg>
                 </div>
             </section>
+            )}
 
             {/* ── Upcoming Events ── */}
             {upcomingEvents.length > 0 && (
                 <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-end justify-between mb-8">
                         <SectionHeader
-                            title="Upcoming Events"
-                            subtitle="Takaful4all – Platform for Takaful Events"
+                            title={t('home.upcoming_events')}
+                            subtitle={t('home.page_title')}
                         />
                         <Link href="/events?status=upcoming" className="text-sm font-medium text-brand hover:underline hidden sm:block">
-                            View all →
+                            {t('home.view_all')}
                         </Link>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -88,11 +97,11 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-end justify-between mb-8">
                             <SectionHeader
-                                title="Previous Events"
-                                subtitle="Explore our archive of past events and conferences."
+                                title={t('home.previous_events')}
+                                subtitle={t('home.previous_events_desc')}
                             />
                             <Link href="/events?status=past" className="text-sm font-medium text-brand hover:underline hidden sm:block">
-                                View all →
+                                {t('home.view_all')}
                             </Link>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -109,7 +118,7 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
                 <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         <div>
-                            <SectionHeader title="About MTA" />
+                            <SectionHeader title={t('home.about_mta')} />
                             <div
                                 className="mt-4 prose prose-brand max-w-none text-gray-600 text-justify
                                            prose-p:mb-4 prose-p:leading-relaxed
@@ -121,13 +130,13 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
                                 href="/about"
                                 className="mt-6 inline-block text-sm font-semibold text-brand hover:underline"
                             >
-                                Read more about MTA →
+                                {t('home.read_more_mta')}
                             </Link>
                         </div>
                         <div className="rounded-2xl overflow-hidden shadow-md aspect-[4/3] lg:aspect-auto lg:h-full min-h-64">
                             <img
                                 src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80"
-                                alt="Corporate event participants at a Takaful industry conference"
+                                alt={t('home.about_image_alt')}
                                 className="w-full h-full object-cover"
                             />
                         </div>
@@ -138,23 +147,23 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
             {/* ── Our Aims ── */}
             <section className="py-16 bg-brand-navy text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <SectionHeader title="Our Aims" subtitle="What drives the Takaful Events platform." centered />
+                    <SectionHeader title={t('home.our_aims')} subtitle={t('home.our_aims_desc')} centered />
                     <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
                         {[
                             {
                                 Icon: BookOpen,
-                                title: 'Knowledge Sharing',
-                                desc: 'Disseminate timely and relevant industry insights to empower takaful professionals.',
+                                title: t('home.aim_knowledge'),
+                                desc: t('home.aim_knowledge_desc'),
                             },
                             {
                                 Icon: Users,
-                                title: 'Networking',
-                                desc: 'Connect industry stakeholders, regulators, and innovators in a collaborative environment.',
+                                title: t('home.aim_networking'),
+                                desc: t('home.aim_networking_desc'),
                             },
                             {
                                 Icon: Lightbulb,
-                                title: 'Thought Leadership',
-                                desc: 'Drive forward-thinking discussions that shape the future of the takaful sector.',
+                                title: t('home.aim_leadership'),
+                                desc: t('home.aim_leadership_desc'),
                             },
                         ].map(({ Icon, title, desc }) => (
                             <div
@@ -175,7 +184,7 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
             {/* ── Podcasts ── */}
             {podcasts.length > 0 && (
                 <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <SectionHeader title="Podcasts" subtitle="Listen to our latest takaful industry conversations." />
+                    <SectionHeader title={t('home.podcasts')} subtitle={t('home.podcasts_desc')} />
                     <div className="mt-8 flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin">
                         {podcasts.map(post => (
                             <div key={post.id} className="flex-shrink-0 w-72 snap-start">
@@ -190,7 +199,7 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
             {webinars.length > 0 && (
                 <section className="py-16 bg-brand-light/40">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <SectionHeader title="Webinars" subtitle="On-demand webinars from leading takaful experts." />
+                        <SectionHeader title={t('home.webinars')} subtitle={t('home.webinars_desc')} />
                         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {webinars.map(post => (
                                 <PostCard key={post.id} post={post} onClick={() => setActivePost(post)} />
@@ -201,7 +210,7 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
                                 href="/webinars"
                                 className="px-8 py-3 rounded-lg bg-brand text-white text-sm font-semibold hover:bg-brand-dark transition-colors"
                             >
-                                Explore More →
+                                {t('home.explore_more')}
                             </Link>
                         </div>
                     </div>
@@ -211,7 +220,7 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
             {/* ── Agent360 Webinars ── */}
             {agent360.length > 0 && (
                 <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <SectionHeader title="Agent360 Webinars" subtitle="Exclusive webinars tailored for takaful agents." />
+                    <SectionHeader title={t('home.agent360_webinars')} subtitle={t('home.agent360_desc')} />
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {agent360.map(post => (
                             <PostCard key={post.id} post={post} onClick={() => setActivePost(post)} />
@@ -222,7 +231,7 @@ export default function Home({ upcomingEvents, pastEvents, aboutPage, podcasts, 
                             href="/agent360"
                             className="px-8 py-3 rounded-lg bg-brand text-white text-sm font-semibold hover:bg-brand-dark transition-colors"
                         >
-                            Explore More →
+                            {t('home.explore_more')}
                         </Link>
                     </div>
                 </section>

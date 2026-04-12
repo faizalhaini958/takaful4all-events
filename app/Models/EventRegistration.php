@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
@@ -13,6 +14,7 @@ class EventRegistration extends Model
     protected $fillable = [
         'event_id',
         'ticket_id',
+        'user_id',
         'reference_no',
         'name',
         'email',
@@ -23,6 +25,7 @@ class EventRegistration extends Model
         'status',
         'quantity',
         'subtotal',
+        'discount_amount',
         'products_total',
         'total_amount',
         'payment_status',
@@ -36,6 +39,7 @@ class EventRegistration extends Model
     protected $casts = [
         'quantity'        => 'integer',
         'subtotal'        => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'products_total'  => 'decimal:2',
         'total_amount'    => 'decimal:2',
         'checked_in_at'   => 'datetime',
@@ -74,9 +78,19 @@ class EventRegistration extends Model
         return $this->belongsTo(EventTicket::class, 'ticket_id');
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function products(): HasMany
     {
         return $this->hasMany(EventRegistrationProduct::class, 'registration_id');
+    }
+
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class, 'registration_id');
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────────────

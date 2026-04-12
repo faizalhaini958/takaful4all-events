@@ -2,7 +2,8 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import { Card, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Link } from '@inertiajs/react';
-import { CheckCircle2, Calendar, MapPin, Ticket, Mail, Hash } from 'lucide-react';
+import { CheckCircle2, Calendar, MapPin, Ticket, Mail, Hash, Download } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { type EventRegistration } from '@/types';
 
 interface Props {
@@ -115,6 +116,36 @@ export default function RegistrationConfirmation({ registration }: Props) {
                                 ? 'Your spot is confirmed. See you at the event!'
                                 : 'Your registration is pending review. You will receive an email once approved.'}
                         </div>
+
+                        {/* QR Code */}
+                        <div className="border-t pt-5">
+                            <div className="flex flex-col items-center gap-3">
+                                <p className="text-sm text-muted-foreground">Your booking QR code</p>
+                                <div className="p-3 bg-white rounded-lg border shadow-sm">
+                                    <QRCodeSVG
+                                        value={`${window.location.origin}/events/${event.slug}/register/confirmation/${registration.reference_no}`}
+                                        size={160}
+                                        level="M"
+                                    />
+                                </div>
+                                <p className="text-xs text-muted-foreground text-center">
+                                    Present this QR code at the event for check-in
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Invoice Download */}
+                        {registration.invoice && (
+                            <div className="border-t pt-4">
+                                <a
+                                    href={`/invoices/${registration.invoice.invoice_number}/download`}
+                                    className="flex items-center justify-center gap-2 w-full p-3 rounded-lg border border-brand text-brand hover:bg-brand/5 transition-colors font-medium text-sm"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Download Invoice ({registration.invoice.invoice_number})
+                                </a>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 

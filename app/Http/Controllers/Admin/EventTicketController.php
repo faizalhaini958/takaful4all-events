@@ -50,15 +50,19 @@ class EventTicketController extends Controller
     public function index(Event $event): Response
     {
         $tickets = $event->tickets()
+            ->with('zone')
             ->withCount(['registrations as sold_count' => function ($q) {
                 $q->whereNotIn('status', ['cancelled']);
             }])
             ->orderBy('sort_order')
             ->get();
 
+        $zones = $event->zones()->orderBy('sort_order')->get();
+
         return Inertia::render('Admin/Events/Tickets', [
             'event'   => $event->load('media'),
             'tickets' => $tickets,
+            'zones'   => $zones,
         ]);
     }
 

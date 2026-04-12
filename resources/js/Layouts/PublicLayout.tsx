@@ -2,13 +2,16 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState, useCallback, type PropsWithChildren } from 'react';
 import { Facebook, Linkedin, Instagram, Youtube, Menu, X, UserCircle } from 'lucide-react';
 import { type MenuItem, type SharedProps } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 import LoginModal from '@/Components/LoginModal';
 import RegisterModal from '@/Components/RegisterModal';
 import ForgotPasswordModal from '@/Components/ForgotPasswordModal';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 
 export default function PublicLayout({ children }: PropsWithChildren) {
     const props = usePage().props as unknown as SharedProps & { menus?: Record<string, MenuItem[]> };
     const auth = props.auth;
+    const { t } = useTranslation();
 
     const mainNav   = props.menus?.['main-navigation']   ?? [];
     const footerNav = props.menus?.['footer-navigation']  ?? [];
@@ -38,10 +41,10 @@ export default function PublicLayout({ children }: PropsWithChildren) {
     const navItems = mainNav.length > 0
         ? mainNav
         : [
-            { id: 0, url: '/',       label: 'Home' },
-            { id: 1, url: '/about',  label: 'About' },
-            { id: 2, url: '/events', label: 'Events' },
-            { id: 3, url: '/contact',label: 'Contact' },
+            { id: 0, url: '/',       label: t('nav.home') },
+            { id: 1, url: '/about',  label: t('nav.about') },
+            { id: 2, url: '/events', label: t('nav.events') },
+            { id: 3, url: '/contact',label: t('nav.contact') },
           ];
 
     return (
@@ -59,17 +62,18 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                         {navItems.map(item => (
                             <Link key={item.id} href={item.url} className="hover:text-brand transition-colors">{item.label}</Link>
                         ))}
+                        <LanguageSwitcher />
                         {auth?.user ? (
                             <Link href="/dashboard" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-navy text-white hover:bg-brand transition-colors text-xs">
                                 <UserCircle className="w-4 h-4" />
-                                My Account
+                                {t('nav.my_account')}
                             </Link>
                         ) : (
                             <button
                                 onClick={() => setLoginOpen(true)}
                                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-navy text-white hover:bg-brand transition-colors text-xs font-semibold uppercase tracking-wide cursor-pointer"
                             >
-                                Login
+                                {t('nav.login')}
                             </button>
                         )}
                     </nav>
@@ -103,7 +107,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                     <button
                         onClick={() => setMobileOpen(false)}
                         className="p-2 rounded-md text-brand-navy hover:text-brand hover:bg-brand-navy/10 transition-colors"
-                        aria-label="Close menu"
+                        aria-label={t('nav.close_menu')}
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -123,6 +127,9 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                     ))}
 
                     <div className="mt-4 pt-4 border-t border-brand-navy/10">
+                        <div className="py-2 px-3">
+                            <LanguageSwitcher />
+                        </div>
                         {auth?.user ? (
                             <Link
                                 href="/dashboard"
@@ -130,7 +137,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                 className="flex items-center gap-2 py-3 px-3 rounded-md text-sm font-semibold text-brand-navy bg-brand-navy/5 hover:bg-brand-navy/10 transition-colors"
                             >
                                 <UserCircle className="w-5 h-5" />
-                                My Account
+                                {t('nav.my_account')}
                             </Link>
                         ) : (
                             <button
@@ -140,7 +147,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                 }}
                                 className="flex items-center gap-2 py-3 px-3 rounded-md text-sm font-semibold text-white bg-brand-navy hover:bg-brand transition-colors w-full cursor-pointer"
                             >
-                                Login
+                                {t('nav.login')}
                             </button>
                         )}
                     </div>
@@ -182,7 +189,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                 <img src="/images/logo.png" alt="Takaful4All" className="h-10 w-auto brightness-0 invert mb-3" />
                             </Link>
                             <p className="text-sm text-brand-light/60">
-                                The leading platform for Takaful meet-ups and conferences in Malaysia.
+                                {t('footer.tagline')}
                             </p>
                             {/* Social media */}
                             <div className="flex items-center gap-3 mt-4">
@@ -203,13 +210,13 @@ export default function PublicLayout({ children }: PropsWithChildren) {
 
                         {/* Quick links */}
                         <div>
-                            <p className="text-white font-semibold mb-3">Quick Links</p>
+                            <p className="text-white font-semibold mb-3">{t('footer.quick_links')}</p>
                             <ul className="space-y-2 text-sm">
                                 {(footerNav.length > 0 ? footerNav : [
-                                    { id: 0, url: '/',       label: 'Home' },
-                                    { id: 1, url: '/about',  label: 'About Us' },
-                                    { id: 2, url: '/events', label: 'Events' },
-                                    { id: 3, url: '/contact',label: 'Contact' },
+                                    { id: 0, url: '/',       label: t('nav.home') },
+                                    { id: 1, url: '/about',  label: t('footer.about_us') },
+                                    { id: 2, url: '/events', label: t('nav.events') },
+                                    { id: 3, url: '/contact',label: t('nav.contact') },
                                 ]).map(item => (
                                     <li key={item.id}>
                                         <Link href={item.url} className="hover:text-brand transition-colors">{item.label}</Link>
@@ -220,12 +227,12 @@ export default function PublicLayout({ children }: PropsWithChildren) {
 
                         {/* Legal */}
                         <div>
-                            <p className="text-white font-semibold mb-3">Legals</p>
+                            <p className="text-white font-semibold mb-3">{t('footer.legals')}</p>
                             <ul className="space-y-2 text-sm">
                                 {(legalNav.length > 0 ? legalNav : [
-                                    { id: 0, url: '/terms',               label: 'Terms & Conditions' },
-                                    { id: 1, url: '/privacy-policy',      label: 'Privacy Policy' },
-                                    { id: 2, url: '/cancellation-refund', label: 'Cancellation & Refund' },
+                                    { id: 0, url: '/terms',               label: t('footer.terms') },
+                                    { id: 1, url: '/privacy-policy',      label: t('footer.privacy') },
+                                    { id: 2, url: '/cancellation-refund', label: t('footer.refund') },
                                 ]).map(item => (
                                     <li key={item.id}>
                                         <Link href={item.url} className="hover:text-brand transition-colors">{item.label}</Link>

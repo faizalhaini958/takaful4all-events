@@ -23,6 +23,7 @@ interface Props {
 
 const emptyTicket = {
     name: '',
+    color: '',
     description: '',
     type: 'free' as 'free' | 'paid',
     price: '0',
@@ -60,6 +61,7 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
         setEditingId(ticket.id);
         setData({
             name: ticket.name,
+            color: ticket.color ?? '',
             description: ticket.description ?? '',
             type: ticket.type,
             price: String(ticket.price),
@@ -164,7 +166,14 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
                                 <TableBody>
                                     {tickets.map(ticket => (
                                         <TableRow key={ticket.id}>
-                                            <TableCell className="font-medium">{ticket.name}</TableCell>
+                                            <TableCell className="font-medium">
+                                                <div className="flex items-center gap-2">
+                                                    {ticket.color && (
+                                                        <div className="w-4 h-4 rounded-full flex-shrink-0 border border-gray-200" style={{ backgroundColor: ticket.color }} />
+                                                    )}
+                                                    {ticket.name}
+                                                </div>
+                                            </TableCell>
                                             <TableCell>
                                                 <Badge variant={ticket.type === 'paid' ? 'default' : 'secondary'}>
                                                     {ticket.type}
@@ -212,18 +221,44 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
 
             {/* Create / Edit Dialog */}
             <Dialog open={showForm} onOpenChange={open => !open && setShowForm(false)}>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle>{editingId ? 'Edit Ticket' : 'New Ticket'}</DialogTitle>
                         <DialogDescription>
                             {editingId ? 'Update ticket details.' : 'Add a new ticket type for this event.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-1">
                         <div>
                             <Label htmlFor="name">Ticket Name *</Label>
                             <Input id="name" value={data.name} onChange={e => setData('name', e.target.value)} placeholder="e.g. Early Bird, VIP, Standard" className="mt-1" />
                             {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
+                        </div>
+
+                        <div>
+                            <Label htmlFor="color">Seat Color</Label>
+                            <div className="flex items-center gap-3 mt-1">
+                                <input
+                                    id="color"
+                                    type="color"
+                                    value={data.color || '#3b82f6'}
+                                    onChange={e => setData('color', e.target.value)}
+                                    className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer p-0.5"
+                                />
+                                <Input
+                                    value={data.color}
+                                    onChange={e => setData('color', e.target.value)}
+                                    placeholder="#3b82f6"
+                                    className="w-28 font-mono text-sm"
+                                    maxLength={7}
+                                />
+                                {data.color && (
+                                    <button type="button" onClick={() => setData('color', '')} className="text-xs text-muted-foreground hover:text-foreground">
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">Assign a color to match the seating layout map.</p>
                         </div>
 
                         <div>

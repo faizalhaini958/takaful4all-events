@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use App\Models\Event;
 use App\Models\Page;
 use App\Models\Post;
@@ -13,6 +14,10 @@ class HomeController extends Controller
 {
     public function index(): Response
     {
+        $banners = Cache::remember('home.banners', 900, fn () =>
+            Banner::active()->get()
+        );
+
         $upcomingEvents = Cache::remember('home.upcoming', 900, fn () =>
             Event::upcoming()->with('media')->take(6)->get()
         );
@@ -38,6 +43,7 @@ class HomeController extends Controller
         );
 
         return Inertia::render('Public/Home', [
+            'banners'        => $banners,
             'upcomingEvents' => $upcomingEvents,
             'pastEvents'     => $pastEvents,
             'aboutPage'      => $aboutPage,

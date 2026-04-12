@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/Com
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Link } from '@inertiajs/react';
-import { Eye, Calendar, MapPin, Receipt, Package, ArrowLeft } from 'lucide-react';
+import { Eye, Calendar, MapPin, Receipt, Package, ArrowLeft, Download } from 'lucide-react';
 import { type EventRegistration } from '@/types';
 
 interface Props {
@@ -202,6 +202,16 @@ export default function OrderDetail({ order }: Props) {
                                         day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
                                     })}
                                 </div>
+
+                                {order.invoice && (
+                                    <a
+                                        href={`/invoices/${order.invoice.invoice_number}/download`}
+                                        className="flex items-center justify-center gap-2 w-full mt-3 p-3 rounded-lg border border-brand text-brand hover:bg-brand/5 transition-colors font-medium text-sm"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        Download Invoice
+                                    </a>
+                                )}
                             </CardContent>
                         </Card>
 

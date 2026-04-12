@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EventProduct;
 use App\Models\EventRegistration;
 use App\Models\Setting;
 use App\Services\ChipInService;
@@ -139,7 +140,8 @@ class ChipInWebhookController extends Controller
         $reference = $data['reference'] ?? null;
 
         if ($reference) {
-            $registration = EventRegistration::where('payment_reference', $reference)
+            $registration = EventRegistration::with('products')
+                ->where('payment_reference', $reference)
                 ->orWhere('reference_no', $reference)
                 ->first();
 
@@ -151,6 +153,13 @@ class ChipInWebhookController extends Controller
                         ['chipin_cancelled_at' => now()->toIso8601String()]
                     ),
                 ]);
+
+                // Restore product stock that was reserved on registration creation
+                foreach ($registration->products as $item) {
+                    EventProduct::where('id', $item->product_id)
+                        ->whereNotNull('stock')
+                        ->increment('stock', $item->quantity);
+                }
             }
         }
 

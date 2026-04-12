@@ -25,7 +25,9 @@ class Event extends Model
         'state',
         'country',
         'registration_url',
+        'gdrive_link',
         'media_id',
+        'venue_map_media_id',
         'is_published',
         'rsvp_enabled',
         'rsvp_deadline',
@@ -64,6 +66,16 @@ class Event extends Model
     public function media(): BelongsTo
     {
         return $this->belongsTo(Media::class, 'media_id');
+    }
+
+    public function venueMap(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'venue_map_media_id');
+    }
+
+    public function zones(): HasMany
+    {
+        return $this->hasMany(EventZone::class)->orderBy('sort_order');
     }
 
     public function tickets(): HasMany

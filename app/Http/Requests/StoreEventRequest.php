@@ -27,12 +27,14 @@ class StoreEventRequest extends FormRequest
             'state'            => 'nullable|string|max:100',
             'country'          => 'nullable|string|max:100',
             'registration_url' => 'nullable|url|max:500',
+            'gdrive_link'      => 'nullable|url|max:500',
             'media_id'         => 'nullable|exists:media,id',
             'is_published'     => 'required|boolean',
             'rsvp_enabled'     => 'nullable|boolean',
             'rsvp_deadline'    => 'nullable|date',
             'max_attendees'    => 'nullable|integer|min:1',
             'require_approval' => 'nullable|boolean',
+            'venue_map_media_id' => 'nullable|exists:media,id',
             'meta_json'        => 'nullable|array',
         ];
     }
@@ -40,6 +42,10 @@ class StoreEventRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $merges = [];
+
+        if ($this->venue_map_media_id === 'none') {
+            $merges['venue_map_media_id'] = null;
+        }
 
         if ($this->has('content_html')) {
             $merges['content_html'] = strip_tags(

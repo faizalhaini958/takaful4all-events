@@ -7,13 +7,21 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin, ChevronLeft, Ticket, ShoppingBag, Plus, Minus, AlertCircle, User } from 'lucide-react';
-import { type Event, type EventTicket, type EventProduct } from '@/types';
+import { Calendar, MapPin, ChevronLeft, Ticket, ShoppingBag, Plus, Minus, AlertCircle, User, Palette, Clock, Check } from 'lucide-react';
+import { type Event, type EventTicket, type EventProduct, type EventZone } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
+
+const STATUS_CONFIG: Record<string, { labelKey: string; classes: string }> = {
+    upcoming: { labelKey: 'event.badge_upcoming', classes: 'bg-emerald-100 text-emerald-800 border border-emerald-200' },
+    past:     { labelKey: 'event.badge_past',     classes: 'bg-gray-100 text-gray-600 border border-gray-200' },
+    draft:    { labelKey: 'event.badge_draft',     classes: 'bg-yellow-100 text-yellow-800 border border-yellow-200' },
+};
 
 interface Props {
     event: Event;
     tickets: EventTicket[];
     products: EventProduct[];
+    zones: EventZone[];
 }
 
 interface ProductSelection {
@@ -40,8 +48,10 @@ const emptyAttendee = (): Attendee => ({
     dietary_requirements: '',
 });
 
-export default function EventRegister({ event, tickets, products }: Props) {
+export default function EventRegister({ event, tickets, products, zones }: Props) {
     const { flash } = usePage().props as { flash: { success?: string; error?: string } };
+    const { t } = useTranslation();
+    const statusCfg = STATUS_CONFIG[event.status] ?? STATUS_CONFIG.draft;
     const [selectedProducts, setSelectedProducts] = useState<ProductSelection[]>([]);
 
     const { data, setData, post, processing, errors } = useForm({
@@ -67,7 +77,7 @@ export default function EventRegister({ event, tickets, products }: Props) {
     }, [qty]);
 
     const selectedTicket = tickets.find(t => t.id === Number(data.ticket_id));
-    const ticketSubtotal = selectedTicket ? selectedTicket.price * qty : 0;
+    const ticketSubtotal = selectedTicket ? Number(selectedTicket.current_price) * qty : 0;
     const productsTotal = selectedProducts.reduce((sum, p) => {
         const product = products.find(pr => pr.id === p.product_id);
         return sum + (product ? product.price * p.quantity : 0);
@@ -75,7 +85,14 @@ export default function EventRegister({ event, tickets, products }: Props) {
     const grandTotal = ticketSubtotal + productsTotal;
 
     const startDate = new Date(event.start_at);
+    const endDate = event.end_at ? new Date(event.end_at) : null;
     const location = [event.venue, event.city, event.state].filter(Boolean).join(', ');
+
+    const formatShortDate = (d: Date) =>
+        d.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    const formatTime = (d: Date) =>
+        d.toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     function updateAttendee(index: number, field: keyof Attendee, value: string) {
         const updated = [...data.attendees];
@@ -114,20 +131,54 @@ export default function EventRegister({ event, tickets, products }: Props) {
     return (
         <PublicLayout>
             {/* Hero */}
-            <section className="relative bg-brand-navy text-white overflow-hidden">
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                    <Link href={`/events/${event.slug}`} className="inline-flex items-center gap-1 text-sm text-white/70 hover:text-white mb-3">
-                        <ChevronLeft className="w-4 h-4" /> Back to event
-                    </Link>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold">{event.title}</h1>
-                    <div className="flex flex-wrap gap-4 mt-3 text-sm text-white/80">
-                        <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {startDate.toLocaleDateString('en-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                        {location && <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {location}</span>}
+            <div className="relative w-full bg-brand-navy overflow-hidden" style={{ minHeight: '170px' }}>
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-navy to-brand-dark opacity-90" />
+
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col justify-end" style={{ minHeight: '170px' }}>
+                    {/* Breadcrumb */}
+                    <nav className="flex items-center gap-1.5 text-xs text-brand-light/70 mb-6" aria-label="Breadcrumb">
+                        <Link href="/" className="hover:text-brand-light transition-colors">{t('event.breadcrumb_home')}</Link>
+                        <ChevronLeft className="w-3 h-3 flex-shrink-0 rotate-180" />
+                        <Link href="/events" className="hover:text-brand-light transition-colors">{t('event.breadcrumb_events')}</Link>
+                        <ChevronLeft className="w-3 h-3 flex-shrink-0 rotate-180" />
+                        <Link href={`/events/${event.slug}`} className="hover:text-brand-light transition-colors truncate max-w-xs">{event.title}</Link>
+                        <ChevronLeft className="w-3 h-3 flex-shrink-0 rotate-180" />
+                        <span className="text-brand-light">{t('register.register')}</span>
+                    </nav>
+
+                    {/* Status badge */}
+                    <span className={`self-start text-xs font-semibold px-3 py-1 rounded-full mb-4 ${statusCfg.classes}`}>
+                        {t(statusCfg.labelKey)}
+                    </span>
+
+                    {/* Title */}
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-6 max-w-4xl">
+                        {event.title}
+                    </h1>
+
+                    {/* Quick meta strip */}
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-brand-light/80">
+                        <span className="flex items-center gap-1.5">
+                            <Calendar className="w-4 h-4 text-brand flex-shrink-0" />
+                            {formatShortDate(startDate)}
+                        </span>
+                        {endDate && (
+                            <span className="flex items-center gap-1.5">
+                                <Clock className="w-4 h-4 text-brand flex-shrink-0" />
+                                {formatTime(startDate)} – {formatTime(endDate)}
+                            </span>
+                        )}
+                        {event.venue && (
+                            <span className="flex items-center gap-1.5">
+                                <MapPin className="w-4 h-4 text-brand flex-shrink-0" />
+                                {event.venue}
+                            </span>
+                        )}
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
                 {flash?.error && (
                     <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 flex items-start gap-2">
                         <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -139,55 +190,108 @@ export default function EventRegister({ event, tickets, products }: Props) {
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
                         {/* Main Form */}
                         <div className="space-y-6">
+                            {/* Venue Map */}
+                            {event.venue_map && (
+                                <Card>
+                                    <CardContent className="p-4">
+                                        <img
+                                            src={event.venue_map.url}
+                                            alt="Venue seating map"
+                                            className="w-full h-auto rounded-lg"
+                                        />
+                                        {zones.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                {zones.map(zone => (
+                                                    <span
+                                                        key={zone.id}
+                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                                                        style={{ backgroundColor: zone.color, color: zone.label_color }}
+                                                    >
+                                                        {zone.name}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
+
                             {/* Ticket Selection */}
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <Ticket className="w-5 h-5 text-brand" /> Select Ticket
+                                        <Ticket className="w-5 h-5 text-brand" /> {t('register.select_ticket')}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
+                                    {/* Zone-based display when zones exist */}
+                                    {zones.length > 0 ? (
+                                        <div className="space-y-5">
+                                            {zones.map(zone => {
+                                                const zoneTickets = tickets.filter(t => t.event_zone_id === zone.id && t.is_on_sale);
+                                                if (zoneTickets.length === 0) return null;
+                                                return (
+                                                    <div key={zone.id} className="rounded-xl border-2 overflow-hidden" style={{ borderColor: zone.color + '60' }}>
+                                                        {/* Zone header */}
+                                                        <div className="px-4 py-3" style={{ backgroundColor: zone.color, color: zone.label_color }}>
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="font-bold text-sm">{zone.name}</span>
+                                                                {zone.capacity !== null && <span className="text-xs opacity-80">{zone.capacity} seats</span>}
+                                                            </div>
+                                                            {zone.description && <p className="text-xs opacity-80 mt-0.5">{zone.description}</p>}
+                                                        </div>
+
+                                                        <div className="p-4">
+                                                            {/* Zone image + perks */}
+                                                            {(zone.image_url || (zone.perks && zone.perks.length > 0)) && (
+                                                                <div className="flex gap-4 mb-4">
+                                                                    {zone.image_url && (
+                                                                        <img src={zone.image_url} alt={zone.name} className="w-28 h-20 rounded-lg object-cover flex-shrink-0" />
+                                                                    )}
+                                                                    {zone.perks && zone.perks.length > 0 && (
+                                                                        <ul className="text-xs text-gray-600 space-y-1">
+                                                                            {zone.perks.map((perk, i) => (
+                                                                                <li key={i} className="flex items-start gap-1.5">
+                                                                                    <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                                                                    {perk}
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Ticket options */}
+                                                            <div className="space-y-2">
+                                                                {zoneTickets.map(ticket => (
+                                                                    <TicketOption key={ticket.id} ticket={ticket} selected={data.ticket_id === String(ticket.id)} onSelect={() => setData('ticket_id', String(ticket.id))} />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {/* Unzoned tickets */}
+                                            {tickets.filter(t => !t.event_zone_id && t.is_on_sale).map(ticket => (
+                                                <TicketOption key={ticket.id} ticket={ticket} selected={data.ticket_id === String(ticket.id)} onSelect={() => setData('ticket_id', String(ticket.id))} />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        /* Flat ticket list (no zones) */
+                                        <>
                                     {tickets.filter(t => t.is_on_sale).map(ticket => (
-                                        <label
-                                            key={ticket.id}
-                                            className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                                                data.ticket_id === String(ticket.id)
-                                                    ? 'border-brand bg-brand/5'
-                                                    : 'border-gray-200 hover:border-gray-300'
-                                            }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="radio"
-                                                    name="ticket_id"
-                                                    value={ticket.id}
-                                                    checked={data.ticket_id === String(ticket.id)}
-                                                    onChange={() => setData('ticket_id', String(ticket.id))}
-                                                    className="accent-brand"
-                                                />
-                                                <div>
-                                                    <p className="font-semibold">{ticket.name}</p>
-                                                    {ticket.description && <p className="text-sm text-gray-500">{ticket.description}</p>}
-                                                    {ticket.available_count !== null && (
-                                                        <p className="text-xs text-amber-600 mt-1">{ticket.available_count} spots left</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-bold text-lg">
-                                                    {ticket.type === 'free' ? 'Free' : `RM ${Number(ticket.price).toFixed(2)}`}
-                                                </p>
-                                            </div>
-                                        </label>
+                                        <TicketOption key={ticket.id} ticket={ticket} selected={data.ticket_id === String(ticket.id)} onSelect={() => setData('ticket_id', String(ticket.id))} />
                                     ))}
                                     {tickets.filter(t => t.is_on_sale).length === 0 && (
-                                        <p className="text-center py-6 text-gray-500">No tickets available at this time.</p>
+                                        <p className="text-center py-6 text-gray-500">{t('tickets.no_tickets')}</p>
+                                    )}
+                                        </>
                                     )}
                                     {errors.ticket_id && <p className="text-sm text-red-600">{errors.ticket_id}</p>}
 
                                     {selectedTicket && (
                                         <div className="flex items-center gap-3 pt-2">
-                                            <Label htmlFor="quantity">Number of attendees</Label>
+                                            <Label htmlFor="quantity">{t('register.num_attendees')}</Label>
                                             <div className="flex items-center border rounded-lg">
                                                 <button
                                                     type="button"
@@ -205,7 +309,7 @@ export default function EventRegister({ event, tickets, products }: Props) {
                                                     <Plus className="w-4 h-4" />
                                                 </button>
                                             </div>
-                                            <span className="text-xs text-muted-foreground">max {selectedTicket.max_per_order}</span>
+                                            <span className="text-xs text-muted-foreground">{t('register.max')} {selectedTicket.max_per_order}</span>
                                         </div>
                                     )}
                                 </CardContent>
@@ -216,7 +320,7 @@ export default function EventRegister({ event, tickets, products }: Props) {
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
-                                            <ShoppingBag className="w-5 h-5 text-brand" /> Add-on Products
+                                            <ShoppingBag className="w-5 h-5 text-brand" /> {t('register.addon_products')}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
@@ -252,7 +356,7 @@ export default function EventRegister({ event, tickets, products }: Props) {
                                                                     onClick={() => toggleProduct(product.id)}
                                                                     className={isSelected ? 'bg-brand hover:bg-brand-dark' : ''}
                                                                 >
-                                                                    {isSelected ? 'Added' : 'Add to order'}
+                                                                    {isSelected ? t('register.added') : t('register.add_to_order')}
                                                                 </Button>
 
                                                                 {isSelected && (
@@ -289,7 +393,7 @@ export default function EventRegister({ event, tickets, products }: Props) {
                                                                             <span className="px-2 text-sm font-medium">{selection?.quantity ?? 1}</span>
                                                                             <button
                                                                                 type="button"
-                                                                                onClick={() => updateProductSelection(product.id, 'quantity', (selection?.quantity ?? 1) + 1)}
+                                                                                onClick={() => updateProductSelection(product.id, 'quantity', Math.min(product.stock ?? 99, (selection?.quantity ?? 1) + 1))}
                                                                                 className="px-2 py-0.5 hover:bg-gray-100 text-sm"
                                                                             >
                                                                                 <Plus className="w-3 h-3" />
@@ -313,53 +417,53 @@ export default function EventRegister({ event, tickets, products }: Props) {
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                             <User className="w-5 h-5 text-brand" />
-                                            {qty === 1 ? 'Your Details' : `Attendee ${index + 1} Details`}
+                                            {qty === 1 ? t('register.your_details') : t('register.attendee_details', { index: index + 1 })}
                                             {qty > 1 && index === 0 && (
-                                                <span className="text-xs font-normal text-muted-foreground ml-1">(Primary buyer)</span>
+                                                <span className="text-xs font-normal text-muted-foreground ml-1">({t('register.primary_buyer')})</span>
                                             )}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <Label htmlFor={`name_${index}`}>Full Name *</Label>
+                                                <Label htmlFor={`name_${index}`}>{t('register.full_name')}</Label>
                                                 <Input
                                                     id={`name_${index}`}
                                                     value={attendee.name}
                                                     onChange={e => updateAttendee(index, 'name', e.target.value)}
                                                     className="mt-1"
-                                                    placeholder="Full name"
+                                                    placeholder={t('register.full_name_placeholder')}
                                                 />
                                                 {(errors as Record<string, string>)[`attendees.${index}.name`] && (
                                                     <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.name`]}</p>
                                                 )}
                                             </div>
                                             <div>
-                                                <Label htmlFor={`email_${index}`}>Email *</Label>
+                                                <Label htmlFor={`email_${index}`}>{t('register.email')}</Label>
                                                 <Input
                                                     id={`email_${index}`}
                                                     type="email"
                                                     value={attendee.email}
                                                     onChange={e => updateAttendee(index, 'email', e.target.value)}
                                                     className="mt-1"
-                                                    placeholder="you@example.com"
+                                                    placeholder={t('register.email_placeholder')}
                                                 />
                                                 {(errors as Record<string, string>)[`attendees.${index}.email`] && (
                                                     <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.email`]}</p>
                                                 )}
                                             </div>
                                             <div>
-                                                <Label htmlFor={`phone_${index}`}>Phone</Label>
+                                                <Label htmlFor={`phone_${index}`}>{t('register.phone')}</Label>
                                                 <Input
                                                     id={`phone_${index}`}
                                                     value={attendee.phone}
                                                     onChange={e => updateAttendee(index, 'phone', e.target.value)}
                                                     className="mt-1"
-                                                    placeholder="+60 12-345 6789"
+                                                    placeholder={t('register.phone_placeholder')}
                                                 />
                                             </div>
                                             <div>
-                                                <Label htmlFor={`company_${index}`}>Company / Organisation</Label>
+                                                <Label htmlFor={`company_${index}`}>{t('register.company')}</Label>
                                                 <Input
                                                     id={`company_${index}`}
                                                     value={attendee.company}
@@ -368,7 +472,7 @@ export default function EventRegister({ event, tickets, products }: Props) {
                                                 />
                                             </div>
                                             <div>
-                                                <Label htmlFor={`job_title_${index}`}>Job Title</Label>
+                                                <Label htmlFor={`job_title_${index}`}>{t('register.job_title')}</Label>
                                                 <Input
                                                     id={`job_title_${index}`}
                                                     value={attendee.job_title}
@@ -377,21 +481,21 @@ export default function EventRegister({ event, tickets, products }: Props) {
                                                 />
                                             </div>
                                             <div>
-                                                <Label htmlFor={`dietary_${index}`}>Dietary Requirements</Label>
+                                                <Label htmlFor={`dietary_${index}`}>{t('register.dietary')}</Label>
                                                 <Input
                                                     id={`dietary_${index}`}
                                                     value={attendee.dietary_requirements}
                                                     onChange={e => updateAttendee(index, 'dietary_requirements', e.target.value)}
                                                     className="mt-1"
-                                                    placeholder="e.g. Halal, Vegetarian"
+                                                    placeholder={t('register.dietary_placeholder')}
                                                 />
                                             </div>
                                         </div>
                                         {/* Notes only on the last attendee card */}
                                         {index === data.attendees.length - 1 && (
                                             <div>
-                                                <Label htmlFor="notes">Additional Notes</Label>
-                                                <Textarea id="notes" value={data.notes} onChange={e => setData('notes', e.target.value)} rows={2} className="mt-1 resize-none" placeholder="Any special requirements…" />
+                                                <Label htmlFor="notes">{t('register.notes')}</Label>
+                                                <Textarea id="notes" value={data.notes} onChange={e => setData('notes', e.target.value)} rows={2} className="mt-1 resize-none" placeholder={t('register.notes_placeholder')} />
                                             </div>
                                         )}
                                     </CardContent>
@@ -400,14 +504,17 @@ export default function EventRegister({ event, tickets, products }: Props) {
                         </div>
 
                         {/* Order Sidebar */}
-                        <div className="lg:sticky lg:top-6">
+                        <div className="lg:sticky lg:top-24">
                             <Card>
-                                <CardHeader><CardTitle>Order Summary</CardTitle></CardHeader>
+                                <CardHeader><CardTitle>{t('register.order_summary')}</CardTitle></CardHeader>
                                 <CardContent className="space-y-3">
                                     {selectedTicket ? (
                                         <>
                                             <div className="flex justify-between text-sm">
-                                                <span>{selectedTicket.name} x {data.quantity}</span>
+                                                <span>
+                                                    {selectedTicket.name} x {data.quantity}
+                                                    {selectedTicket.is_early_bird && <span className="text-amber-600 text-xs ml-1">(Early Bird)</span>}
+                                                </span>
                                                 <span>RM {ticketSubtotal.toFixed(2)}</span>
                                             </div>
                                             {selectedProducts.map(sp => {
@@ -425,12 +532,12 @@ export default function EventRegister({ event, tickets, products }: Props) {
                                                 );
                                             })}
                                             <div className="border-t pt-3 flex justify-between font-bold">
-                                                <span>Total</span>
+                                                <span>{t('register.total')}</span>
                                                 <span>RM {grandTotal.toFixed(2)}</span>
                                             </div>
                                         </>
                                     ) : (
-                                        <p className="text-sm text-muted-foreground">Select a ticket to see your order summary.</p>
+                                        <p className="text-sm text-muted-foreground">{t('register.select_ticket')}.</p>
                                     )}
 
                                     <Button
@@ -448,5 +555,62 @@ export default function EventRegister({ event, tickets, products }: Props) {
                 </form>
             </div>
         </PublicLayout>
+    );
+}
+
+/**
+ * Reusable ticket radio option with early bird pricing support.
+ */
+function TicketOption({ ticket, selected, onSelect }: {
+    ticket: EventTicket;
+    selected: boolean;
+    onSelect: () => void;
+}) {
+    const borderStyle = ticket.color
+        ? { borderLeftWidth: '4px', borderLeftColor: ticket.color, borderTopWidth: '1px', borderRightWidth: '1px', borderBottomWidth: '1px' }
+        : undefined;
+
+    return (
+        <label
+            className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-all ${
+                selected
+                    ? 'border-2 border-brand bg-brand/5'
+                    : 'border border-gray-200 hover:border-gray-300'
+            }`}
+            style={!selected ? borderStyle : undefined}
+        >
+            <div className="flex items-center gap-3">
+                <input type="radio" name="ticket_id" value={ticket.id} checked={selected} onChange={onSelect} className="accent-brand" />
+                <div>
+                    <div className="flex items-center gap-2">
+                        <p className="font-semibold">{ticket.name}</p>
+                        {ticket.is_early_bird && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                                <Clock className="w-3 h-3" /> Early Bird
+                            </span>
+                        )}
+                    </div>
+                    {ticket.description && <p className="text-sm text-gray-500">{ticket.description}</p>}
+                    {ticket.available_count !== null && <p className="text-xs text-amber-600 mt-1">{ticket.available_count} spots left</p>}
+                    {ticket.is_early_bird && ticket.early_bird_end_at && (
+                        <p className="text-xs text-amber-700 mt-1">
+                            Ends {new Date(ticket.early_bird_end_at).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                    )}
+                </div>
+            </div>
+            <div className="text-right flex-shrink-0 ml-4">
+                {ticket.type === 'free' ? (
+                    <p className="font-bold text-lg text-emerald-600">Free</p>
+                ) : ticket.is_early_bird ? (
+                    <>
+                        <p className="font-bold text-lg text-emerald-600">RM {Number(ticket.current_price).toFixed(2)}</p>
+                        <p className="text-xs text-gray-400 line-through">RM {Number(ticket.price).toFixed(2)}</p>
+                    </>
+                ) : (
+                    <p className="font-bold text-lg text-gray-900">RM {Number(ticket.current_price).toFixed(2)}</p>
+                )}
+            </div>
+        </label>
     );
 }

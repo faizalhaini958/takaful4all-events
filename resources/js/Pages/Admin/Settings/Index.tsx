@@ -8,6 +8,7 @@ import { Label } from '@/Components/ui/label';
 import { Button } from '@/Components/ui/button';
 import { Switch } from '@/Components/ui/switch';
 import { Badge } from '@/Components/ui/badge';
+import { Textarea } from '@/Components/ui/textarea';
 import {
     Select,
     SelectContent,
@@ -29,6 +30,11 @@ import {
     Check,
     Shield,
     AlertCircle,
+    Settings,
+    CalendarCheck,
+    Bell,
+    FileText,
+    Globe,
 } from 'lucide-react';
 
 interface SmtpSettings {
@@ -51,10 +57,51 @@ interface ChipInSettings {
     is_test_mode: string;
 }
 
+interface GeneralSettings {
+    site_name: string;
+    site_logo: string;
+    footer_text: string;
+    contact_email: string;
+    contact_phone: string;
+}
+
+interface BookingSettings {
+    default_max_attendees: string;
+    default_require_approval: string;
+    registration_cutoff_hours: string;
+    waitlist_enabled: string;
+}
+
+interface NotificationSettings {
+    send_confirmation_email: string;
+    send_reminder_email: string;
+    reminder_hours: string;
+    send_cancellation_email: string;
+}
+
+interface InvoicingSettings {
+    company_name: string;
+    company_registration_no: string;
+    company_address: string;
+    invoice_prefix: string;
+    tax_rate: string;
+}
+
+interface LocalisationSettings {
+    default_locale: string;
+    enable_en: string;
+    enable_ms: string;
+}
+
 interface Props {
     tab: string;
     smtp: SmtpSettings;
     chipin: ChipInSettings;
+    general: GeneralSettings;
+    booking: BookingSettings;
+    notifications: NotificationSettings;
+    invoicing: InvoicingSettings;
+    localisation: LocalisationSettings;
 }
 
 function SmtpSettingsTab({ smtp }: { smtp: SmtpSettings }) {
@@ -591,28 +638,547 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
     );
 }
 
-export default function SettingsIndex({ tab, smtp, chipin }: Props) {
+// ─── General Settings Tab ─────────────────────────────────────────────────────
+
+function GeneralSettingsTab({ general }: { general: GeneralSettings }) {
+    const form = useForm({
+        site_name: general.site_name || '',
+        site_logo: general.site_logo || '',
+        footer_text: general.footer_text || '',
+        contact_email: general.contact_email || '',
+        contact_phone: general.contact_phone || '',
+    });
+
+    function handleSubmit(e: FormEvent) {
+        e.preventDefault();
+        form.post(route('admin.settings.general'), { preserveScroll: true });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    General Settings
+                </CardTitle>
+                <CardDescription>
+                    Configure basic site information displayed across the platform.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="site-name">Site Name</Label>
+                            <Input
+                                id="site-name"
+                                placeholder="Takaful Events"
+                                value={form.data.site_name}
+                                onChange={e => form.setData('site_name', e.target.value)}
+                            />
+                            {form.errors.site_name && <p className="text-sm text-destructive">{form.errors.site_name}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="site-logo">Site Logo URL</Label>
+                            <Input
+                                id="site-logo"
+                                placeholder="/images/logo.png"
+                                value={form.data.site_logo}
+                                onChange={e => form.setData('site_logo', e.target.value)}
+                            />
+                            {form.errors.site_logo && <p className="text-sm text-destructive">{form.errors.site_logo}</p>}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="footer-text">Footer Text</Label>
+                        <Textarea
+                            id="footer-text"
+                            placeholder="© 2026 Malaysian Takaful Association. All rights reserved."
+                            value={form.data.footer_text}
+                            onChange={e => form.setData('footer_text', e.target.value)}
+                            rows={3}
+                        />
+                        {form.errors.footer_text && <p className="text-sm text-destructive">{form.errors.footer_text}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="contact-email">Contact Email</Label>
+                            <Input
+                                id="contact-email"
+                                type="email"
+                                placeholder="event@malaysiantakaful.com.my"
+                                value={form.data.contact_email}
+                                onChange={e => form.setData('contact_email', e.target.value)}
+                            />
+                            {form.errors.contact_email && <p className="text-sm text-destructive">{form.errors.contact_email}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="contact-phone">Contact Phone</Label>
+                            <Input
+                                id="contact-phone"
+                                placeholder="+60 3-2034 6268"
+                                value={form.data.contact_phone}
+                                onChange={e => form.setData('contact_phone', e.target.value)}
+                            />
+                            {form.errors.contact_phone && <p className="text-sm text-destructive">{form.errors.contact_phone}</p>}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save General Settings
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
+    );
+}
+
+// ─── Booking Rules Tab ────────────────────────────────────────────────────────
+
+function BookingSettingsTab({ booking }: { booking: BookingSettings }) {
+    const form = useForm({
+        default_max_attendees: booking.default_max_attendees || '',
+        default_require_approval: booking.default_require_approval || '0',
+        registration_cutoff_hours: booking.registration_cutoff_hours || '',
+        waitlist_enabled: booking.waitlist_enabled || '0',
+    });
+
+    function handleSubmit(e: FormEvent) {
+        e.preventDefault();
+        form.post(route('admin.settings.booking'), { preserveScroll: true });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <CalendarCheck className="h-5 w-5" />
+                    Booking Rules
+                </CardTitle>
+                <CardDescription>
+                    Default rules applied to new events. Individual events can override these.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="max-attendees">Default Max Attendees per Registration</Label>
+                            <Input
+                                id="max-attendees"
+                                type="number"
+                                min="1"
+                                placeholder="10"
+                                value={form.data.default_max_attendees}
+                                onChange={e => form.setData('default_max_attendees', e.target.value)}
+                            />
+                            {form.errors.default_max_attendees && <p className="text-sm text-destructive">{form.errors.default_max_attendees}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="cutoff-hours">Registration Cutoff (hours before event)</Label>
+                            <Input
+                                id="cutoff-hours"
+                                type="number"
+                                min="0"
+                                placeholder="24"
+                                value={form.data.registration_cutoff_hours}
+                                onChange={e => form.setData('registration_cutoff_hours', e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Close registration this many hours before the event starts. 0 = no cutoff.
+                            </p>
+                            {form.errors.registration_cutoff_hours && <p className="text-sm text-destructive">{form.errors.registration_cutoff_hours}</p>}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="require-approval" className="text-base">Require Approval</Label>
+                            <p className="text-sm text-muted-foreground">
+                                New registrations require admin approval before confirmation.
+                            </p>
+                        </div>
+                        <Switch
+                            id="require-approval"
+                            checked={form.data.default_require_approval === '1'}
+                            onCheckedChange={(checked) => form.setData('default_require_approval', checked ? '1' : '0')}
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="waitlist" className="text-base">Enable Waitlist</Label>
+                            <p className="text-sm text-muted-foreground">
+                                Allow users to join a waitlist when tickets are sold out.
+                            </p>
+                        </div>
+                        <Switch
+                            id="waitlist"
+                            checked={form.data.waitlist_enabled === '1'}
+                            onCheckedChange={(checked) => form.setData('waitlist_enabled', checked ? '1' : '0')}
+                        />
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Booking Rules
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
+    );
+}
+
+// ─── Notification Settings Tab ────────────────────────────────────────────────
+
+function NotificationSettingsTab({ notifications }: { notifications: NotificationSettings }) {
+    const form = useForm({
+        send_confirmation_email: notifications.send_confirmation_email || '1',
+        send_reminder_email: notifications.send_reminder_email || '0',
+        reminder_hours: notifications.reminder_hours || '24',
+        send_cancellation_email: notifications.send_cancellation_email || '1',
+    });
+
+    function handleSubmit(e: FormEvent) {
+        e.preventDefault();
+        form.post(route('admin.settings.notifications'), { preserveScroll: true });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Bell className="h-5 w-5" />
+                    Email Notifications
+                </CardTitle>
+                <CardDescription>
+                    Control which automated emails are sent to registrants.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="confirmation-email" className="text-base">Confirmation Email</Label>
+                            <p className="text-sm text-muted-foreground">
+                                Send a confirmation email when a registration is approved or paid.
+                            </p>
+                        </div>
+                        <Switch
+                            id="confirmation-email"
+                            checked={form.data.send_confirmation_email === '1'}
+                            onCheckedChange={(checked) => form.setData('send_confirmation_email', checked ? '1' : '0')}
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="reminder-email" className="text-base">Reminder Email</Label>
+                            <p className="text-sm text-muted-foreground">
+                                Send a reminder email before the event starts.
+                            </p>
+                        </div>
+                        <Switch
+                            id="reminder-email"
+                            checked={form.data.send_reminder_email === '1'}
+                            onCheckedChange={(checked) => form.setData('send_reminder_email', checked ? '1' : '0')}
+                        />
+                    </div>
+
+                    {form.data.send_reminder_email === '1' && (
+                        <div className="space-y-2 ml-4 pl-4 border-l-2">
+                            <Label htmlFor="reminder-hours">Reminder Hours Before Event</Label>
+                            <Input
+                                id="reminder-hours"
+                                type="number"
+                                min="1"
+                                max="168"
+                                placeholder="24"
+                                value={form.data.reminder_hours}
+                                onChange={e => form.setData('reminder_hours', e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                How many hours before the event to send the reminder (1–168).
+                            </p>
+                            {form.errors.reminder_hours && <p className="text-sm text-destructive">{form.errors.reminder_hours}</p>}
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="cancellation-email" className="text-base">Cancellation Email</Label>
+                            <p className="text-sm text-muted-foreground">
+                                Send an email when a registration is cancelled.
+                            </p>
+                        </div>
+                        <Switch
+                            id="cancellation-email"
+                            checked={form.data.send_cancellation_email === '1'}
+                            onCheckedChange={(checked) => form.setData('send_cancellation_email', checked ? '1' : '0')}
+                        />
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Notification Settings
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
+    );
+}
+
+// ─── Invoicing Settings Tab ───────────────────────────────────────────────────
+
+function InvoicingSettingsTab({ invoicing }: { invoicing: InvoicingSettings }) {
+    const form = useForm({
+        company_name: invoicing.company_name || '',
+        company_registration_no: invoicing.company_registration_no || '',
+        company_address: invoicing.company_address || '',
+        invoice_prefix: invoicing.invoice_prefix || 'INV',
+        tax_rate: invoicing.tax_rate || '',
+    });
+
+    function handleSubmit(e: FormEvent) {
+        e.preventDefault();
+        form.post(route('admin.settings.invoicing'), { preserveScroll: true });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Invoice Settings
+                </CardTitle>
+                <CardDescription>
+                    Company details and formatting options printed on invoices.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="inv-company-name">Company Name</Label>
+                            <Input
+                                id="inv-company-name"
+                                placeholder="Malaysian Takaful Association"
+                                value={form.data.company_name}
+                                onChange={e => form.setData('company_name', e.target.value)}
+                            />
+                            {form.errors.company_name && <p className="text-sm text-destructive">{form.errors.company_name}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="inv-reg-no">Company Registration No.</Label>
+                            <Input
+                                id="inv-reg-no"
+                                placeholder="e.g. 200501012345"
+                                value={form.data.company_registration_no}
+                                onChange={e => form.setData('company_registration_no', e.target.value)}
+                            />
+                            {form.errors.company_registration_no && <p className="text-sm text-destructive">{form.errors.company_registration_no}</p>}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="inv-address">Company Address</Label>
+                        <Textarea
+                            id="inv-address"
+                            placeholder="Full company address for invoice header"
+                            value={form.data.company_address}
+                            onChange={e => form.setData('company_address', e.target.value)}
+                            rows={3}
+                        />
+                        {form.errors.company_address && <p className="text-sm text-destructive">{form.errors.company_address}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="inv-prefix">Invoice Prefix</Label>
+                            <Input
+                                id="inv-prefix"
+                                placeholder="INV"
+                                value={form.data.invoice_prefix}
+                                onChange={e => form.setData('invoice_prefix', e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Prefix for invoice numbers, e.g. INV-20260001
+                            </p>
+                            {form.errors.invoice_prefix && <p className="text-sm text-destructive">{form.errors.invoice_prefix}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="inv-tax">Tax Rate (%)</Label>
+                            <Input
+                                id="inv-tax"
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                placeholder="0"
+                                value={form.data.tax_rate}
+                                onChange={e => form.setData('tax_rate', e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Leave empty or 0 for no tax.
+                            </p>
+                            {form.errors.tax_rate && <p className="text-sm text-destructive">{form.errors.tax_rate}</p>}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Invoice Settings
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
+    );
+}
+
+// ─── Localisation Settings Tab ────────────────────────────────────────────────
+
+function LocalisationSettingsTab({ localisation }: { localisation: LocalisationSettings }) {
+    const form = useForm({
+        default_locale: localisation.default_locale || 'en',
+        enable_en: localisation.enable_en || '1',
+        enable_ms: localisation.enable_ms || '1',
+    });
+
+    function handleSubmit(e: FormEvent) {
+        e.preventDefault();
+        form.post(route('admin.settings.localisation'), { preserveScroll: true });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5" />
+                    Localisation Settings
+                </CardTitle>
+                <CardDescription>
+                    Manage language options and default locale for the platform.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="default-locale">Default Language</Label>
+                        <Select
+                            value={form.data.default_locale}
+                            onValueChange={val => form.setData('default_locale', val)}
+                        >
+                            <SelectTrigger id="default-locale">
+                                <SelectValue placeholder="Select default language" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="en">English</SelectItem>
+                                <SelectItem value="ms">Bahasa Melayu</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                            Language used for new visitors and guests without a preference.
+                        </p>
+                        {form.errors.default_locale && <p className="text-sm text-destructive">{form.errors.default_locale}</p>}
+                    </div>
+
+                    <div className="space-y-4">
+                        <Label>Available Languages</Label>
+
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="enable-en" className="text-base">English</Label>
+                                <p className="text-sm text-muted-foreground">Enable English language on the public site.</p>
+                            </div>
+                            <Switch
+                                id="enable-en"
+                                checked={form.data.enable_en === '1'}
+                                onCheckedChange={(checked) => form.setData('enable_en', checked ? '1' : '0')}
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="enable-ms" className="text-base">Bahasa Melayu</Label>
+                                <p className="text-sm text-muted-foreground">Enable Bahasa Melayu language on the public site.</p>
+                            </div>
+                            <Switch
+                                id="enable-ms"
+                                checked={form.data.enable_ms === '1'}
+                                onCheckedChange={(checked) => form.setData('enable_ms', checked ? '1' : '0')}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Localisation Settings
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
+    );
+}
+
+export default function SettingsIndex({ tab, smtp, chipin, general, booking, notifications, invoicing, localisation }: Props) {
     return (
         <AdminLayout>
             <div className="space-y-6">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">System Settings</h1>
                     <p className="text-muted-foreground mt-1">
-                        Manage your email and payment gateway configurations.
+                        Manage system configurations, email, payments, booking rules, and localisation.
                     </p>
                 </div>
 
                 <Tabs defaultValue={tab} className="space-y-6">
-                    <TabsList>
+                    <TabsList className="flex-wrap h-auto gap-1">
+                        <TabsTrigger value="general" className="gap-2">
+                            <Settings className="h-4 w-4" />
+                            General
+                        </TabsTrigger>
                         <TabsTrigger value="smtp" className="gap-2">
                             <Mail className="h-4 w-4" />
                             SMTP Mail
                         </TabsTrigger>
                         <TabsTrigger value="payment" className="gap-2">
                             <CreditCard className="h-4 w-4" />
-                            Payment Gateway
+                            Payment
+                        </TabsTrigger>
+                        <TabsTrigger value="booking" className="gap-2">
+                            <CalendarCheck className="h-4 w-4" />
+                            Booking Rules
+                        </TabsTrigger>
+                        <TabsTrigger value="notifications" className="gap-2">
+                            <Bell className="h-4 w-4" />
+                            Notifications
+                        </TabsTrigger>
+                        <TabsTrigger value="invoicing" className="gap-2">
+                            <FileText className="h-4 w-4" />
+                            Invoicing
+                        </TabsTrigger>
+                        <TabsTrigger value="localisation" className="gap-2">
+                            <Globe className="h-4 w-4" />
+                            Localisation
                         </TabsTrigger>
                     </TabsList>
+
+                    <TabsContent value="general">
+                        <GeneralSettingsTab general={general} />
+                    </TabsContent>
 
                     <TabsContent value="smtp">
                         <SmtpSettingsTab smtp={smtp} />
@@ -620,6 +1186,22 @@ export default function SettingsIndex({ tab, smtp, chipin }: Props) {
 
                     <TabsContent value="payment">
                         <ChipInSettingsTab chipin={chipin} />
+                    </TabsContent>
+
+                    <TabsContent value="booking">
+                        <BookingSettingsTab booking={booking} />
+                    </TabsContent>
+
+                    <TabsContent value="notifications">
+                        <NotificationSettingsTab notifications={notifications} />
+                    </TabsContent>
+
+                    <TabsContent value="invoicing">
+                        <InvoicingSettingsTab invoicing={invoicing} />
+                    </TabsContent>
+
+                    <TabsContent value="localisation">
+                        <LocalisationSettingsTab localisation={localisation} />
                     </TabsContent>
                 </Tabs>
             </div>

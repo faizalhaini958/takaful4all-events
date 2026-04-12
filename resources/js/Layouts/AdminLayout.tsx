@@ -6,6 +6,7 @@ import {
     FileText,
     PenSquare,
     Image,
+    ImageIcon,
     Menu,
     Globe,
     UserCircle,
@@ -56,9 +57,11 @@ import {
 const NAV = [
     { href: '/admin',          label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/events',   label: 'Events',    icon: CalendarDays },
+    { href: '/admin/users',    label: 'Users',     icon: Users },
     { href: '/admin/pages',    label: 'Pages',     icon: FileText },
     { href: '/admin/posts',    label: 'Posts',     icon: PenSquare },
     { href: '/admin/media',    label: 'Media',     icon: Image },
+    { href: '/admin/banners',  label: 'Banners',   icon: ImageIcon },
     { href: '/admin/menus',    label: 'Menus',     icon: Menu },
     { href: '/admin/settings', label: 'Settings',  icon: Settings },
 ];
@@ -68,7 +71,7 @@ const NAV = [
  * e.g. /admin/events/leadership-summit-2026/edit → leadership-summit-2026
  */
 function getEventSlugFromPath(path: string): string | null {
-    const match = path.match(/^\/admin\/events\/([^/]+)\/(edit|tickets|products|registrations)/);
+    const match = path.match(/^\/admin\/events\/([^/]+)\/(edit|tickets|products|registrations|zones|check-in)/);
     return match ? match[1] : null;
 }
 

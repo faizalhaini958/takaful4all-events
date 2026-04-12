@@ -10,6 +10,7 @@ class Media extends Model
     protected $fillable = [
         'disk',
         'path',
+        'thumbnail_path',
         'url',
         'alt',
         'title',
@@ -24,6 +25,8 @@ class Media extends Model
         'width'  => 'integer',
         'height' => 'integer',
     ];
+
+    protected $appends = ['thumbnail_url'];
 
     /**
      * Get the full URL for the media file.
@@ -48,6 +51,15 @@ class Media extends Model
 
         // Fallback: assume it's just the storage path
         return config('app.url') . '/storage/' . $value;
+    }
+
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if (!$this->thumbnail_path) {
+            return null;
+        }
+
+        return config('app.url') . '/storage/' . $this->thumbnail_path;
     }
 
     public function events(): HasMany

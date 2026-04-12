@@ -165,7 +165,7 @@ class UserDashboardController extends Controller
     public function orderDetail(Request $request, int $id): Response
     {
         $order = EventRegistration::where('email', $request->user()->email)
-            ->with(['event.media', 'ticket', 'products.product'])
+            ->with(['event.media', 'ticket', 'products.product', 'invoice'])
             ->findOrFail($id);
 
         return Inertia::render('User/OrderDetail', [

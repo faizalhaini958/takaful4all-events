@@ -47,8 +47,9 @@ class EventController extends Controller
     public function edit(Event $event): Response
     {
         return Inertia::render('Admin/Events/Edit', [
-            'event'     => $event->load('media'),
-            'mediaList' => Media::latest()->get(['id', 'url', 'title']),
+            'event'         => $event->load('media'),
+            'mediaList'     => Media::latest()->get(['id', 'url', 'title']),
+            'venueMapMedia' => $event->venueMap,
         ]);
     }
 

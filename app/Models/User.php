@@ -23,6 +23,11 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'company_name',
+        'company_registration_no',
+        'company_address',
+        'company_phone',
+        'locale',
     ];
 
     /**
@@ -61,5 +66,22 @@ class User extends Authenticatable
     public function registrations(): HasMany
     {
         return $this->hasMany(EventRegistration::class, 'email', 'email');
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isCompany(): bool
+    {
+        return $this->role === 'company';
+    }
+
+    public function isPublic(): bool
+    {
+        return $this->role === 'public';
     }
 }

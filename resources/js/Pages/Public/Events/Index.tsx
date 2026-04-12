@@ -3,6 +3,7 @@ import EventCard from '@/Components/EventCard';
 import { Link, router } from '@inertiajs/react';
 import { CalendarDays } from 'lucide-react';
 import { type Event, type PaginatedData } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
 interface Props {
     events: PaginatedData<Event>;
@@ -10,12 +11,13 @@ interface Props {
 }
 
 const FILTERS = [
-    { value: 'all',      label: 'All Events' },
-    { value: 'upcoming', label: 'Upcoming' },
-    { value: 'past',     label: 'Past' },
+    { value: 'all',      label: 'events.all' },
+    { value: 'upcoming', label: 'events.upcoming' },
+    { value: 'past',     label: 'events.past' },
 ];
 
 export default function EventsIndex({ events, currentStatus }: Props) {
+    const { t } = useTranslation();
     const handleFilter = (status: string) => {
         router.get('/events', status !== 'all' ? { status } : {}, { preserveScroll: true });
     };
@@ -26,10 +28,10 @@ export default function EventsIndex({ events, currentStatus }: Props) {
             <section className="relative bg-brand-light overflow-hidden">
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-36 md:py-20 md:pb-44">
                     <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-navy uppercase tracking-wide mb-3">
-                        Events
+                        {t('events.title')}
                     </h1>
                     <p className="text-brand-navy/60 text-lg">
-                        Browse all Takaful conferences, meet-ups, and networking events.
+                        {t('events.description')}
                     </p>
                 </div>
                 {/* Layered wave divider */}
@@ -56,7 +58,7 @@ export default function EventsIndex({ events, currentStatus }: Props) {
                                     : 'bg-white text-gray-600 border-gray-200 hover:border-brand hover:text-brand'
                             }`}
                         >
-                            {f.label}
+                            {t(f.label)}
                         </button>
                     ))}
                 </div>
@@ -71,8 +73,8 @@ export default function EventsIndex({ events, currentStatus }: Props) {
                 ) : (
                     <div className="text-center py-24 text-gray-400 flex flex-col items-center gap-4">
                         <CalendarDays className="w-12 h-12 text-brand/30" strokeWidth={1.5} />
-                        <p className="text-lg font-medium text-gray-500">No events found.</p>
-                        <p className="text-sm text-gray-400">Try selecting a different filter above.</p>
+                        <p className="text-lg font-medium text-gray-500">{t('events.no_events')}</p>
+                        <p className="text-sm text-gray-400">{t('events.try_filter')}</p>
                     </div>
                 )}
 

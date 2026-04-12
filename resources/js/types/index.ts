@@ -1,9 +1,23 @@
 // ─── Domain Types ────────────────────────────────────────────────────────────
 
+export interface Banner {
+    id: number;
+    title: string;
+    image_path: string;
+    image_url: string;
+    link_url: string | null;
+    sort_order: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Media {
     id: number;
     disk: string;
     path: string;
+    thumbnail_path: string | null;
+    thumbnail_url: string | null;
     url: string;
     alt: string | null;
     title: string | null;
@@ -28,8 +42,11 @@ export interface Event {
     state: string | null;
     country: string;
     registration_url: string | null;
+    gdrive_link: string | null;
     media_id: number | null;
+    venue_map_media_id: number | null;
     media: Media | null;
+    venue_map: Media | null;
     is_published: boolean;
     rsvp_enabled: boolean;
     rsvp_deadline: string | null;
@@ -39,6 +56,8 @@ export interface Event {
     registration_count?: number;
     is_registration_open?: boolean;
     meta_json: Record<string, unknown> | null;
+    tickets?: EventTicket[];
+    zones?: EventZone[];
     created_at: string;
     updated_at: string;
 }
@@ -48,10 +67,16 @@ export interface Event {
 export interface EventTicket {
     id: number;
     event_id: number;
+    event_zone_id: number | null;
     name: string;
+    color: string | null;
     description: string | null;
     type: 'free' | 'paid';
     price: number;
+    early_bird_price: number | null;
+    early_bird_end_at: string | null;
+    current_price: number;
+    is_early_bird: boolean;
     currency: string;
     quantity: number | null;
     max_per_order: number;
@@ -62,6 +87,8 @@ export interface EventTicket {
     sold_count: number;
     available_count: number | null;
     is_on_sale: boolean;
+    discount_tiers?: TicketDiscountTier[];
+    zone?: EventZone | null;
     created_at: string;
     updated_at: string;
 }
@@ -109,8 +136,10 @@ export interface EventRegistration {
     id: number;
     event_id: number;
     ticket_id: number;
+    user_id: number | null;
     event?: Event;
     ticket?: EventTicket;
+    user?: AuthUser;
     reference_no: string;
     name: string;
     email: string;
@@ -121,6 +150,7 @@ export interface EventRegistration {
     status: RegistrationStatus;
     quantity: number;
     subtotal: number;
+    discount_amount: number;
     products_total: number;
     total_amount: number;
     payment_status: PaymentStatus;
@@ -129,6 +159,7 @@ export interface EventRegistration {
     notes: string | null;
     checked_in_at: string | null;
     products?: EventRegistrationProduct[];
+    invoice?: Invoice | null;
     meta_json: Record<string, unknown> | null;
     created_at: string;
     updated_at: string;
@@ -205,12 +236,67 @@ export interface PaginatedData<T> {
 
 // ─── Auth / User ──────────────────────────────────────────────────────────────
 
+export type UserRole = 'admin' | 'editor' | 'company' | 'public';
+
 export interface AuthUser {
     id: number;
     name: string;
     email: string;
     email_verified_at: string | null;
-    role: 'admin' | 'editor';
+    role: UserRole;
+    company_name: string | null;
+    company_registration_no: string | null;
+    company_address: string | null;
+    company_phone: string | null;
+    locale: string;
+}
+
+export interface TicketDiscountTier {
+    id: number;
+    event_ticket_id: number;
+    min_quantity: number;
+    discount_type: 'percentage' | 'fixed';
+    discount_value: number;
+    created_at: string;
+    updated_at: string;
+}
+
+// ─── Zones ───────────────────────────────────────────────────────────────────
+
+export interface EventZone {
+    id: number;
+    event_id: number;
+    name: string;
+    description: string | null;
+    color: string;
+    label_color: string;
+    perks: string[] | null;
+    image_path: string | null;
+    image_url: string | null;
+    capacity: number | null;
+    sort_order: number;
+    tickets_count?: number;
+    created_at: string;
+    updated_at: string;
+}
+
+// ─── Invoices ────────────────────────────────────────────────────────────────
+
+export interface Invoice {
+    id: number;
+    registration_id: number;
+    user_id: number | null;
+    invoice_number: string;
+    company_name: string | null;
+    company_registration_no: string | null;
+    subtotal: number;
+    discount_amount: number;
+    total_amount: number;
+    issued_at: string;
+    pdf_path: string | null;
+    meta_json: Record<string, unknown> | null;
+    created_at: string;
+    updated_at: string;
 }
 
 // ─── Admin Dashboard ─────────────────────────────────────────────────────────
@@ -243,6 +329,9 @@ export interface SharedProps extends Record<string, unknown> {
         error?: string;
     };
     menus: Record<string, MenuItem[]>;
+    translations: Record<string, string>;
+    locale: string;
+    availableLocales: Array<{ code: string; name: string }>;
 }
 
 // ─── PageProps (used by Breeze-generated pages) ───────────────────────────────

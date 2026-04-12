@@ -103,7 +103,7 @@ export default function Dashboard({ stats, recentEvents }: Props) {
                                         <TableCell className="text-sm text-muted-foreground">{event.city ?? '—'}</TableCell>
                                         <TableCell className="text-right">
                                             <Link
-                                                href={`/admin/events/${event.id}/edit`}
+                                                href={`/admin/events/${event.slug}/edit`}
                                                 className="text-sm text-brand-navy hover:underline"
                                             >
                                                 Edit

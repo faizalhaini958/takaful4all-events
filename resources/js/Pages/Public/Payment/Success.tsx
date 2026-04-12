@@ -93,7 +93,7 @@ export default function PaymentSuccess({ registration }: Props) {
                                     <div>
                                         <p className="text-muted-foreground">Amount Paid</p>
                                         <p className="font-medium text-emerald-700">
-                                            RM {(registration.total_amount / 100).toFixed(2)}
+                                            RM {Number(registration.total_amount).toFixed(2)}
                                         </p>
                                     </div>
                                 )}

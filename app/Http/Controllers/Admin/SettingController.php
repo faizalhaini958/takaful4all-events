@@ -22,9 +22,14 @@ class SettingController extends Controller
         $tab = $request->query('tab', 'smtp');
 
         return Inertia::render('Admin/Settings/Index', [
-            'tab'   => $tab,
-            'smtp'  => Setting::getGroup('smtp'),
-            'chipin' => $this->getChipInSettings(),
+            'tab'            => $tab,
+            'smtp'           => Setting::getGroup('smtp'),
+            'chipin'         => $this->getChipInSettings(),
+            'general'        => Setting::getGroup('general'),
+            'booking'        => Setting::getGroup('booking'),
+            'notifications'  => Setting::getGroup('notifications'),
+            'invoicing'      => Setting::getGroup('invoicing'),
+            'localisation'   => Setting::getGroup('localisation'),
         ]);
     }
 
@@ -132,6 +137,92 @@ class SettingController extends Controller
         }
 
         return back()->with('error', $result['message']);
+    }
+
+    /**
+     * Update General settings.
+     */
+    public function updateGeneral(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'site_name'     => 'nullable|string|max:255',
+            'site_logo'     => 'nullable|string|max:500',
+            'footer_text'   => 'nullable|string|max:1000',
+            'contact_email' => 'nullable|email|max:255',
+            'contact_phone' => 'nullable|string|max:50',
+        ]);
+
+        Setting::setGroup('general', $validated);
+
+        return back()->with('success', 'General settings updated successfully.');
+    }
+
+    /**
+     * Update Booking Rules settings.
+     */
+    public function updateBooking(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'default_max_attendees'      => 'nullable|integer|min:1|max:10000',
+            'default_require_approval'   => 'nullable|in:0,1',
+            'registration_cutoff_hours'  => 'nullable|integer|min:0|max:720',
+            'waitlist_enabled'           => 'nullable|in:0,1',
+        ]);
+
+        Setting::setGroup('booking', $validated);
+
+        return back()->with('success', 'Booking rules updated successfully.');
+    }
+
+    /**
+     * Update Notification settings.
+     */
+    public function updateNotifications(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'send_confirmation_email' => 'nullable|in:0,1',
+            'send_reminder_email'     => 'nullable|in:0,1',
+            'reminder_hours'          => 'nullable|integer|min:1|max:168',
+            'send_cancellation_email' => 'nullable|in:0,1',
+        ]);
+
+        Setting::setGroup('notifications', $validated);
+
+        return back()->with('success', 'Notification settings updated successfully.');
+    }
+
+    /**
+     * Update Invoicing settings.
+     */
+    public function updateInvoicing(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'company_name'            => 'nullable|string|max:255',
+            'company_registration_no' => 'nullable|string|max:100',
+            'company_address'         => 'nullable|string|max:1000',
+            'invoice_prefix'          => 'nullable|string|max:20',
+            'tax_rate'                => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        Setting::setGroup('invoicing', $validated);
+
+        return back()->with('success', 'Invoicing settings updated successfully.');
+    }
+
+    /**
+     * Update Localisation settings.
+     */
+    public function updateLocalisation(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'default_locale'   => 'required|in:en,ms',
+            'enable_en'        => 'nullable|in:0,1',
+            'enable_ms'        => 'nullable|in:0,1',
+        ]);
+
+        Setting::setGroup('localisation', $validated);
+
+        return back()->with('success', 'Localisation settings updated successfully.');
     }
 
     /**

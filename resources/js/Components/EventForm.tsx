@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Switch } from '@/Components/ui/switch';
 import { Link } from '@inertiajs/react';
-import { MapPin, Calendar, ExternalLink, Eye, Users, Ticket } from 'lucide-react';
+import { MapPin, Calendar, ExternalLink, Eye, Users, Ticket, Palette, QrCode, FolderOpen } from 'lucide-react';
 import RichEditor from '@/Components/RichEditor';
 import ImageUpload from '@/Components/ImageUpload';
 import { type Media, type Event } from '@/types';
@@ -24,8 +24,10 @@ export interface EventFormData {
     state: string;
     country: string;
     registration_url: string;
+    gdrive_link: string;
     is_published: string;
     media_id: string;
+    venue_map_media_id: string;
     rsvp_enabled: boolean;
     rsvp_deadline: string;
     max_attendees: string;
@@ -40,6 +42,7 @@ interface Props {
     onSubmit: (e: React.FormEvent) => void;
     submitLabel: string;
     currentMedia?: Media | null;
+    currentVenueMap?: Media | null;
     /** For the "View on site" link in edit mode */
     eventSlug?: string;
 }
@@ -99,6 +102,7 @@ export default function EventForm({
     onSubmit,
     submitLabel,
     currentMedia,
+    currentVenueMap,
     eventSlug,
 }: Props) {
     const mapQuery = useMemo(
@@ -308,6 +312,23 @@ export default function EventForm({
                                 {errors.registration_url && <p className="text-sm text-red-600 mt-1">{errors.registration_url}</p>}
                             </div>
 
+                            <div>
+                                <Label htmlFor="gdrive_link">
+                                    <FolderOpen className="w-3.5 h-3.5 inline mr-1" />
+                                    Google Drive Link <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+                                </Label>
+                                <Input
+                                    id="gdrive_link"
+                                    type="url"
+                                    value={data.gdrive_link}
+                                    onChange={e => setData('gdrive_link', e.target.value)}
+                                    className="mt-1"
+                                    placeholder="https://drive.google.com/…"
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">Link to photo/video album for this event.</p>
+                                {errors.gdrive_link && <p className="text-sm text-red-600 mt-1">{errors.gdrive_link}</p>}
+                            </div>
+
                             <div className="flex flex-col gap-2 pt-2">
                                 <Button type="submit" disabled={processing} className="w-full bg-brand hover:bg-brand-dark">
                                     {processing ? 'Saving…' : submitLabel}
@@ -340,6 +361,27 @@ export default function EventForm({
                                 onClear={() => setData('media_id', 'none')}
                             />
                             {errors.media_id && <p className="text-sm text-red-600 mt-2">{errors.media_id}</p>}
+                        </CardContent>
+                    </Card>
+
+                    {/* Venue / Seating Map */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-brand" /> Venue / Seating Map
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-xs text-muted-foreground mb-3">
+                                Upload a seating layout or venue map image (PNG/JPG) shown on the registration page.
+                            </p>
+                            <ImageUpload
+                                value={data.venue_map_media_id}
+                                currentMedia={currentVenueMap}
+                                onChange={(id) => setData('venue_map_media_id', id)}
+                                onClear={() => setData('venue_map_media_id', 'none')}
+                            />
+                            {errors.venue_map_media_id && <p className="text-sm text-red-600 mt-2">{errors.venue_map_media_id}</p>}
                         </CardContent>
                     </Card>
 
@@ -417,6 +459,18 @@ export default function EventForm({
                                                 className="flex items-center gap-1.5 text-xs text-brand hover:underline font-medium"
                                             >
                                                 <Users className="w-3.5 h-3.5" /> View Registrations
+                                            </Link>
+                                            <Link
+                                                href={`/admin/events/${eventSlug}/zones`}
+                                                className="flex items-center gap-1.5 text-xs text-brand hover:underline font-medium"
+                                            >
+                                                <Palette className="w-3.5 h-3.5" /> Manage Zones
+                                            </Link>
+                                            <Link
+                                                href={`/admin/events/${eventSlug}/check-in`}
+                                                className="flex items-center gap-1.5 text-xs text-brand hover:underline font-medium"
+                                            >
+                                                <QrCode className="w-3.5 h-3.5" /> Check-In Scanner
                                             </Link>
                                         </div>
                                     )}
