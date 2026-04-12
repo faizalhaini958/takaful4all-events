@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Post;
@@ -22,6 +23,12 @@ class DashboardController extends Controller
                     'past'     => Event::where('is_published', true)->where('start_at', '<=', now())->count(),
                     'draft'    => Event::where('is_published', false)->count(),
                 ],
+                'registrations' => [
+                    'total'     => EventRegistration::count(),
+                    'confirmed' => EventRegistration::where('status', 'confirmed')->count(),
+                    'pending'   => EventRegistration::where('status', 'pending')->count(),
+                    'revenue'   => EventRegistration::whereNotIn('status', ['cancelled'])->sum('total_amount'),
+                ],
                 'posts' => [
                     'total'   => Post::count(),
                     'podcast' => Post::where('type', 'podcast')->count(),
@@ -32,8 +39,9 @@ class DashboardController extends Controller
                 'media' => Media::count(),
             ],
             'recentEvents' => Event::with('media')
+                ->withCount('registrations')
                 ->latest()
-                ->take(10)
+                ->take(5)
                 ->get(),
         ]);
     }

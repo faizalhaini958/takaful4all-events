@@ -33,6 +33,7 @@ interface Props {
     submitLabel:  string;
     currentMedia?: Media | null;
     postSlug?:   string;
+    onCancel?:   () => void;
 }
 
 function generateSlug(value: string) {
@@ -78,6 +79,7 @@ export default function PostForm({
     submitLabel,
     currentMedia,
     postSlug,
+    onCancel,
 }: Props) {
     const [activeMedia, setActiveMedia]   = useState<Media | null | undefined>(currentMedia);
     const [fetchingThumb, setFetchingThumb] = useState(false);
@@ -283,9 +285,13 @@ export default function PostForm({
                                         <Eye className="w-3.5 h-3.5" /> View on site
                                     </a>
                                 )}
-                                <Button variant="outline" asChild className="w-full">
-                                    <Link href="/admin/posts">Cancel</Link>
-                                </Button>
+                                {onCancel ? (
+                                    <Button type="button" variant="outline" className="w-full" onClick={onCancel}>Cancel</Button>
+                                ) : (
+                                    <Button variant="outline" asChild className="w-full">
+                                        <Link href="/admin/posts">Cancel</Link>
+                                    </Button>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

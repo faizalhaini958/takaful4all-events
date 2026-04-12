@@ -1,7 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
@@ -9,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/Components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
+import { Separator } from '@/Components/ui/separator';
 import { Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { ChevronLeft, Plus, Pencil, Trash2, Ticket } from 'lucide-react';
+import { ChevronLeft, Plus, Pencil, Trash2, Ticket, MoreHorizontal, Zap, Tag } from 'lucide-react';
 import { type Event, type EventTicket, type EventZone } from '@/types';
 
 interface Props {
@@ -95,11 +95,11 @@ export default function EventTickets({ event, tickets, zones }: Props) {
 
     return (
         <AdminLayout>
-            <div className="space-y-6">
+            <div className="space-y-4">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Link href={`/admin/events/${event.slug}/edit`} className="text-muted-foreground hover:text-foreground transition-colors">
+                        <Link href="/admin/events" className="text-muted-foreground hover:text-foreground transition-colors">
                             <ChevronLeft className="w-5 h-5" />
                         </Link>
                         <div>
@@ -107,99 +107,175 @@ export default function EventTickets({ event, tickets, zones }: Props) {
                             <p className="text-sm text-muted-foreground">{event.title}</p>
                         </div>
                     </div>
-                    <Button onClick={openCreate} className="bg-brand hover:bg-brand-dark">
-                        <Plus className="w-4 h-4 mr-1" /> Add Ticket
+                    <Button onClick={openCreate}>
+                        <Plus className="w-4 h-4 mr-1.5" /> Add Ticket
                     </Button>
                 </div>
 
+                {/* Summary stats */}
+                {tickets.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <div className="rounded-xl border border-border/60 p-3.5">
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Total Tickets</p>
+                            <p className="text-2xl font-bold tabular-nums text-foreground">{tickets.length}</p>
+                        </div>
+                        <div className="rounded-xl border border-border/60 p-3.5 bg-emerald-500/5">
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">On Sale</p>
+                            <p className="text-2xl font-bold tabular-nums text-foreground">{tickets.filter(t => t.is_on_sale).length}</p>
+                        </div>
+                        <div className="rounded-xl border border-border/60 p-3.5 bg-primary/5">
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary mb-1">Total Sold</p>
+                            <p className="text-2xl font-bold tabular-nums text-foreground">{tickets.reduce((sum, t) => sum + t.sold_count, 0)}</p>
+                        </div>
+                        <div className="rounded-xl border border-border/60 p-3.5 bg-amber-500/5">
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">Total Capacity</p>
+                            <p className="text-2xl font-bold tabular-nums text-foreground">
+                                {tickets.every(t => t.quantity !== null)
+                                    ? tickets.reduce((sum, t) => sum + (t.quantity ?? 0), 0)
+                                    : '∞'}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Tickets table */}
-                <Card>
-                    <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Zone</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Price</TableHead>
-                                    <TableHead>Sold / Capacity</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {tickets.map(ticket => (
-                                    <TableRow key={ticket.id}>
-                                        <TableCell className="font-medium">
-                                            <div className="flex items-center gap-2">
-                                                {ticket.color && (
-                                                    <div className="w-4 h-4 rounded-full flex-shrink-0 border border-gray-200" style={{ backgroundColor: ticket.color }} />
-                                                )}
-                                                {ticket.name}
+                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Zone</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Price</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sold / Capacity</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {tickets.map(ticket => (
+                                <TableRow key={ticket.id}>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2.5">
+                                            {ticket.color && (
+                                                <div className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-1 ring-border/60" style={{ backgroundColor: ticket.color }} />
+                                            )}
+                                            <span className="text-foreground">{ticket.name}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        {ticket.zone ? (
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-3 h-3 rounded-full ring-1 ring-border/40" style={{ backgroundColor: ticket.zone.color }} />
+                                                <span className="text-sm text-foreground">{ticket.zone.name}</span>
                                             </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {ticket.zone ? (
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ticket.zone.color }} />
-                                                    <span className="text-sm">{ticket.zone.name}</span>
+                                        ) : (
+                                            <span className="text-muted-foreground/50">—</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold capitalize ${
+                                            ticket.type === 'paid'
+                                                ? 'bg-primary/15 text-primary border-primary/30'
+                                                : 'bg-muted text-muted-foreground border-muted-foreground/20'
+                                        }`}>
+                                            {ticket.type}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell>
+                                        {ticket.type === 'paid' ? (
+                                            <div className="flex items-center gap-1.5">
+                                                {ticket.is_early_bird ? (
+                                                    <>
+                                                        <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                                                            {ticket.currency} {Number(ticket.early_bird_price).toFixed(2)}
+                                                        </span>
+                                                        <span className="text-xs text-muted-foreground/60 line-through tabular-nums">
+                                                            {Number(ticket.price).toFixed(2)}
+                                                        </span>
+                                                        <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                                                            <Zap className="w-2.5 h-2.5 mr-0.5" /> Early Bird
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <span className="font-medium tabular-nums text-foreground">
+                                                        {ticket.currency} {Number(ticket.price).toFixed(2)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <span className="text-muted-foreground">Free</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold tabular-nums text-foreground">{ticket.sold_count}</span>
+                                            <span className="text-muted-foreground/50">/</span>
+                                            <span className="tabular-nums text-muted-foreground">{ticket.quantity ?? '∞'}</span>
+                                            {ticket.quantity !== null && ticket.sold_count > 0 && (
+                                                <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full bg-primary transition-all"
+                                                        style={{ width: `${Math.min(100, (ticket.sold_count / ticket.quantity) * 100)}%` }}
+                                                    />
                                                 </div>
-                                            ) : (
-                                                <span className="text-muted-foreground text-sm">—</span>
                                             )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={ticket.type === 'paid' ? 'default' : 'secondary'}>
-                                                {ticket.type}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            {ticket.type === 'paid' ? (
-                                                <div>
-                                                    {ticket.is_early_bird ? (
-                                                        <>
-                                                            <span className="font-medium text-emerald-600">{ticket.currency} {Number(ticket.early_bird_price).toFixed(2)}</span>
-                                                            <span className="text-xs text-muted-foreground line-through ml-1">{Number(ticket.price).toFixed(2)}</span>
-                                                            <Badge variant="secondary" className="ml-1.5 text-[10px] bg-amber-100 text-amber-800">Early Bird</Badge>
-                                                        </>
-                                                    ) : (
-                                                        <span>{ticket.currency} {Number(ticket.price).toFixed(2)}</span>
-                                                    )}
-                                                </div>
-                                            ) : 'Free'}
-                                        </TableCell>
-                                        <TableCell>
-                                            {ticket.sold_count} / {ticket.quantity ?? '∞'}
-                                        </TableCell>
-                                        <TableCell>
-                                            {ticket.is_on_sale ? (
-                                                <Badge variant="default" className="bg-emerald-600">On Sale</Badge>
-                                            ) : (
-                                                <Badge variant="outline">Off Sale</Badge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-right space-x-2">
-                                            <button onClick={() => openEdit(ticket)} className="text-sm text-brand-navy hover:underline">
-                                                <Pencil className="w-4 h-4 inline" />
-                                            </button>
-                                            <button onClick={() => setDeleteTarget(ticket)} className="text-sm text-red-600 hover:underline">
-                                                <Trash2 className="w-4 h-4 inline" />
-                                            </button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {tickets.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                                            <Ticket className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                                            No tickets yet. Create your first ticket to start accepting registrations.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        {ticket.is_on_sale ? (
+                                            <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                                On Sale
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                                                Off Sale
+                                            </span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="w-12">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-36">
+                                                <DropdownMenuItem onClick={() => openEdit(ticket)}>
+                                                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem onClick={() => setDeleteTarget(ticket)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {tickets.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center py-16 text-muted-foreground">
+                                        <Ticket className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                                        <p className="text-sm">No tickets yet. Create your first ticket to start accepting registrations.</p>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+
+                {/* Table footer */}
+                {tickets.length > 0 && (
+                    <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
+                        <span className="text-sm text-muted-foreground">
+                            <span className="font-medium text-foreground">{tickets.length}</span> ticket{tickets.length !== 1 ? 's' : ''}
+                        </span>
+                        <Button variant="ghost" size="sm" onClick={openCreate} className="text-primary hover:text-primary/80">
+                            <Plus className="w-3.5 h-3.5 mr-1" /> Add another
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Create / Edit Dialog */}
@@ -226,7 +302,7 @@ export default function EventTickets({ event, tickets, zones }: Props) {
                                     type="color"
                                     value={data.color || '#3b82f6'}
                                     onChange={e => setData('color', e.target.value)}
-                                    className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer p-0.5"
+                                    className="w-10 h-10 rounded-lg border border-border cursor-pointer p-0.5"
                                 />
                                 <Input
                                     value={data.color}
@@ -291,10 +367,11 @@ export default function EventTickets({ event, tickets, zones }: Props) {
 
                         {/* Early Bird Pricing */}
                         {data.type === 'paid' && (
-                            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
+                            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm font-semibold text-amber-800">Early Bird Pricing</span>
-                                    <span className="text-xs text-amber-600">(optional)</span>
+                                    <Zap className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                    <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">Early Bird Pricing</span>
+                                    <span className="text-xs text-muted-foreground">(optional)</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -306,7 +383,7 @@ export default function EventTickets({ event, tickets, zones }: Props) {
                                             min="0"
                                             value={data.early_bird_price}
                                             onChange={e => setData('early_bird_price', e.target.value)}
-                                            className="mt-1 bg-white"
+                                            className="mt-1 bg-background"
                                             placeholder="Leave blank for none"
                                         />
                                         {errors.early_bird_price && <p className="text-sm text-red-600 mt-1">{errors.early_bird_price}</p>}
@@ -318,12 +395,12 @@ export default function EventTickets({ event, tickets, zones }: Props) {
                                             type="datetime-local"
                                             value={data.early_bird_end_at}
                                             onChange={e => setData('early_bird_end_at', e.target.value)}
-                                            className="mt-1 bg-white"
+                                            className="mt-1 bg-background"
                                         />
                                         {errors.early_bird_end_at && <p className="text-sm text-red-600 mt-1">{errors.early_bird_end_at}</p>}
                                     </div>
                                 </div>
-                                <p className="text-xs text-amber-700">Set a discounted price that applies until the early bird end date. After that, the regular price is charged.</p>
+                                <p className="text-xs text-muted-foreground">Set a discounted price that applies until the early bird end date. After that, the regular price is charged.</p>
                             </div>
                         )}
 
@@ -356,7 +433,7 @@ export default function EventTickets({ event, tickets, zones }: Props) {
 
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-                            <Button type="submit" disabled={processing} className="bg-brand hover:bg-brand-dark">
+                            <Button type="submit" disabled={processing}>
                                 {processing ? 'Saving…' : editingId ? 'Update Ticket' : 'Create Ticket'}
                             </Button>
                         </DialogFooter>

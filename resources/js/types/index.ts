@@ -282,6 +282,20 @@ export interface EventZone {
 
 // ─── Invoices ────────────────────────────────────────────────────────────────
 
+export interface ShippingZone {
+    id: number;
+    name: string;
+    countries: string[];
+    states: string[] | null;
+    rate: number;
+    rate_type: 'flat' | 'per_item';
+    free_shipping_min: number | null;
+    is_active: boolean;
+    sort_order: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Invoice {
     id: number;
     registration_id: number;
@@ -307,6 +321,12 @@ export interface DashboardStats {
         upcoming: number;
         past: number;
         draft: number;
+    };
+    registrations: {
+        total: number;
+        confirmed: number;
+        pending: number;
+        revenue: number;
     };
     posts: {
         total: number;

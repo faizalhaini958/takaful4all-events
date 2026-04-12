@@ -217,5 +217,24 @@
     "zones.perks": "Perks / Inclusions",
     "zones.label_color": "Label Colour",
     "zones.image": "Zone Image",
-    "zones.seats": ":count seats"
+    "zones.seats": ":count seats",
+
+    "shipping.title": "Shipping Zones",
+    "shipping.description": "Manage shipping zones by country for event product delivery.",
+    "shipping.add_zone": "Add Zone",
+    "shipping.no_zones": "No shipping zones configured",
+    "shipping.no_zones_desc": "Create a shipping zone to set delivery rates for event products.",
+    "shipping.zone_name": "Zone Name",
+    "shipping.countries": "Countries",
+    "shipping.rate": "Rate",
+    "shipping.rate_type": "Rate Type",
+    "shipping.flat": "Flat rate per order",
+    "shipping.per_item": "Per item",
+    "shipping.free_shipping_min": "Free Shipping Minimum",
+    "shipping.status": "Status",
+    "shipping.active": "Active",
+    "shipping.inactive": "Inactive",
+    "shipping.create_zone": "Create Shipping Zone",
+    "shipping.edit_zone": "Edit Shipping Zone",
+    "shipping.more_countries": "+:count more"
 }

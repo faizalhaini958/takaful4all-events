@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\ShippingZoneController as AdminShippingZoneController;
 use App\Http\Controllers\ChipInWebhookController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocaleController;
@@ -184,6 +185,11 @@ Route::prefix('admin')
         Route::post('settings/notifications', [AdminSettingController::class, 'updateNotifications'])->name('settings.notifications');
         Route::post('settings/invoicing', [AdminSettingController::class, 'updateInvoicing'])->name('settings.invoicing');
         Route::post('settings/localisation', [AdminSettingController::class, 'updateLocalisation'])->name('settings.localisation');
+
+        // Shipping Zones
+        Route::post('settings/shipping-zones', [AdminShippingZoneController::class, 'store'])->name('shipping-zones.store');
+        Route::put('settings/shipping-zones/{zone}', [AdminShippingZoneController::class, 'update'])->name('shipping-zones.update');
+        Route::delete('settings/shipping-zones/{zone}', [AdminShippingZoneController::class, 'destroy'])->name('shipping-zones.destroy');
 
         // Profile
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');

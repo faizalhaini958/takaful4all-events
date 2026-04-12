@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\ShippingZone;
 use App\Services\ChipInService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class SettingController extends Controller
             'notifications'  => Setting::getGroup('notifications'),
             'invoicing'      => Setting::getGroup('invoicing'),
             'localisation'   => Setting::getGroup('localisation'),
+            'shippingZones'  => ShippingZone::ordered()->get(),
         ]);
     }
 

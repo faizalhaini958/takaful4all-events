@@ -16,10 +16,13 @@ class EventController extends Controller
 {
     public function index(): Response
     {
+        $perPage = (int) request()->input('per_page', 15);
+        $perPage = in_array($perPage, [10, 15, 25, 50]) ? $perPage : 15;
+
         $events = Event::with('media')
-            ->withCount('registrations')
+            ->withCount(['registrations', 'tickets', 'products', 'zones'])
             ->latest()
-            ->paginate(15)
+            ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('Admin/Events/Index', [

@@ -57,6 +57,7 @@ import {
 const NAV = [
     { href: '/admin',          label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/events',   label: 'Events',    icon: CalendarDays },
+    { href: '/admin/orders',   label: 'Orders',    icon: ShoppingCart },
     { href: '/admin/users',    label: 'Users',     icon: Users },
     { href: '/admin/pages',    label: 'Pages',     icon: FileText },
     { href: '/admin/posts',    label: 'Posts',     icon: PenSquare },
@@ -64,6 +65,12 @@ const NAV = [
     { href: '/admin/banners',  label: 'Banners',   icon: ImageIcon },
     { href: '/admin/menus',    label: 'Menus',     icon: Menu },
     { href: '/admin/settings', label: 'Settings',  icon: Settings },
+];
+
+const EVENTS_SUB = [
+    { href: '/admin/registrations', label: 'All Registrations', icon: ClipboardList },
+    { href: '/admin/tickets',       label: 'All Tickets',       icon: Ticket },
+    { href: '/admin/products',      label: 'All Products',      icon: ShoppingBag },
 ];
 
 /**
@@ -76,12 +83,11 @@ function getEventSlugFromPath(path: string): string | null {
 }
 
 function AdminSidebar({ currentPath }: { currentPath: string }) {
-    const isRegistrationSection =
+    const isEventsSection =
+        currentPath.startsWith('/admin/events') ||
         currentPath.startsWith('/admin/registrations') ||
         currentPath.startsWith('/admin/tickets') ||
-        currentPath.startsWith('/admin/products') ||
-        currentPath.startsWith('/admin/orders') ||
-        /\/admin\/events\/[^/]+\/(registrations|tickets|products)/.test(currentPath);
+        currentPath.startsWith('/admin/products');
 
     return (
         <Sidebar collapsible="icon">
@@ -116,36 +122,23 @@ function AdminSidebar({ currentPath }: { currentPath: string }) {
                                     (item.href !== '/admin' && currentPath.startsWith(item.href));
                                 const Icon = item.icon;
 
-                                // Insert Registration collapsible after Events
+                                // Events with sub-items for global views
                                 if (item.href === '/admin/events') {
-                                    return [
-                                        <SidebarMenuItem key={item.href}>
-                                            <SidebarMenuButton
-                                                asChild
-                                                isActive={active && !isRegistrationSection}
-                                                tooltip={item.label}
-                                            >
-                                                <Link href={item.href}>
-                                                    <Icon />
-                                                    <span>{item.label}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>,
-
+                                    return (
                                         <Collapsible
-                                            key="registration"
+                                            key="events"
                                             asChild
-                                            defaultOpen={isRegistrationSection}
+                                            defaultOpen={isEventsSection}
                                             className="group/collapsible"
                                         >
                                             <SidebarMenuItem>
                                                 <CollapsibleTrigger asChild>
                                                     <SidebarMenuButton
-                                                        tooltip="Registration"
-                                                        isActive={isRegistrationSection}
+                                                        tooltip={item.label}
+                                                        isActive={isEventsSection}
                                                     >
-                                                        <ClipboardList />
-                                                        <span>Registration</span>
+                                                        <Icon />
+                                                        <span>{item.label}</span>
                                                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                                                     </SidebarMenuButton>
                                                 </CollapsibleTrigger>
@@ -154,52 +147,32 @@ function AdminSidebar({ currentPath }: { currentPath: string }) {
                                                         <SidebarMenuSubItem>
                                                             <SidebarMenuSubButton
                                                                 asChild
-                                                                isActive={currentPath.startsWith('/admin/registrations')}
+                                                                isActive={currentPath === '/admin/events' || currentPath.startsWith('/admin/events/')}
                                                             >
-                                                                <Link href="/admin/registrations">
-                                                                    <Users className="w-3.5 h-3.5" />
-                                                                    <span>All Registrations</span>
+                                                                <Link href="/admin/events">
+                                                                    <CalendarDays className="w-3.5 h-3.5" />
+                                                                    <span>All Events</span>
                                                                 </Link>
                                                             </SidebarMenuSubButton>
                                                         </SidebarMenuSubItem>
-                                                        <SidebarMenuSubItem>
-                                                            <SidebarMenuSubButton
-                                                                asChild
-                                                                isActive={currentPath.startsWith('/admin/tickets') || currentPath.includes('/tickets')}
-                                                            >
-                                                                <Link href="/admin/tickets">
-                                                                    <Ticket className="w-3.5 h-3.5" />
-                                                                    <span>Manage Tickets</span>
-                                                                </Link>
-                                                            </SidebarMenuSubButton>
-                                                        </SidebarMenuSubItem>
-                                                        <SidebarMenuSubItem>
-                                                            <SidebarMenuSubButton
-                                                                asChild
-                                                                isActive={currentPath.startsWith('/admin/products') || currentPath.includes('/products')}
-                                                            >
-                                                                <Link href="/admin/products">
-                                                                    <ShoppingBag className="w-3.5 h-3.5" />
-                                                                    <span>Manage Products</span>
-                                                                </Link>
-                                                            </SidebarMenuSubButton>
-                                                        </SidebarMenuSubItem>
-                                                        <SidebarMenuSubItem>
-                                                            <SidebarMenuSubButton
-                                                                asChild
-                                                                isActive={currentPath.startsWith('/admin/orders')}
-                                                            >
-                                                                <Link href="/admin/orders">
-                                                                    <ShoppingCart className="w-3.5 h-3.5" />
-                                                                    <span>Orders</span>
-                                                                </Link>
-                                                            </SidebarMenuSubButton>
-                                                        </SidebarMenuSubItem>
+                                                        {EVENTS_SUB.map(sub => (
+                                                            <SidebarMenuSubItem key={sub.href}>
+                                                                <SidebarMenuSubButton
+                                                                    asChild
+                                                                    isActive={currentPath.startsWith(sub.href)}
+                                                                >
+                                                                    <Link href={sub.href}>
+                                                                        <sub.icon className="w-3.5 h-3.5" />
+                                                                        <span>{sub.label}</span>
+                                                                    </Link>
+                                                                </SidebarMenuSubButton>
+                                                            </SidebarMenuSubItem>
+                                                        ))}
                                                     </SidebarMenuSub>
                                                 </CollapsibleContent>
                                             </SidebarMenuItem>
-                                        </Collapsible>,
-                                    ];
+                                        </Collapsible>
+                                    );
                                 }
 
                                 return (

@@ -217,5 +217,24 @@
     "zones.perks": "Kelebihan / Keistimewaan",
     "zones.label_color": "Warna Label",
     "zones.image": "Gambar Zon",
-    "zones.seats": ":count tempat duduk"
+    "zones.seats": ":count tempat duduk",
+
+    "shipping.title": "Zon Penghantaran",
+    "shipping.description": "Urus zon penghantaran mengikut negara untuk penghantaran produk acara.",
+    "shipping.add_zone": "Tambah Zon",
+    "shipping.no_zones": "Tiada zon penghantaran dikonfigurasi",
+    "shipping.no_zones_desc": "Cipta zon penghantaran untuk menetapkan kadar penghantaran bagi produk acara.",
+    "shipping.zone_name": "Nama Zon",
+    "shipping.countries": "Negara",
+    "shipping.rate": "Kadar",
+    "shipping.rate_type": "Jenis Kadar",
+    "shipping.flat": "Kadar tetap setiap pesanan",
+    "shipping.per_item": "Setiap item",
+    "shipping.free_shipping_min": "Minimum Penghantaran Percuma",
+    "shipping.status": "Status",
+    "shipping.active": "Aktif",
+    "shipping.inactive": "Tidak Aktif",
+    "shipping.create_zone": "Cipta Zon Penghantaran",
+    "shipping.edit_zone": "Edit Zon Penghantaran",
+    "shipping.more_countries": "+:count lagi"
 }

@@ -21,7 +21,7 @@ class EventRegistrationController extends Controller
         $status = request('status', 'all');
         $eventSlug = request('event', '');
 
-        $query = EventRegistration::with(['event.media', 'ticket'])
+        $query = EventRegistration::with(['event.media', 'ticket', 'products.product'])
             ->latest();
 
         if ($search) {

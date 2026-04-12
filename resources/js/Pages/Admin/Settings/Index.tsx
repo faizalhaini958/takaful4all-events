@@ -1,5 +1,5 @@
 import { useForm, usePage, router } from '@inertiajs/react';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useState, useMemo } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
@@ -9,6 +9,22 @@ import { Button } from '@/Components/ui/button';
 import { Switch } from '@/Components/ui/switch';
 import { Badge } from '@/Components/ui/badge';
 import { Textarea } from '@/Components/ui/textarea';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/Components/ui/dialog';
 import {
     Select,
     SelectContent,
@@ -35,7 +51,14 @@ import {
     Bell,
     FileText,
     Globe,
+    Truck,
+    Plus,
+    Pencil,
+    Trash2,
+    X,
+    Search,
 } from 'lucide-react';
+import { ShippingZone } from '@/types';
 
 interface SmtpSettings {
     host: string;
@@ -102,6 +125,7 @@ interface Props {
     notifications: NotificationSettings;
     invoicing: InvoicingSettings;
     localisation: LocalisationSettings;
+    shippingZones: ShippingZone[];
 }
 
 function SmtpSettingsTab({ smtp }: { smtp: SmtpSettings }) {
@@ -137,10 +161,10 @@ function SmtpSettingsTab({ smtp }: { smtp: SmtpSettings }) {
 
     return (
         <div className="space-y-6">
-            <Card>
+            <Card className="rounded-xl border-border/60">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Mail className="h-5 w-5" />
+                        <Mail className="h-5 w-5 text-primary" />
                         SMTP Configuration
                     </CardTitle>
                     <CardDescription>
@@ -276,10 +300,10 @@ function SmtpSettingsTab({ smtp }: { smtp: SmtpSettings }) {
             </Card>
 
             {/* Test Email */}
-            <Card>
+            <Card className="rounded-xl border-border/60">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Send className="h-5 w-5" />
+                        <Send className="h-5 w-5 text-primary" />
                         Send Test Email
                     </CardTitle>
                     <CardDescription>
@@ -359,12 +383,12 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
     return (
         <div className="space-y-6">
             {/* API Credentials */}
-            <Card>
+            <Card className="rounded-xl border-border/60">
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
                             <CardTitle className="flex items-center gap-2">
-                                <CreditCard className="h-5 w-5" />
+                                <CreditCard className="h-5 w-5 text-primary" />
                                 Chip-In API Credentials
                             </CardTitle>
                             <CardDescription>
@@ -434,7 +458,7 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
                             )}
                         </div>
 
-                        <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
                             <div className="space-y-0.5">
                                 <Label htmlFor="chipin-test-mode" className="text-base">Test Mode</Label>
                                 <p className="text-sm text-muted-foreground">
@@ -448,7 +472,7 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
                             />
                         </div>
 
-                        <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
                             <div className="space-y-0.5">
                                 <Label htmlFor="chipin-send-receipt" className="text-base">Send Receipt</Label>
                                 <p className="text-sm text-muted-foreground">
@@ -522,10 +546,10 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
             </Card>
 
             {/* Webhook Configuration */}
-            <Card>
+            <Card className="rounded-xl border-border/60">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Webhook className="h-5 w-5" />
+                        <Webhook className="h-5 w-5 text-primary" />
                         Webhook Configuration
                     </CardTitle>
                     <CardDescription>
@@ -546,7 +570,7 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
                     <div className="space-y-2">
                         <Label>Webhook URL</Label>
                         <div className="flex items-center gap-2">
-                            <div className="flex-1 rounded-md border bg-muted/50 px-3 py-2 text-sm font-mono">
+                            <div className="flex-1 rounded-xl border border-border/60 bg-muted/50 px-3 py-2 text-sm font-mono">
                                 {webhookUrl}
                             </div>
                             <Button
@@ -594,7 +618,7 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
                     {/* Supported Events */}
                     <div className="space-y-3">
                         <Label>Supported Webhook Events</Label>
-                        <div className="rounded-md border bg-muted/30 p-4">
+                        <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                                 {[
                                     { event: 'purchase.paid', description: 'Payment completed successfully' },
@@ -604,7 +628,7 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
                                     { event: 'payment.refunded', description: 'Payment was refunded' },
                                 ].map(item => (
                                     <div key={item.event} className="flex items-start gap-2">
-                                        <Shield className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                                        <Shield className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                                         <div>
                                             <code className="text-xs font-mono bg-muted px-1 py-0.5 rounded">{item.event}</code>
                                             <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
@@ -616,16 +640,16 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
                     </div>
 
                     {/* Setup Instructions */}
-                    <div className="rounded-lg border border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30 p-4">
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
                         <div className="flex gap-3">
-                            <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                            <AlertCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                             <div className="space-y-2 text-sm">
-                                <p className="font-medium text-blue-900 dark:text-blue-200">Webhook Setup Instructions</p>
-                                <ol className="list-decimal list-inside space-y-1 text-blue-800 dark:text-blue-300">
+                                <p className="font-medium text-foreground">Webhook Setup Instructions</p>
+                                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
                                     <li>Go to your <a href="https://portal.chip-in.asia/collect/developers" target="_blank" rel="noopener noreferrer" className="underline">Chip-In Developer Portal</a></li>
                                     <li>Navigate to the Webhooks section</li>
                                     <li>Create a new webhook with the URL shown above</li>
-                                    <li>Select the events: <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded text-xs">purchase.paid</code>, <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded text-xs">purchase.payment_failure</code>, <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded text-xs">purchase.cancelled</code>, <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded text-xs">payment.refunded</code></li>
+                                    <li>Select the events: <code className="bg-primary/10 px-1 rounded text-xs">purchase.paid</code>, <code className="bg-primary/10 px-1 rounded text-xs">purchase.payment_failure</code>, <code className="bg-primary/10 px-1 rounded text-xs">purchase.cancelled</code>, <code className="bg-primary/10 px-1 rounded text-xs">payment.refunded</code></li>
                                     <li>Copy the public key and paste it in the field above for signature verification</li>
                                     <li>Save the webhook configuration</li>
                                 </ol>
@@ -655,10 +679,10 @@ function GeneralSettingsTab({ general }: { general: GeneralSettings }) {
     }
 
     return (
-        <Card>
+        <Card className="rounded-xl border-border/60">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
+                    <Settings className="h-5 w-5 text-primary" />
                     General Settings
                 </CardTitle>
                 <CardDescription>
@@ -754,10 +778,10 @@ function BookingSettingsTab({ booking }: { booking: BookingSettings }) {
     }
 
     return (
-        <Card>
+        <Card className="rounded-xl border-border/60">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <CalendarCheck className="h-5 w-5" />
+                    <CalendarCheck className="h-5 w-5 text-primary" />
                     Booking Rules
                 </CardTitle>
                 <CardDescription>
@@ -796,7 +820,7 @@ function BookingSettingsTab({ booking }: { booking: BookingSettings }) {
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
                         <div className="space-y-0.5">
                             <Label htmlFor="require-approval" className="text-base">Require Approval</Label>
                             <p className="text-sm text-muted-foreground">
@@ -810,7 +834,7 @@ function BookingSettingsTab({ booking }: { booking: BookingSettings }) {
                         />
                     </div>
 
-                    <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
                         <div className="space-y-0.5">
                             <Label htmlFor="waitlist" className="text-base">Enable Waitlist</Label>
                             <p className="text-sm text-muted-foreground">
@@ -852,10 +876,10 @@ function NotificationSettingsTab({ notifications }: { notifications: Notificatio
     }
 
     return (
-        <Card>
+        <Card className="rounded-xl border-border/60">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" />
+                    <Bell className="h-5 w-5 text-primary" />
                     Email Notifications
                 </CardTitle>
                 <CardDescription>
@@ -864,7 +888,7 @@ function NotificationSettingsTab({ notifications }: { notifications: Notificatio
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
                         <div className="space-y-0.5">
                             <Label htmlFor="confirmation-email" className="text-base">Confirmation Email</Label>
                             <p className="text-sm text-muted-foreground">
@@ -878,7 +902,7 @@ function NotificationSettingsTab({ notifications }: { notifications: Notificatio
                         />
                     </div>
 
-                    <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
                         <div className="space-y-0.5">
                             <Label htmlFor="reminder-email" className="text-base">Reminder Email</Label>
                             <p className="text-sm text-muted-foreground">
@@ -893,7 +917,7 @@ function NotificationSettingsTab({ notifications }: { notifications: Notificatio
                     </div>
 
                     {form.data.send_reminder_email === '1' && (
-                        <div className="space-y-2 ml-4 pl-4 border-l-2">
+                        <div className="space-y-2 ml-4 pl-4 border-l-2 border-primary/30">
                             <Label htmlFor="reminder-hours">Reminder Hours Before Event</Label>
                             <Input
                                 id="reminder-hours"
@@ -911,7 +935,7 @@ function NotificationSettingsTab({ notifications }: { notifications: Notificatio
                         </div>
                     )}
 
-                    <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
                         <div className="space-y-0.5">
                             <Label htmlFor="cancellation-email" className="text-base">Cancellation Email</Label>
                             <p className="text-sm text-muted-foreground">
@@ -954,10 +978,10 @@ function InvoicingSettingsTab({ invoicing }: { invoicing: InvoicingSettings }) {
     }
 
     return (
-        <Card>
+        <Card className="rounded-xl border-border/60">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
+                    <FileText className="h-5 w-5 text-primary" />
                     Invoice Settings
                 </CardTitle>
                 <CardDescription>
@@ -1061,10 +1085,10 @@ function LocalisationSettingsTab({ localisation }: { localisation: LocalisationS
     }
 
     return (
-        <Card>
+        <Card className="rounded-xl border-border/60">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Globe className="h-5 w-5" />
+                    <Globe className="h-5 w-5 text-primary" />
                     Localisation Settings
                 </CardTitle>
                 <CardDescription>
@@ -1096,7 +1120,7 @@ function LocalisationSettingsTab({ localisation }: { localisation: LocalisationS
                     <div className="space-y-4">
                         <Label>Available Languages</Label>
 
-                        <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
                             <div className="space-y-0.5">
                                 <Label htmlFor="enable-en" className="text-base">English</Label>
                                 <p className="text-sm text-muted-foreground">Enable English language on the public site.</p>
@@ -1108,7 +1132,7 @@ function LocalisationSettingsTab({ localisation }: { localisation: LocalisationS
                             />
                         </div>
 
-                        <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
                             <div className="space-y-0.5">
                                 <Label htmlFor="enable-ms" className="text-base">Bahasa Melayu</Label>
                                 <p className="text-sm text-muted-foreground">Enable Bahasa Melayu language on the public site.</p>
@@ -1133,19 +1157,732 @@ function LocalisationSettingsTab({ localisation }: { localisation: LocalisationS
     );
 }
 
-export default function SettingsIndex({ tab, smtp, chipin, general, booking, notifications, invoicing, localisation }: Props) {
+// ─── Country List ─────────────────────────────────────────────────────────────
+
+const COUNTRIES: { code: string; name: string }[] = [
+    { code: 'AF', name: 'Afghanistan' },
+    { code: 'AL', name: 'Albania' },
+    { code: 'DZ', name: 'Algeria' },
+    { code: 'AR', name: 'Argentina' },
+    { code: 'AU', name: 'Australia' },
+    { code: 'AT', name: 'Austria' },
+    { code: 'BH', name: 'Bahrain' },
+    { code: 'BD', name: 'Bangladesh' },
+    { code: 'BE', name: 'Belgium' },
+    { code: 'BN', name: 'Brunei' },
+    { code: 'KH', name: 'Cambodia' },
+    { code: 'CA', name: 'Canada' },
+    { code: 'CN', name: 'China' },
+    { code: 'CO', name: 'Colombia' },
+    { code: 'HR', name: 'Croatia' },
+    { code: 'CZ', name: 'Czech Republic' },
+    { code: 'DK', name: 'Denmark' },
+    { code: 'EG', name: 'Egypt' },
+    { code: 'FI', name: 'Finland' },
+    { code: 'FR', name: 'France' },
+    { code: 'DE', name: 'Germany' },
+    { code: 'GR', name: 'Greece' },
+    { code: 'HK', name: 'Hong Kong' },
+    { code: 'HU', name: 'Hungary' },
+    { code: 'IN', name: 'India' },
+    { code: 'ID', name: 'Indonesia' },
+    { code: 'IR', name: 'Iran' },
+    { code: 'IQ', name: 'Iraq' },
+    { code: 'IE', name: 'Ireland' },
+    { code: 'IL', name: 'Israel' },
+    { code: 'IT', name: 'Italy' },
+    { code: 'JP', name: 'Japan' },
+    { code: 'JO', name: 'Jordan' },
+    { code: 'KZ', name: 'Kazakhstan' },
+    { code: 'KE', name: 'Kenya' },
+    { code: 'KR', name: 'South Korea' },
+    { code: 'KW', name: 'Kuwait' },
+    { code: 'LA', name: 'Laos' },
+    { code: 'LB', name: 'Lebanon' },
+    { code: 'MY', name: 'Malaysia' },
+    { code: 'MV', name: 'Maldives' },
+    { code: 'MX', name: 'Mexico' },
+    { code: 'MM', name: 'Myanmar' },
+    { code: 'NL', name: 'Netherlands' },
+    { code: 'NZ', name: 'New Zealand' },
+    { code: 'NG', name: 'Nigeria' },
+    { code: 'NO', name: 'Norway' },
+    { code: 'OM', name: 'Oman' },
+    { code: 'PK', name: 'Pakistan' },
+    { code: 'PH', name: 'Philippines' },
+    { code: 'PL', name: 'Poland' },
+    { code: 'PT', name: 'Portugal' },
+    { code: 'QA', name: 'Qatar' },
+    { code: 'RO', name: 'Romania' },
+    { code: 'RU', name: 'Russia' },
+    { code: 'SA', name: 'Saudi Arabia' },
+    { code: 'SG', name: 'Singapore' },
+    { code: 'ZA', name: 'South Africa' },
+    { code: 'ES', name: 'Spain' },
+    { code: 'LK', name: 'Sri Lanka' },
+    { code: 'SE', name: 'Sweden' },
+    { code: 'CH', name: 'Switzerland' },
+    { code: 'TW', name: 'Taiwan' },
+    { code: 'TH', name: 'Thailand' },
+    { code: 'TR', name: 'Turkey' },
+    { code: 'AE', name: 'United Arab Emirates' },
+    { code: 'GB', name: 'United Kingdom' },
+    { code: 'US', name: 'United States' },
+    { code: 'UZ', name: 'Uzbekistan' },
+    { code: 'VN', name: 'Vietnam' },
+    { code: 'YE', name: 'Yemen' },
+];
+
+function countryName(code: string): string {
+    return COUNTRIES.find(c => c.code === code)?.name ?? code;
+}
+
+// ─── Malaysian States ─────────────────────────────────────────────────────────
+
+const MY_STATES: { code: string; name: string; region: 'west' | 'east' }[] = [
+    // West Malaysia (Peninsular)
+    { code: 'JHR', name: 'Johor', region: 'west' },
+    { code: 'KDH', name: 'Kedah', region: 'west' },
+    { code: 'KTN', name: 'Kelantan', region: 'west' },
+    { code: 'MLK', name: 'Melaka', region: 'west' },
+    { code: 'NSN', name: 'Negeri Sembilan', region: 'west' },
+    { code: 'PHG', name: 'Pahang', region: 'west' },
+    { code: 'PNG', name: 'Pulau Pinang', region: 'west' },
+    { code: 'PRK', name: 'Perak', region: 'west' },
+    { code: 'PLS', name: 'Perlis', region: 'west' },
+    { code: 'SGR', name: 'Selangor', region: 'west' },
+    { code: 'TRG', name: 'Terengganu', region: 'west' },
+    { code: 'KUL', name: 'W.P. Kuala Lumpur', region: 'west' },
+    { code: 'PJY', name: 'W.P. Putrajaya', region: 'west' },
+    // East Malaysia
+    { code: 'SBH', name: 'Sabah', region: 'east' },
+    { code: 'SWK', name: 'Sarawak', region: 'east' },
+    { code: 'LBN', name: 'W.P. Labuan', region: 'east' },
+];
+
+function stateName(code: string): string {
+    return MY_STATES.find(s => s.code === code)?.name ?? code;
+}
+
+// ─── Shipping Settings Tab ────────────────────────────────────────────────────
+
+function ShippingSettingsTab({ shippingZones }: { shippingZones: ShippingZone[] }) {
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingZone, setEditingZone] = useState<ShippingZone | null>(null);
+    const [countrySearch, setCountrySearch] = useState('');
+    const [stateSearch, setStateSearch] = useState('');
+    const [deleting, setDeleting] = useState<number | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<ShippingZone | null>(null);
+
+    const form = useForm({
+        name: '',
+        countries: [] as string[],
+        states: [] as string[],
+        rate: '',
+        rate_type: 'flat' as 'flat' | 'per_item',
+        free_shipping_min: '',
+        is_active: true,
+        sort_order: 0,
+    });
+
+    const hasMY = form.data.countries.includes('MY');
+
+    function openCreate() {
+        setEditingZone(null);
+        form.reset();
+        form.setData({
+            name: '',
+            countries: [],
+            states: [],
+            rate: '',
+            rate_type: 'flat',
+            free_shipping_min: '',
+            is_active: true,
+            sort_order: 0,
+        });
+        setCountrySearch('');
+        setStateSearch('');
+        setDialogOpen(true);
+    }
+
+    function openEdit(zone: ShippingZone) {
+        setEditingZone(zone);
+        form.setData({
+            name: zone.name,
+            countries: zone.countries,
+            states: zone.states ?? [],
+            rate: String(zone.rate),
+            rate_type: zone.rate_type,
+            free_shipping_min: zone.free_shipping_min ? String(zone.free_shipping_min) : '',
+            is_active: zone.is_active,
+            sort_order: zone.sort_order,
+        });
+        setCountrySearch('');
+        setStateSearch('');
+        setDialogOpen(true);
+    }
+
+    function handleSubmit(e: FormEvent) {
+        e.preventDefault();
+        if (editingZone) {
+            form.put(route('admin.shipping-zones.update', editingZone.id), {
+                preserveScroll: true,
+                onSuccess: () => setDialogOpen(false),
+            });
+        } else {
+            form.post(route('admin.shipping-zones.store'), {
+                preserveScroll: true,
+                onSuccess: () => setDialogOpen(false),
+            });
+        }
+    }
+
+    function confirmDelete() {
+        if (!deleteTarget) return;
+        setDeleting(deleteTarget.id);
+        router.delete(route('admin.shipping-zones.destroy', deleteTarget.id), {
+            preserveScroll: true,
+            onFinish: () => {
+                setDeleting(null);
+                setDeleteTarget(null);
+            },
+        });
+    }
+
+    function toggleCountry(code: string) {
+        const current = form.data.countries;
+        if (current.includes(code)) {
+            form.setData('countries', current.filter(c => c !== code));
+            // Clear states if removing MY
+            if (code === 'MY') {
+                form.setData('states', []);
+            }
+        } else {
+            form.setData('countries', [...current, code]);
+        }
+    }
+
+    function removeCountry(code: string) {
+        form.setData('countries', form.data.countries.filter(c => c !== code));
+        if (code === 'MY') {
+            form.setData('states', []);
+        }
+    }
+
+    function toggleState(code: string) {
+        const current = form.data.states;
+        if (current.includes(code)) {
+            form.setData('states', current.filter(s => s !== code));
+        } else {
+            form.setData('states', [...current, code]);
+        }
+    }
+
+    function removeState(code: string) {
+        form.setData('states', form.data.states.filter(s => s !== code));
+    }
+
+    function selectAllStates(region: 'west' | 'east') {
+        const regionCodes = MY_STATES.filter(s => s.region === region).map(s => s.code);
+        const currentStates = new Set(form.data.states);
+        regionCodes.forEach(c => currentStates.add(c));
+        form.setData('states', Array.from(currentStates));
+    }
+
+    // All country codes already assigned to other zones (excluding current editing zone)
+    const assignedCodes = useMemo(() => {
+        const codes = new Set<string>();
+        shippingZones.forEach(z => {
+            if (editingZone && z.id === editingZone.id) return;
+            // Only block country if no states specified (whole-country zone)
+            if (!z.states || z.states.length === 0) {
+                z.countries.forEach(c => codes.add(c));
+            }
+        });
+        return codes;
+    }, [shippingZones, editingZone]);
+
+    // State codes assigned to other zones
+    const assignedStates = useMemo(() => {
+        const codes = new Set<string>();
+        shippingZones.forEach(z => {
+            if (editingZone && z.id === editingZone.id) return;
+            (z.states ?? []).forEach(s => codes.add(s));
+        });
+        return codes;
+    }, [shippingZones, editingZone]);
+
+    const filteredCountries = useMemo(() => {
+        const q = countrySearch.toLowerCase();
+        return COUNTRIES.filter(c =>
+            c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)
+        );
+    }, [countrySearch]);
+
+    return (
+        <div className="space-y-6">
+            <Card className="rounded-xl border-border/60">
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2">
+                                <Truck className="h-5 w-5 text-primary" />
+                                Shipping Zones
+                            </CardTitle>
+                            <CardDescription>
+                                Manage shipping zones by country for event product delivery. Each zone defines a shipping rate applied during checkout.
+                            </CardDescription>
+                        </div>
+                        <Button onClick={openCreate}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Zone
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {shippingZones.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                            <Truck className="mx-auto h-12 w-12 mb-3 opacity-30" />
+                            <p className="text-lg font-medium">No shipping zones configured</p>
+                            <p className="text-sm mt-1">Create a shipping zone to set delivery rates for event products.</p>
+                        </div>
+                    ) : (
+                        <div className="rounded-xl border border-border/60 overflow-hidden">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Zone Name</TableHead>
+                                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Countries</TableHead>
+                                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rate</TableHead>
+                                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Free Shipping Min</TableHead>
+                                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {shippingZones.map(zone => (
+                                    <TableRow key={zone.id}>
+                                        <TableCell className="font-medium">{zone.name}</TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-wrap gap-1 max-w-xs">
+                                                {zone.countries.slice(0, 5).map(code => (
+                                                    <Badge key={code} variant="secondary" className="text-xs">
+                                                        {countryName(code)}
+                                                    </Badge>
+                                                ))}
+                                                {zone.countries.length > 5 && (
+                                                    <Badge variant="outline" className="text-xs">
+                                                        +{zone.countries.length - 5} more
+                                                    </Badge>
+                                                )}
+                                                {zone.states && zone.states.length > 0 && (
+                                                    <div className="w-full mt-1 flex flex-wrap gap-1">
+                                                        {zone.states.slice(0, 4).map(code => (
+                                                            <Badge key={code} variant="outline" className="text-xs">
+                                                                {stateName(code)}
+                                                            </Badge>
+                                                        ))}
+                                                        {zone.states.length > 4 && (
+                                                            <Badge variant="outline" className="text-xs">
+                                                                +{zone.states.length - 4} more
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="font-mono text-sm">
+                                                RM {Number(zone.rate).toFixed(2)}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground ml-1">
+                                                / {zone.rate_type === 'per_item' ? 'item' : 'order'}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            {zone.free_shipping_min ? (
+                                                <span className="text-sm">RM {Number(zone.free_shipping_min).toFixed(2)}</span>
+                                            ) : (
+                                                <span className="text-sm text-muted-foreground">—</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${
+                                                zone.is_active
+                                                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                                    : 'bg-muted/60 text-muted-foreground border-border'
+                                            }`}>
+                                                {zone.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => openEdit(zone)}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setDeleteTarget(zone)}
+                                                    disabled={deleting === zone.id}
+                                                    className="text-destructive hover:text-destructive"
+                                                >
+                                                    {deleting === zone.id ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="h-4 w-4" />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Create / Edit Dialog */}
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {editingZone ? 'Edit Shipping Zone' : 'Create Shipping Zone'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {editingZone
+                                ? 'Update the shipping zone details and countries.'
+                                : 'Define a new shipping zone with countries and delivery rate.'}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="zone-name">Zone Name</Label>
+                            <Input
+                                id="zone-name"
+                                placeholder="e.g. Domestic, Southeast Asia, International"
+                                value={form.data.name}
+                                onChange={e => form.setData('name', e.target.value)}
+                            />
+                            {form.errors.name && (
+                                <p className="text-sm text-destructive">{form.errors.name}</p>
+                            )}
+                        </div>
+
+                        {/* Country Selector */}
+                        <div className="space-y-2">
+                            <Label>Countries</Label>
+
+                            {/* Selected countries */}
+                            {form.data.countries.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 p-2 rounded-md border bg-muted/30">
+                                    {form.data.countries.map(code => (
+                                        <Badge
+                                            key={code}
+                                            variant="secondary"
+                                            className="gap-1 pr-1"
+                                        >
+                                            {countryName(code)}
+                                            <button
+                                                type="button"
+                                                onClick={() => removeCountry(code)}
+                                                className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </Badge>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Search & select */}
+                            <div className="relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search countries..."
+                                    value={countrySearch}
+                                    onChange={e => setCountrySearch(e.target.value)}
+                                    className="pl-9"
+                                />
+                            </div>
+
+                            <div className="max-h-48 overflow-y-auto rounded-md border p-1 space-y-0.5">
+                                {filteredCountries.map(country => {
+                                    const isSelected = form.data.countries.includes(country.code);
+                                    const isAssigned = assignedCodes.has(country.code);
+
+                                    return (
+                                        <button
+                                            key={country.code}
+                                            type="button"
+                                            disabled={isAssigned && !isSelected}
+                                            onClick={() => toggleCountry(country.code)}
+                                            className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-sm text-left transition-colors ${
+                                                isSelected
+                                                    ? 'bg-primary/10 text-primary font-medium'
+                                                    : isAssigned
+                                                        ? 'text-muted-foreground/50 cursor-not-allowed'
+                                                        : 'hover:bg-muted'
+                                            }`}
+                                        >
+                                            <span>
+                                                {country.name}
+                                                <span className="ml-1 text-xs text-muted-foreground">({country.code})</span>
+                                            </span>
+                                            {isSelected && <Check className="h-4 w-4 text-primary" />}
+                                            {isAssigned && !isSelected && (
+                                                <span className="text-xs text-muted-foreground">assigned</span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                                {filteredCountries.length === 0 && (
+                                    <p className="text-sm text-muted-foreground text-center py-3">
+                                        No countries found.
+                                    </p>
+                                )}
+                            </div>
+
+                            {form.errors.countries && (
+                                <p className="text-sm text-destructive">{form.errors.countries}</p>
+                            )}
+                        </div>
+
+                        {/* Malaysian State Selector — shown when MY is selected */}
+                        {hasMY && (
+                            <div className="space-y-2">
+                                <Label>Malaysian States (optional)</Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Select specific states to create regional zones (e.g. West/East Malaysia). Leave empty to cover all of Malaysia.
+                                </p>
+
+                                {/* Selected states */}
+                                {form.data.states.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 p-2 rounded-md border bg-muted/30">
+                                        {form.data.states.map(code => (
+                                            <Badge key={code} variant="secondary" className="gap-1 pr-1">
+                                                {stateName(code)}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeState(code)}
+                                                    className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Quick select buttons */}
+                                <div className="flex gap-2">
+                                    <Button type="button" variant="outline" size="sm" onClick={() => selectAllStates('west')}>
+                                        Select West Malaysia
+                                    </Button>
+                                    <Button type="button" variant="outline" size="sm" onClick={() => selectAllStates('east')}>
+                                        Select East Malaysia
+                                    </Button>
+                                </div>
+
+                                {/* Search & select */}
+                                <div className="relative">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search states..."
+                                        value={stateSearch}
+                                        onChange={e => setStateSearch(e.target.value)}
+                                        className="pl-9"
+                                    />
+                                </div>
+
+                                <div className="max-h-48 overflow-y-auto rounded-md border p-1 space-y-0.5">
+                                    {MY_STATES
+                                        .filter(s => {
+                                            const q = stateSearch.toLowerCase();
+                                            return s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q);
+                                        })
+                                        .map(state => {
+                                            const isSelected = form.data.states.includes(state.code);
+                                            const isAssigned = assignedStates.has(state.code);
+
+                                            return (
+                                                <button
+                                                    key={state.code}
+                                                    type="button"
+                                                    disabled={isAssigned && !isSelected}
+                                                    onClick={() => toggleState(state.code)}
+                                                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-sm text-left transition-colors ${
+                                                        isSelected
+                                                            ? 'bg-primary/10 text-primary font-medium'
+                                                            : isAssigned
+                                                                ? 'text-muted-foreground/50 cursor-not-allowed'
+                                                                : 'hover:bg-muted'
+                                                    }`}
+                                                >
+                                                    <span>
+                                                        {state.name}
+                                                        <span className="ml-1 text-xs text-muted-foreground">
+                                                            ({state.region === 'west' ? 'Peninsular' : 'East'})
+                                                        </span>
+                                                    </span>
+                                                    {isSelected && <Check className="h-4 w-4 text-primary" />}
+                                                    {isAssigned && !isSelected && (
+                                                        <span className="text-xs text-muted-foreground">assigned</span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                </div>
+
+                                {form.errors.states && (
+                                    <p className="text-sm text-destructive">{form.errors.states}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Rate */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="zone-rate">Shipping Rate (RM)</Label>
+                                <Input
+                                    id="zone-rate"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    value={form.data.rate}
+                                    onChange={e => form.setData('rate', e.target.value)}
+                                />
+                                {form.errors.rate && (
+                                    <p className="text-sm text-destructive">{form.errors.rate}</p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="zone-rate-type">Rate Type</Label>
+                                <Select
+                                    value={form.data.rate_type}
+                                    onValueChange={val => form.setData('rate_type', val as 'flat' | 'per_item')}
+                                >
+                                    <SelectTrigger id="zone-rate-type">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="flat">Flat rate per order</SelectItem>
+                                        <SelectItem value="per_item">Per item</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {form.errors.rate_type && (
+                                    <p className="text-sm text-destructive">{form.errors.rate_type}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Free shipping threshold */}
+                        <div className="space-y-2">
+                            <Label htmlFor="zone-free-min">Free Shipping Minimum (RM)</Label>
+                            <Input
+                                id="zone-free-min"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="Leave empty to disable"
+                                value={form.data.free_shipping_min}
+                                onChange={e => form.setData('free_shipping_min', e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Orders above this amount qualify for free shipping. Leave empty to disable.
+                            </p>
+                            {form.errors.free_shipping_min && (
+                                <p className="text-sm text-destructive">{form.errors.free_shipping_min}</p>
+                            )}
+                        </div>
+
+                        {/* Active toggle */}
+                        <div className="flex items-center justify-between rounded-xl border border-border/60 p-4">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="zone-active" className="text-base">Active</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Enable this shipping zone for checkout.
+                                </p>
+                            </div>
+                            <Switch
+                                id="zone-active"
+                                checked={form.data.is_active}
+                                onCheckedChange={(checked) => form.setData('is_active', checked)}
+                            />
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={form.processing}>
+                                {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {editingZone ? 'Update Zone' : 'Create Zone'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-destructive">
+                            <Trash2 className="h-5 w-5" />
+                            Delete Shipping Zone
+                        </DialogTitle>
+                        <DialogDescription>
+                            This will permanently remove the zone <strong className="text-foreground">{deleteTarget?.name}</strong> and its rate configuration.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={confirmDelete}
+                            disabled={deleting === deleteTarget?.id}
+                        >
+                            {deleting === deleteTarget?.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Zone
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
+}
+
+export default function SettingsIndex({ tab, smtp, chipin, general, booking, notifications, invoicing, localisation, shippingZones }: Props) {
     return (
         <AdminLayout>
             <div className="space-y-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-foreground">System Settings</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Manage system configurations, email, payments, booking rules, and localisation.
-                    </p>
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                        <Settings className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-foreground">System Settings</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Manage email, payments, booking rules, and localisation.
+                        </p>
+                    </div>
                 </div>
 
                 <Tabs defaultValue={tab} className="space-y-6">
-                    <TabsList className="flex-wrap h-auto gap-1">
+                    <TabsList className="flex-wrap h-auto gap-1 p-1.5">
                         <TabsTrigger value="general" className="gap-2">
                             <Settings className="h-4 w-4" />
                             General
@@ -1173,6 +1910,10 @@ export default function SettingsIndex({ tab, smtp, chipin, general, booking, not
                         <TabsTrigger value="localisation" className="gap-2">
                             <Globe className="h-4 w-4" />
                             Localisation
+                        </TabsTrigger>
+                        <TabsTrigger value="shipping" className="gap-2">
+                            <Truck className="h-4 w-4" />
+                            Shipping
                         </TabsTrigger>
                     </TabsList>
 
@@ -1202,6 +1943,10 @@ export default function SettingsIndex({ tab, smtp, chipin, general, booking, not
 
                     <TabsContent value="localisation">
                         <LocalisationSettingsTab localisation={localisation} />
+                    </TabsContent>
+
+                    <TabsContent value="shipping">
+                        <ShippingSettingsTab shippingZones={shippingZones} />
                     </TabsContent>
                 </Tabs>
             </div>
