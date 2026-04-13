@@ -2,7 +2,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import EventForm from '@/Components/EventForm';
 import { Link, useForm } from '@inertiajs/react';
 import { type FormEventHandler } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, CalendarPlus } from 'lucide-react';
 
 export default function EventCreate() {
     const { data, setData, post, processing, errors } = useForm({
@@ -39,7 +39,13 @@ export default function EventCreate() {
                     <Link href="/admin/events" className="text-muted-foreground hover:text-foreground transition-colors">
                         <ChevronLeft className="w-5 h-5" />
                     </Link>
-                    <h1 className="text-2xl font-bold text-foreground">New Event</h1>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                        <CalendarPlus className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-foreground">New Event</h1>
+                        <p className="text-sm text-muted-foreground">Create a new event with details, venue, and registration settings.</p>
+                    </div>
                 </div>
 
                 <EventForm

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Switch } from '@/Components/ui/switch';
 import { Link } from '@inertiajs/react';
-import { MapPin, Calendar, ExternalLink, Eye, Users, Ticket, Palette, QrCode, FolderOpen } from 'lucide-react';
+import { MapPin, Calendar, ExternalLink, Eye, Users, Ticket, Palette, QrCode, FolderOpen, FileText, Image, Loader2, Link2, Save } from 'lucide-react';
 import RichEditor from '@/Components/RichEditor';
 import ImageUpload from '@/Components/ImageUpload';
 import { type Media, type Event } from '@/types';
@@ -59,8 +59,8 @@ function generateSlug(value: string) {
 function MapPreview({ query }: { query: string }) {
     if (!query.trim()) {
         return (
-            <div className="rounded-lg bg-gray-100 border border-dashed border-gray-300 h-44 flex flex-col items-center justify-center gap-2 text-gray-400">
-                <MapPin className="w-7 h-7" />
+            <div className="rounded-xl border border-dashed border-border/60 bg-muted/30 h-44 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                <MapPin className="w-7 h-7 opacity-40" />
                 <p className="text-xs">Fill in venue / city to see map</p>
             </div>
         );
@@ -69,7 +69,7 @@ function MapPreview({ query }: { query: string }) {
     const src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
 
     return (
-        <div className="rounded-lg overflow-hidden border border-input">
+        <div className="rounded-xl overflow-hidden border border-border/60">
             <iframe
                 key={query}           // remount on query change
                 title="Venue map"
@@ -80,12 +80,12 @@ function MapPreview({ query }: { query: string }) {
                 referrerPolicy="no-referrer-when-downgrade"
                 className="block w-full"
             />
-            <div className="px-3 py-2 bg-gray-50 border-t border-input">
+            <div className="px-3 py-2 bg-muted/40 border-t border-border/60">
                 <a
                     href={`https://maps.google.com/?q=${encodeURIComponent(query)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-brand font-semibold hover:underline flex items-center gap-1"
+                    className="text-xs text-primary font-semibold hover:underline flex items-center gap-1"
                 >
                     Open in Google Maps <ExternalLink className="w-3 h-3" />
                 </a>
@@ -129,8 +129,12 @@ export default function EventForm({
                 <div className="space-y-6">
 
                     {/* Details */}
-                    <Card>
-                        <CardHeader><CardTitle>Event Details</CardTitle></CardHeader>
+                    <Card className="rounded-xl border-border/60">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-primary" /> Event Details
+                            </CardTitle>
+                        </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
                                 <Label htmlFor="title">Title *</Label>
@@ -141,23 +145,23 @@ export default function EventForm({
                                     placeholder="eg. Takaful Leader & Agent Summit 2025"
                                     className="mt-1"
                                 />
-                                {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title}</p>}
+                                {errors.title && <p className="text-sm text-destructive mt-1">{errors.title}</p>}
                             </div>
 
                             <div>
                                 <Label htmlFor="slug">Slug *</Label>
-                                <div className="mt-1 flex rounded-md overflow-hidden border border-input focus-within:ring-2 focus-within:ring-ring bg-white">
-                                    <span className="px-3 flex items-center text-xs text-muted-foreground bg-muted border-r border-input whitespace-nowrap">
+                                <div className="mt-1 flex rounded-xl overflow-hidden border border-border/60 focus-within:ring-2 focus-within:ring-ring bg-background">
+                                    <span className="px-3 flex items-center text-xs text-muted-foreground bg-muted border-r border-border/60 whitespace-nowrap font-mono">
                                         /events/
                                     </span>
                                     <input
                                         id="slug"
                                         value={data.slug}
                                         onChange={e => setData('slug', e.target.value)}
-                                        className="flex-1 px-3 py-2 text-sm bg-white outline-none"
+                                        className="flex-1 px-3 py-2 text-sm bg-background outline-none"
                                     />
                                 </div>
-                                {errors.slug && <p className="text-sm text-red-600 mt-1">{errors.slug}</p>}
+                                {errors.slug && <p className="text-sm text-destructive mt-1">{errors.slug}</p>}
                             </div>
 
                             <div>
@@ -170,29 +174,33 @@ export default function EventForm({
                                     placeholder="Short summary shown on event cards and the hero pull-quote…"
                                     className="mt-1 resize-none"
                                 />
-                                {errors.excerpt && <p className="text-sm text-red-600 mt-1">{errors.excerpt}</p>}
+                                {errors.excerpt && <p className="text-sm text-destructive mt-1">{errors.excerpt}</p>}
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Content — WYSIWYG */}
-                    <Card>
-                        <CardHeader><CardTitle>Content</CardTitle></CardHeader>
+                    <Card className="rounded-xl border-border/60">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-primary" /> Content
+                            </CardTitle>
+                        </CardHeader>
                         <CardContent>
                             <RichEditor
                                 value={data.content_html}
                                 onChange={html => setData('content_html', html)}
                                 placeholder="Describe the event — agenda, speakers, highlights…"
                             />
-                            {errors.content_html && <p className="text-sm text-red-600 mt-2">{errors.content_html}</p>}
+                            {errors.content_html && <p className="text-sm text-destructive mt-2">{errors.content_html}</p>}
                         </CardContent>
                     </Card>
 
                     {/* Date & Time */}
-                    <Card>
+                    <Card className="rounded-xl border-border/60">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-brand" /> Date &amp; Time
+                                <Calendar className="w-4 h-4 text-primary" /> Date &amp; Time
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -206,7 +214,7 @@ export default function EventForm({
                                         onChange={e => setData('start_at', e.target.value)}
                                         className="mt-1"
                                     />
-                                    {errors.start_at && <p className="text-sm text-red-600 mt-1">{errors.start_at}</p>}
+                                    {errors.start_at && <p className="text-sm text-destructive mt-1">{errors.start_at}</p>}
                                 </div>
                                 <div>
                                     <Label htmlFor="end_at">End</Label>
@@ -217,17 +225,17 @@ export default function EventForm({
                                         onChange={e => setData('end_at', e.target.value)}
                                         className="mt-1"
                                     />
-                                    {errors.end_at && <p className="text-sm text-red-600 mt-1">{errors.end_at}</p>}
+                                    {errors.end_at && <p className="text-sm text-destructive mt-1">{errors.end_at}</p>}
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Location */}
-                    <Card>
+                    <Card className="rounded-xl border-border/60">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-brand" /> Location
+                                <MapPin className="w-4 h-4 text-primary" /> Location
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -283,8 +291,12 @@ export default function EventForm({
                 <div className="space-y-5">
 
                     {/* Publish */}
-                    <Card>
-                        <CardHeader><CardTitle>Publish</CardTitle></CardHeader>
+                    <Card className="rounded-xl border-border/60">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Save className="w-4 h-4 text-primary" /> Publish
+                            </CardTitle>
+                        </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
                                 <Label htmlFor="is_published">Status</Label>
@@ -309,7 +321,7 @@ export default function EventForm({
                                     className="mt-1"
                                     placeholder="https://…"
                                 />
-                                {errors.registration_url && <p className="text-sm text-red-600 mt-1">{errors.registration_url}</p>}
+                                {errors.registration_url && <p className="text-sm text-destructive mt-1">{errors.registration_url}</p>}
                             </div>
 
                             <div>
@@ -326,19 +338,23 @@ export default function EventForm({
                                     placeholder="https://drive.google.com/…"
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">Link to photo/video album for this event.</p>
-                                {errors.gdrive_link && <p className="text-sm text-red-600 mt-1">{errors.gdrive_link}</p>}
+                                {errors.gdrive_link && <p className="text-sm text-destructive mt-1">{errors.gdrive_link}</p>}
                             </div>
 
                             <div className="flex flex-col gap-2 pt-2">
-                                <Button type="submit" disabled={processing} className="w-full bg-brand hover:bg-brand-dark">
-                                    {processing ? 'Saving…' : submitLabel}
+                                <Button type="submit" disabled={processing} className="w-full">
+                                    {processing ? (
+                                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</>
+                                    ) : (
+                                        <><Save className="mr-2 h-4 w-4" /> {submitLabel}</>
+                                    )}
                                 </Button>
                                 {eventSlug && (
                                     <a
                                         href={`/events/${eventSlug}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-brand transition-colors py-1"
+                                        className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors py-1"
                                     >
                                         <Eye className="w-3.5 h-3.5" /> View on site
                                     </a>
@@ -351,8 +367,12 @@ export default function EventForm({
                     </Card>
 
                     {/* Featured Image */}
-                    <Card>
-                        <CardHeader><CardTitle>Featured Image</CardTitle></CardHeader>
+                    <Card className="rounded-xl border-border/60">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Image className="w-4 h-4 text-primary" /> Featured Image
+                            </CardTitle>
+                        </CardHeader>
                         <CardContent>
                             <ImageUpload
                                 value={data.media_id}
@@ -360,15 +380,15 @@ export default function EventForm({
                                 onChange={(id) => setData('media_id', id)}
                                 onClear={() => setData('media_id', 'none')}
                             />
-                            {errors.media_id && <p className="text-sm text-red-600 mt-2">{errors.media_id}</p>}
+                            {errors.media_id && <p className="text-sm text-destructive mt-2">{errors.media_id}</p>}
                         </CardContent>
                     </Card>
 
                     {/* Venue / Seating Map */}
-                    <Card>
+                    <Card className="rounded-xl border-border/60">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-brand" /> Venue / Seating Map
+                                <MapPin className="w-4 h-4 text-primary" /> Venue / Seating Map
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -381,19 +401,19 @@ export default function EventForm({
                                 onChange={(id) => setData('venue_map_media_id', id)}
                                 onClear={() => setData('venue_map_media_id', 'none')}
                             />
-                            {errors.venue_map_media_id && <p className="text-sm text-red-600 mt-2">{errors.venue_map_media_id}</p>}
+                            {errors.venue_map_media_id && <p className="text-sm text-destructive mt-2">{errors.venue_map_media_id}</p>}
                         </CardContent>
                     </Card>
 
                     {/* RSVP / Registration Settings */}
-                    <Card>
+                    <Card className="rounded-xl border-border/60">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Ticket className="w-4 h-4 text-brand" /> RSVP / Registration
+                                <Ticket className="w-4 h-4 text-primary" /> RSVP / Registration
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between rounded-xl border border-border/60 p-3">
                                 <Label htmlFor="rsvp_enabled" className="cursor-pointer">Enable RSVP</Label>
                                 <Switch
                                     id="rsvp_enabled"
@@ -428,7 +448,7 @@ export default function EventForm({
                                         />
                                     </div>
 
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-center justify-between rounded-xl border border-border/60 p-3">
                                         <div>
                                             <Label htmlFor="require_approval" className="cursor-pointer">Require Approval</Label>
                                             <p className="text-xs text-muted-foreground">Registrations need manual approval</p>
@@ -441,34 +461,34 @@ export default function EventForm({
                                     </div>
 
                                     {eventSlug && (
-                                        <div className="pt-1 space-y-1.5 border-t">
+                                        <div className="pt-2 space-y-1.5 border-t border-border/60">
                                             <Link
                                                 href={`/admin/events/${eventSlug}/tickets`}
-                                                className="flex items-center gap-1.5 text-xs text-brand hover:underline font-medium"
+                                                className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
                                             >
                                                 <Ticket className="w-3.5 h-3.5" /> Manage Tickets
                                             </Link>
                                             <Link
                                                 href={`/admin/events/${eventSlug}/products`}
-                                                className="flex items-center gap-1.5 text-xs text-brand hover:underline font-medium"
+                                                className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
                                             >
                                                 <Users className="w-3.5 h-3.5" /> Manage Products
                                             </Link>
                                             <Link
                                                 href={`/admin/events/${eventSlug}/registrations`}
-                                                className="flex items-center gap-1.5 text-xs text-brand hover:underline font-medium"
+                                                className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
                                             >
                                                 <Users className="w-3.5 h-3.5" /> View Registrations
                                             </Link>
                                             <Link
                                                 href={`/admin/events/${eventSlug}/zones`}
-                                                className="flex items-center gap-1.5 text-xs text-brand hover:underline font-medium"
+                                                className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
                                             >
                                                 <Palette className="w-3.5 h-3.5" /> Manage Zones
                                             </Link>
                                             <Link
                                                 href={`/admin/events/${eventSlug}/check-in`}
-                                                className="flex items-center gap-1.5 text-xs text-brand hover:underline font-medium"
+                                                className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
                                             >
                                                 <QrCode className="w-3.5 h-3.5" /> Check-In Scanner
                                             </Link>
