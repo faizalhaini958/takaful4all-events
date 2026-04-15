@@ -25,10 +25,16 @@ class MediaController extends Controller
         ]);
     }
 
-    public function store(MediaUploadRequest $request): RedirectResponse
+    public function store(MediaUploadRequest $request): JsonResponse|RedirectResponse
     {
-        $this->mediaService->upload($request->file('file'));
+        $media = $this->mediaService->upload($request->file('file'));
 
+        // Axios/XHR uploads (e.g. ImageUpload component) expect JSON
+        if ($request->expectsJson()) {
+            return response()->json(['media' => $media], 201);
+        }
+
+        // Inertia form submissions (e.g. Media Library page) get a redirect
         return redirect()->route('admin.media.index');
     }
 
