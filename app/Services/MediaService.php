@@ -13,7 +13,8 @@ class MediaService
 {
     public function upload(UploadedFile $file, ?string $folder = null): Media
     {
-        $filename  = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        // Always use .jpg extension since we convert everything to JPEG
+        $filename  = Str::uuid() . '.jpg';
         $directory = $folder ?? ('media/' . now()->format('Y/m'));
         $path      = $directory . '/' . $filename;
 
@@ -48,7 +49,7 @@ class MediaService
             'path'           => $path,
             'thumbnail_path' => $thumbnailPath,
             'url'            => $url,
-            'mime'           => $file->getMimeType(),
+            'mime'           => 'image/jpeg',
             'size'           => Storage::disk('public')->size($path),
             'width'          => $width,
             'height'         => $height,

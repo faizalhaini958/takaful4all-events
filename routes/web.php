@@ -31,6 +31,19 @@ use Illuminate\Support\Facades\Route;
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 
+// Serve storage files when PHP built-in server can't follow symlinks
+Route::get('/storage/{path}', function (string $path) {
+    $fullPath = storage_path('app/public/' . $path);
+    $realPath = realpath($fullPath);
+
+    // Prevent path traversal outside the public storage directory
+    if (!$realPath || !str_starts_with($realPath, realpath(storage_path('app/public')))) {
+        abort(404);
+    }
+
+    return response()->file($realPath);
+})->where('path', '.*')->name('storage.serve');
+
 Route::post('/locale/{lang}', [LocaleController::class, 'switch'])->name('locale.switch');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');

@@ -1,17 +1,18 @@
-# 🚀 Takaful Events - Shared Hosting Deployment Guide
+# Takaful Events - Shared Hosting Deployment Guide
 
-## 📦 What You Have
+## What You Get
 
-After running `bash deploy/package.sh`, you'll get:
-- **takaful_app.zip** (11 MB) - Laravel application files
-- **takaful_public.zip** (409 KB) - Document root files
-- **takaful-events.sql** (183 KB) - Database export from XAMPP
+After running `bash deploy/package.sh`, you'll find in `deploy/dist/`:
+- **takaful_app.zip** — Laravel application files (goes OUTSIDE document root)
+- **takaful_public.zip** — Document root files (CSS/JS build, .htaccess, index.php)
+- **takaful_media.zip** — Uploaded media images (goes into storage/app/public/)
+- **deploy/database/takaful-events.sql** — Database dump
 
 ---
 
-## 🎯 Step-by-Step Deployment (Subdomain on cPanel)
+## Step-by-Step Deployment (Subdomain on cPanel)
 
-### **STEP 1: Create Subdomain in cPanel**
+### STEP 1: Create Subdomain in cPanel
 
 1. Log into cPanel
 2. Go to **Domains** → **Subdomains**
@@ -20,7 +21,7 @@ After running `bash deploy/package.sh`, you'll get:
 
 ---
 
-### **STEP 2: Create MySQL Database**
+### STEP 2: Create MySQL Database
 
 1. cPanel → **MySQL® Databases**
 2. Create new database: `username_takaful` (note the full name with prefix)
@@ -34,7 +35,7 @@ After running `bash deploy/package.sh`, you'll get:
 
 ---
 
-### **STEP 3: Import Database**
+### STEP 3: Import Database
 
 1. cPanel → **phpMyAdmin**
 2. Select your database (`username_takaful`) from left sidebar
@@ -45,7 +46,7 @@ After running `bash deploy/package.sh`, you'll get:
 
 ---
 
-### **STEP 4: Upload Application Files**
+### STEP 4: Upload Application Files
 
 Via **cPanel File Manager**:
 
@@ -66,9 +67,17 @@ Via **cPanel File Manager**:
 5. Delete the zip file
 6. **Rename** `index_server.php` to `index.php`
 
+#### C. Upload Media Files
+
+1. Navigate to `/home/username/takaful_app/storage/app/public/`
+2. Upload `takaful_media.zip`
+3. Right-click → **Extract**
+4. Delete the zip file
+5. You should now see a `media/` folder with year/month subfolders
+
 ---
 
-### **STEP 5: Configure index.php**
+### STEP 5: Configure index.php
 
 1. Open `index.php` (in document root) with **Code Editor**
 2. Find this line:
@@ -92,7 +101,7 @@ Via **cPanel File Manager**:
 
 ---
 
-### **STEP 6: Configure .env File**
+### STEP 6: Configure .env File
 
 1. Copy `deploy/.env.production` content
 2. In File Manager, navigate to `/home/username/takaful_app/`
@@ -120,7 +129,7 @@ Via **cPanel File Manager**:
 
 ---
 
-### **STEP 7: Set File Permissions**
+### STEP 7: Set File Permissions
 
 In File Manager, navigate to `/home/username/takaful_app/` and set:
 
@@ -129,7 +138,18 @@ In File Manager, navigate to `/home/username/takaful_app/` and set:
 
 ---
 
-### **STEP 8: Test the Site**
+### STEP 8: Run Migrations & Create Storage Link
+
+1. Upload `deploy/run-migrations.php` to your document root
+2. Edit the file and change `SECRET` to a random string
+3. Also edit `$app_path` if needed (same as index.php)
+4. Visit: `https://events.yourdomain.com/run-migrations.php?token=YOUR_SECRET`
+5. Verify all commands show success
+6. **DELETE `run-migrations.php` immediately after**
+
+---
+
+### STEP 9: Test the Site
 
 Visit: `https://events.yourdomain.com`
 
@@ -140,47 +160,58 @@ Visit: `https://events.yourdomain.com`
 
 ---
 
-## ⚠️ Common Issues & Fixes
+## Common Issues & Fixes
 
-### **500 Internal Server Error**
+### 500 Internal Server Error
 
 1. **Wrong app path** → Check `$app_path` in `index.php`, use absolute path
 2. **Missing .env** → Ensure `.env` exists in `/home/username/takaful_app/`
 3. **Wrong permissions** → Set `storage/` and `bootstrap/cache/` to 755
 4. **PHP version** → Ensure PHP 8.2 or 8.3 (cPanel → **Select PHP Version**)
 
-### **CSS/JS not loading**
+### CSS/JS not loading
 
 1. Check `APP_URL` in `.env` matches your actual domain
 2. Clear browser cache (Ctrl+Shift+R)
 3. Check if `/build/` folder exists in document root
 
-### **Database connection error**
+### Database connection error
 
 1. Verify database credentials in `.env`
 2. Ensure user has ALL PRIVILEGES on the database
 3. Check database host (usually `localhost`)
 
-### **"No input file specified"**
+### Images not showing
+
+1. Verify storage link was created (Step 8)
+2. Check `/home/username/takaful_app/storage/app/public/media/` has files
+3. Try visiting an image URL directly in the browser
+4. If symlink doesn't work, the app's built-in `/storage/{path}` route will serve files as fallback
+
+### "No input file specified"
 
 1. Check `.htaccess` exists in document root
 2. Ensure `mod_rewrite` is enabled (ask hosting support)
 
 ---
 
-## 🔄 How to Update the Site Later
+## How to Update the Site Later
 
 1. Make changes locally
-2. Run `npm run build` and `composer install --no-dev`
-3. Re-run `bash deploy/package.sh`
-4. Upload and extract the new zip files
-5. Clear cache: temporarily add this to your `.env`: `APP_DEBUG=true`
-6. Visit: `https://events.yourdomain.com/clear-cache` (if you create that route)
-7. Or use cPanel Terminal: `cd ~/takaful_app && php artisan optimize:clear`
+2. Run `bash deploy/package.sh`
+3. Upload and extract the new zip files (overwrite existing)
+4. Upload `run-migrations.php` to document root (change SECRET)
+5. Visit the migration URL to run new migrations and clear caches
+6. **DELETE `run-migrations.php`**
+
+Alternatively, if you have cPanel Terminal access:
+```bash
+cd ~/takaful_app && php artisan migrate --force && php artisan optimize
+```
 
 ---
 
-## 📞 Need Help?
+## Diagnostics
 
 **Before asking for help, check:**
 1. Upload [deploy/check.php](check.php) to document root
@@ -191,9 +222,10 @@ Visit: `https://events.yourdomain.com`
 
 ---
 
-**Ready to deploy? Run:**
+## Build & Deploy
+
 ```bash
 bash deploy/package.sh
 ```
 
-Then follow the steps above! 🎉
+Then follow the steps above.

@@ -25,13 +25,11 @@ class MediaController extends Controller
         ]);
     }
 
-    public function store(MediaUploadRequest $request): JsonResponse
+    public function store(MediaUploadRequest $request): RedirectResponse
     {
-        $media = $this->mediaService->upload($request->file('file'));
+        $this->mediaService->upload($request->file('file'));
 
-        return response()->json([
-            'media' => $media,
-        ], 201);
+        return redirect()->route('admin.media.index');
     }
 
     public function storeFromUrl(Request $request): JsonResponse

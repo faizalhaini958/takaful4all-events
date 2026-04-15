@@ -4,14 +4,12 @@
 | TEMPORARY MIGRATION RUNNER
 |--------------------------------------------------------------------------
 | Upload this file to your document root (same folder as index.php).
-| Access it via browser: https://your-domain.com/run-migrations.php
+| Access it via browser: https://your-domain.com/run-migrations.php?token=YOUR_SECRET
 |
 | !! DELETE THIS FILE IMMEDIATELY AFTER USE !!
-| It exposes artisan commands to anyone who knows the URL.
-|
+|--------------------------------------------------------------------------
 */
 
-// Secret token - change this before uploading!
 define('SECRET', 'CHANGE_THIS_SECRET_TOKEN_BEFORE_UPLOADING');
 
 if (!isset($_GET['token']) || $_GET['token'] !== SECRET) {
@@ -25,6 +23,9 @@ require $app_path . '/vendor/autoload.php';
 
 $app = require_once $app_path . '/bootstrap/app.php';
 
+// Override the public path to point to this document root
+$app->usePublicPath(__DIR__);
+
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
 $commands = [];
@@ -33,6 +34,16 @@ $commands = [];
 ob_start();
 $exitCode = $kernel->call('migrate', ['--force' => true]);
 $commands['migrate'] = ob_get_clean();
+
+// Create storage symlink
+ob_start();
+$kernel->call('storage:link');
+$commands['storage:link'] = ob_get_clean();
+
+// Fix media extensions (rename .png/.jpeg -> .jpg for files stored as JPEG)
+ob_start();
+$kernel->call('media:fix-extensions');
+$commands['media:fix-extensions'] = ob_get_clean();
 
 // Cache config
 ob_start();
@@ -49,20 +60,10 @@ ob_start();
 $kernel->call('view:cache');
 $commands['view:cache'] = ob_get_clean();
 
-// Optimize
-ob_start();
-$kernel->call('optimize');
-$commands['optimize'] = ob_get_clean();
-
-// Storage link
-ob_start();
-$kernel->call('storage:link');
-$commands['storage:link'] = ob_get_clean();
-
 echo '<pre style="font-family:monospace;background:#1e1e1e;color:#d4d4d4;padding:20px;">';
 echo "<strong>!! DELETE THIS FILE AFTER USE !!</strong>\n\n";
 foreach ($commands as $cmd => $output) {
-    echo "<strong>>>> php artisan {$cmd}</strong>\n";
+    echo "<strong>&gt;&gt;&gt; php artisan {$cmd}</strong>\n";
     echo htmlspecialchars($output) . "\n";
 }
 echo '</pre>';
