@@ -10,7 +10,7 @@ class AdminOnly
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() || !in_array($request->user()->role, ['admin', 'editor'])) {
+        if (!$request->user() || !in_array($request->user()->role, ['admin', 'editor', 'checkin_staff'])) {
             abort(403, 'Admin access required.');
         }
 

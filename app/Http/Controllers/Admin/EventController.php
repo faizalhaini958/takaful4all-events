@@ -19,9 +19,27 @@ class EventController extends Controller
         $perPage = (int) request()->input('per_page', 15);
         $perPage = in_array($perPage, [10, 15, 25, 50]) ? $perPage : 15;
 
-        $events = Event::with('media')
-            ->withCount(['registrations', 'tickets', 'products', 'zones'])
-            ->latest()
+        $query = Event::with('media')
+            ->withCount(['registrations', 'tickets', 'products', 'zones']);
+
+        // Check-in staff can only see upcoming & current (non-past) published events
+        if (request()->user()?->isCheckinStaff()) {
+            $query->where('is_published', true)
+                  ->where(function ($q) {
+                      $q->where('start_at', '>', now())                // upcoming
+                        ->orWhere(function ($q2) {                     // currently running
+                            $q2->where('start_at', '<=', now())
+                               ->where('end_at', '>=', now());
+                        })
+                        ->orWhere(function ($q2) {                     // started today, no end date
+                            $q2->where('start_at', '<=', now())
+                               ->whereNull('end_at')
+                               ->whereDate('start_at', now()->toDateString());
+                        });
+                  });
+        }
+
+        $events = $query->latest()
             ->paginate($perPage)
             ->withQueryString();
 
@@ -52,7 +70,6 @@ class EventController extends Controller
         return Inertia::render('Admin/Events/Edit', [
             'event'         => $event->load('media'),
             'mediaList'     => Media::latest()->get(['id', 'url', 'title']),
-            'venueMapMedia' => $event->venueMap,
         ]);
     }
 

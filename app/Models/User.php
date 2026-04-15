@@ -84,4 +84,9 @@ class User extends Authenticatable
     {
         return $this->role === 'public';
     }
+
+    public function isCheckinStaff(): bool
+    {
+        return $this->role === 'checkin_staff';
+    }
 }

@@ -20,7 +20,6 @@ export default function EventCreate() {
         gdrive_link: '',
         is_published: '1',
         media_id: '',
-        venue_map_media_id: '',
         rsvp_enabled: false,
         rsvp_deadline: '',
         max_attendees: '',

@@ -20,7 +20,7 @@ class UpdateUserRequest extends FormRequest
             'name'                    => ['required', 'string', 'max:255'],
             'email'                   => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'password'                => ['nullable', 'string', 'min:8'],
-            'role'                    => ['required', Rule::in(['admin', 'editor', 'company', 'public'])],
+            'role'                    => ['required', Rule::in(['admin', 'editor', 'checkin_staff', 'company', 'public'])],
             'company_name'            => ['nullable', 'required_if:role,company', 'string', 'max:255'],
             'company_registration_no' => ['nullable', 'string', 'max:100'],
             'company_address'         => ['nullable', 'string', 'max:1000'],

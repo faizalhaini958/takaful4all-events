@@ -9,7 +9,7 @@ export default function UserCreate() {
         name: '',
         email: '',
         password: '',
-        role: 'public' as 'admin' | 'editor' | 'company' | 'public',
+        role: 'public' as 'admin' | 'editor' | 'checkin_staff' | 'company' | 'public',
         company_name: '',
         company_registration_no: '',
         company_address: '',

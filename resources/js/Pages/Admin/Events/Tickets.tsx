@@ -10,14 +10,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { Separator } from '@/Components/ui/separator';
 import { Link, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
-import { ChevronLeft, Plus, Pencil, Trash2, Ticket, MoreHorizontal, Zap, Tag } from 'lucide-react';
-import { type Event, type EventTicket, type EventZone } from '@/types';
+import { useState, useRef } from 'react';
+import { ChevronLeft, Plus, Pencil, Trash2, Ticket, MoreHorizontal, Zap, Tag, MapPin, Eye, Image as ImageIcon, X } from 'lucide-react';
+import { type Event, type EventTicket, type EventZone, type Media } from '@/types';
 
 interface Props {
     event: Event;
     tickets: EventTicket[];
     zones: EventZone[];
+    venueMapMedia: Media | null;
 }
 
 const emptyTicket = {
@@ -38,10 +39,16 @@ const emptyTicket = {
     event_zone_id: '',
 };
 
-export default function EventTickets({ event, tickets, zones }: Props) {
+export default function EventTickets({ event, tickets, zones, venueMapMedia }: Props) {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<EventTicket | null>(null);
+    const [showMapPreview, setShowMapPreview] = useState(false);
+    const [venueMapId, setVenueMapId] = useState<string>(
+        venueMapMedia ? String(venueMapMedia.id) : 'none'
+    );
+    const [savingMap, setSavingMap] = useState(false);
+    const venueMapFileRef = useRef<HTMLInputElement>(null);
 
     const { data, setData, post, put, processing, errors, reset } = useForm(emptyTicket);
 
@@ -110,6 +117,78 @@ export default function EventTickets({ event, tickets, zones }: Props) {
                     <Button onClick={openCreate}>
                         <Plus className="w-4 h-4 mr-1.5" /> Add Ticket
                     </Button>
+                </div>
+
+                {/* Venue / Seating Map */}
+                <div className="rounded-xl border border-border/60 bg-card shadow-sm px-5 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-primary" />
+                            <h3 className="text-sm font-semibold text-foreground">Venue / Seating Map</h3>
+                            {venueMapMedia && (
+                                <span className="text-xs text-muted-foreground">— {venueMapMedia.title || 'Uploaded'}</span>
+                            )}
+                            {savingMap && <span className="text-xs text-muted-foreground italic">Saving…</span>}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {venueMapMedia && (
+                                <>
+                                    <Button variant="outline" size="sm" onClick={() => setShowMapPreview(true)}>
+                                        <Eye className="w-3.5 h-3.5 mr-1.5" /> View Zone
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                        onClick={() => {
+                                            setVenueMapId('none');
+                                            setSavingMap(true);
+                                            router.post(`/admin/events/${event.slug}/tickets/venue-map`, {
+                                                venue_map_media_id: null,
+                                            }, { onFinish: () => setSavingMap(false) });
+                                        }}
+                                    >
+                                        <X className="w-3.5 h-3.5 mr-1" /> Remove
+                                    </Button>
+                                </>
+                            )}
+                            <Button
+                                variant={venueMapMedia ? 'ghost' : 'outline'}
+                                size="sm"
+                                onClick={() => venueMapFileRef.current?.click()}
+                            >
+                                <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
+                                {venueMapMedia ? 'Change' : 'Upload Image'}
+                            </Button>
+                            <input
+                                ref={venueMapFileRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    setSavingMap(true);
+                                    try {
+                                        const form = new FormData();
+                                        form.append('file', file);
+                                        const { data } = await (await import('axios')).default.post<{ media: { id: number; url: string; title: string } }>(
+                                            '/admin/media', form,
+                                            { headers: { 'Content-Type': 'multipart/form-data' } },
+                                        );
+                                        const newId = String(data.media.id);
+                                        setVenueMapId(newId);
+                                        router.post(`/admin/events/${event.slug}/tickets/venue-map`, {
+                                            venue_map_media_id: newId,
+                                        }, { onFinish: () => setSavingMap(false) });
+                                    } catch {
+                                        setSavingMap(false);
+                                    }
+                                    if (venueMapFileRef.current) venueMapFileRef.current.value = '';
+                                }}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Summary stats */}
@@ -264,18 +343,6 @@ export default function EventTickets({ event, tickets, zones }: Props) {
                         </TableBody>
                     </Table>
                 </div>
-
-                {/* Table footer */}
-                {tickets.length > 0 && (
-                    <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-                        <span className="text-sm text-muted-foreground">
-                            <span className="font-medium text-foreground">{tickets.length}</span> ticket{tickets.length !== 1 ? 's' : ''}
-                        </span>
-                        <Button variant="ghost" size="sm" onClick={openCreate} className="text-primary hover:text-primary/80">
-                            <Plus className="w-3.5 h-3.5 mr-1" /> Add another
-                        </Button>
-                    </div>
-                )}
             </div>
 
             {/* Create / Edit Dialog */}
@@ -454,6 +521,27 @@ export default function EventTickets({ event, tickets, zones }: Props) {
                         <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
                         <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Venue Map Preview Modal */}
+            <Dialog open={showMapPreview} onOpenChange={setShowMapPreview}>
+                <DialogContent className="max-w-3xl p-0 overflow-hidden">
+                    <DialogHeader className="px-6 pt-6 pb-0">
+                        <DialogTitle className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-primary" /> Venue / Seating Map
+                        </DialogTitle>
+                        <DialogDescription>{event.title}</DialogDescription>
+                    </DialogHeader>
+                    {venueMapMedia && (
+                        <div className="px-6 pb-6">
+                            <img
+                                src={venueMapMedia.url}
+                                alt="Venue / Seating Map"
+                                className="w-full rounded-lg border border-border/60"
+                            />
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </AdminLayout>

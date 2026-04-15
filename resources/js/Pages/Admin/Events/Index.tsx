@@ -4,10 +4,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Ticket, Package, ShoppingCart, Users, Pencil, Copy, Trash2, MapPin, CalendarDays, Globe, Shield } from 'lucide-react';
-import { type Event, type PaginatedData } from '@/types';
+import { ChevronDown, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Ticket, Package, ShoppingCart, Users, Pencil, Copy, Trash2, MapPin, CalendarDays, Globe, Shield, QrCode } from 'lucide-react';
+import { type Event, type PaginatedData, type SharedProps } from '@/types';
 
 interface Props {
     events: PaginatedData<EventRow>;
@@ -31,6 +31,8 @@ function formatDate(date: string) {
 }
 
 export default function EventsIndex({ events }: Props) {
+    const { auth } = usePage().props as unknown as SharedProps;
+    const isCheckinStaff = auth.user?.role === 'checkin_staff';
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Event | null>(null);
     const [duplicating, setDuplicating] = useState<string | null>(null);
@@ -69,9 +71,11 @@ export default function EventsIndex({ events }: Props) {
                         <h1 className="text-2xl font-bold text-foreground">Events</h1>
                         <p className="text-sm text-muted-foreground mt-0.5">{events.total} total event{events.total !== 1 ? 's' : ''}</p>
                     </div>
-                    <Button asChild>
-                        <Link href="/admin/events/create">+ New Event</Link>
-                    </Button>
+                    {!isCheckinStaff && (
+                        <Button asChild>
+                            <Link href="/admin/events/create">+ New Event</Link>
+                        </Button>
+                    )}
                 </div>
 
                 <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
@@ -98,6 +102,7 @@ export default function EventsIndex({ events }: Props) {
                                         onDelete={() => setDeleteTarget(event)}
                                         onDuplicate={() => duplicateEvent(event)}
                                         isDuplicating={duplicating === event.slug}
+                                        isCheckinStaff={isCheckinStaff}
                                     />
                                 );
                             })}
@@ -176,6 +181,7 @@ function EventRowBlock({
     onDelete,
     onDuplicate,
     isDuplicating,
+    isCheckinStaff,
 }: {
     event: EventRow;
     isExpanded: boolean;
@@ -183,6 +189,7 @@ function EventRowBlock({
     onDelete: () => void;
     onDuplicate: () => void;
     isDuplicating: boolean;
+    isCheckinStaff: boolean;
 }) {
     return (
         <>
@@ -226,6 +233,7 @@ function EventRowBlock({
                     )}
                 </TableCell>
                 <TableCell className="w-12" onClick={e => e.stopPropagation()}>
+                    {!isCheckinStaff && (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
@@ -247,6 +255,7 @@ function EventRowBlock({
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    )}
                 </TableCell>
             </TableRow>
 
@@ -255,7 +264,7 @@ function EventRowBlock({
                 <TableRow className="bg-accent/10 hover:bg-accent/10 border-b border-border/40">
                     <TableCell colSpan={6} className="p-0">
                         <div className="px-6 py-5 border-l-2 border-primary/40 ml-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div className={`grid grid-cols-1 ${isCheckinStaff ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-8`}>
                                 {/* Event details */}
                                 <div className="space-y-3">
                                     <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest">Details</h4>
@@ -283,7 +292,8 @@ function EventRowBlock({
                                     </div>
                                 </div>
 
-                                {/* Stats */}
+                                {/* Stats — hidden for checkin_staff */}
+                                {!isCheckinStaff && (
                                 <div className="space-y-3">
                                     <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest">Stats</h4>
                                     <div className="grid grid-cols-2 gap-2.5">
@@ -293,16 +303,24 @@ function EventRowBlock({
                                         <StatCard value={event.zones_count ?? 0} label="Zones" accent="muted" />
                                     </div>
                                 </div>
+                                )}
 
                                 {/* Quick actions */}
                                 <div className="space-y-3">
-                                    <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest">Manage</h4>
+                                    <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest">{isCheckinStaff ? 'Actions' : 'Manage'}</h4>
                                     <div className="flex flex-col gap-1.5">
+                                        {!isCheckinStaff && (
+                                        <>
                                         <ActionLink href={`/admin/events/${event.slug}/registrations`} icon={Users} label="Registrations" />
                                         <ActionLink href={`/admin/events/${event.slug}/tickets`} icon={Ticket} label="Manage Tickets" />
                                         <ActionLink href={`/admin/events/${event.slug}/products`} icon={Package} label="Manage Products" />
                                         <ActionLink href="/admin/orders" icon={ShoppingCart} label="Manage Orders" />
+                                        </>
+                                        )}
+                                        <ActionLink href={`/admin/events/${event.slug}/check-in`} icon={QrCode} label="Check-In Scanner" />
+                                        {!isCheckinStaff && (
                                         <ActionLink href={`/events/${event.slug}`} icon={Eye} label="View Public Page" external />
+                                        )}
                                     </div>
                                 </div>
                             </div>

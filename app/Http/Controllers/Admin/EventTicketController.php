@@ -7,6 +7,7 @@ use App\Http\Requests\StoreEventTicketRequest;
 use App\Models\Event;
 use App\Models\EventTicket;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -60,10 +61,25 @@ class EventTicketController extends Controller
         $zones = $event->zones()->orderBy('sort_order')->get();
 
         return Inertia::render('Admin/Events/Tickets', [
-            'event'   => $event->load('media'),
-            'tickets' => $tickets,
-            'zones'   => $zones,
+            'event'       => $event->load('media'),
+            'tickets'     => $tickets,
+            'zones'       => $zones,
+            'venueMapMedia' => $event->venueMap,
         ]);
+    }
+
+    public function updateVenueMap(Request $request, Event $event): RedirectResponse
+    {
+        $data = $request->validate([
+            'venue_map_media_id' => ['nullable', 'integer', 'exists:media,id'],
+        ]);
+
+        $event->update([
+            'venue_map_media_id' => $data['venue_map_media_id'],
+        ]);
+
+        return redirect()->route('admin.events.tickets.index', $event)
+            ->with('success', 'Venue / seating map updated.');
     }
 
     public function store(StoreEventTicketRequest $request, Event $event): RedirectResponse

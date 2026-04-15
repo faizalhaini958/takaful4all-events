@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
 import { Link } from '@inertiajs/react';
-import { useState, useRef } from 'react';
-import { ChevronLeft, QrCode, Search, CheckCircle2, XCircle, AlertCircle, UserCheck } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { ChevronLeft, QrCode, Search, CheckCircle2, XCircle, AlertCircle, UserCheck, Camera, Keyboard, Video, VideoOff } from 'lucide-react';
+import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import { type Event } from '@/types';
 import { registrationStatusBadge, paymentStatusBadge } from '@/lib/status-colors';
 
@@ -28,6 +29,7 @@ interface LookupResult {
 }
 
 type MessageType = 'success' | 'error' | 'warning';
+type ScanMode = 'manual' | 'camera';
 
 export default function EventCheckIn({ event }: Props) {
     const [reference, setReference] = useState('');
@@ -35,15 +37,29 @@ export default function EventCheckIn({ event }: Props) {
     const [result, setResult] = useState<LookupResult | null>(null);
     const [message, setMessage] = useState<{ type: MessageType; text: string } | null>(null);
     const [checkedInCount, setCheckedInCount] = useState(0);
+    const [scanMode, setScanMode] = useState<ScanMode>('manual');
+    const [cameraActive, setCameraActive] = useState(false);
+    const [cameraError, setCameraError] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const scannerRef = useRef<Html5Qrcode | null>(null);
+    const scannerContainerId = 'qr-reader';
+    // Guard to prevent double-lookup from rapid scans
+    const lookupInProgress = useRef(false);
 
-    async function handleLookup(e?: React.FormEvent) {
-        e?.preventDefault();
-        if (!reference.trim()) return;
+    // Extract reference from QR URL (handles full URLs like /events/.../confirmation/EVT-...)
+    const parseInput = useCallback((value: string): string => {
+        const match = value.match(/confirmation\/(EVT-[A-Z0-9-]+)/i);
+        return match ? match[1] : value;
+    }, []);
 
+    const doLookup = useCallback(async (ref: string) => {
+        if (!ref.trim() || lookupInProgress.current) return;
+
+        lookupInProgress.current = true;
         setLoading(true);
         setMessage(null);
         setResult(null);
+        setReference(ref);
 
         try {
             const res = await fetch(`/admin/events/${event.slug}/check-in/lookup`, {
@@ -53,7 +69,7 @@ export default function EventCheckIn({ event }: Props) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ reference: reference.trim() }),
+                body: JSON.stringify({ reference: ref.trim() }),
             });
 
             const data = await res.json();
@@ -70,7 +86,13 @@ export default function EventCheckIn({ event }: Props) {
             setMessage({ type: 'error', text: 'Failed to look up registration. Please try again.' });
         } finally {
             setLoading(false);
+            lookupInProgress.current = false;
         }
+    }, [event.slug]);
+
+    async function handleLookup(e?: React.FormEvent) {
+        e?.preventDefault();
+        await doLookup(reference);
     }
 
     async function handleCheckIn() {
@@ -100,7 +122,9 @@ export default function EventCheckIn({ event }: Props) {
                     setReference('');
                     setResult(null);
                     setMessage(null);
-                    inputRef.current?.focus();
+                    if (scanMode === 'manual') {
+                        inputRef.current?.focus();
+                    }
                 }, 3000);
             } else {
                 setMessage({ type: 'error', text: data.message });
@@ -112,15 +136,93 @@ export default function EventCheckIn({ event }: Props) {
         }
     }
 
-    // Extract reference from QR URL (handles full URLs like /events/.../confirmation/EVT-...)
-    function parseInput(value: string): string {
-        const match = value.match(/confirmation\/(EVT-[A-Z0-9-]+)/i);
-        return match ? match[1] : value;
-    }
-
     function handleInputChange(value: string) {
         const parsed = parseInput(value);
         setReference(parsed);
+    }
+
+    // ── Camera scanner management ──
+
+    const stopCamera = useCallback(async () => {
+        const scanner = scannerRef.current;
+        if (scanner) {
+            try {
+                const state = scanner.getState();
+                if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+                    await scanner.stop();
+                }
+            } catch {
+                // ignore stop errors
+            }
+            try {
+                scanner.clear();
+            } catch {
+                // ignore clear errors
+            }
+            scannerRef.current = null;
+        }
+        setCameraActive(false);
+    }, []);
+
+    const startCamera = useCallback(async () => {
+        setCameraError(null);
+
+        // Small delay to ensure the DOM container is rendered
+        await new Promise(r => setTimeout(r, 100));
+
+        const container = document.getElementById(scannerContainerId);
+        if (!container) {
+            setCameraError('Scanner container not found.');
+            return;
+        }
+
+        try {
+            const scanner = new Html5Qrcode(scannerContainerId);
+            scannerRef.current = scanner;
+
+            await scanner.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
+                (decodedText) => {
+                    const parsed = parseInput(decodedText);
+                    doLookup(parsed);
+                },
+                () => {
+                    // ignore scan failures (no QR in frame)
+                },
+            );
+
+            setCameraActive(true);
+        } catch (err: any) {
+            const msg = typeof err === 'string' ? err : err?.message ?? 'Unknown error';
+            if (msg.includes('NotAllowedError') || msg.includes('Permission')) {
+                setCameraError('Camera permission denied. Please allow camera access and try again.');
+            } else if (msg.includes('NotFoundError') || msg.includes('no camera')) {
+                setCameraError('No camera found on this device.');
+            } else {
+                setCameraError(`Camera error: ${msg}`);
+            }
+            scannerRef.current = null;
+        }
+    }, [parseInput, doLookup]);
+
+    // Stop camera when switching away from camera mode or unmounting
+    useEffect(() => {
+        if (scanMode !== 'camera') {
+            stopCamera();
+        }
+        return () => { stopCamera(); };
+    }, [scanMode, stopCamera]);
+
+    function handleModeSwitch(mode: ScanMode) {
+        setScanMode(mode);
+        setMessage(null);
+        setResult(null);
+        setReference('');
+        setCameraError(null);
+        if (mode === 'manual') {
+            setTimeout(() => inputRef.current?.focus(), 100);
+        }
     }
 
     const msgIcon = {
@@ -140,7 +242,7 @@ export default function EventCheckIn({ event }: Props) {
             <div className="max-w-2xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-3">
-                    <Link href={`/admin/events/${event.slug}/edit`} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <Link href="/admin/events" className="text-muted-foreground hover:text-foreground transition-colors">
                         <ChevronLeft className="w-5 h-5" />
                     </Link>
                     <div className="flex-1">
@@ -154,29 +256,106 @@ export default function EventCheckIn({ event }: Props) {
                     )}
                 </div>
 
-                {/* Scanner Input */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <QrCode className="w-5 h-5" /> Scan or Enter Reference
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleLookup} className="flex gap-2">
-                            <Input
-                                ref={inputRef}
-                                value={reference}
-                                onChange={e => handleInputChange(e.target.value)}
-                                placeholder="Scan QR code or type reference number (e.g. EVT-20260410-ABCD)"
-                                className="flex-1 text-lg"
-                                autoFocus
+                {/* Mode Switcher */}
+                <div className="flex gap-2">
+                    <Button
+                        variant={scanMode === 'manual' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleModeSwitch('manual')}
+                        className="flex-1"
+                    >
+                        <Keyboard className="w-4 h-4 mr-1.5" />
+                        USB / Bluetooth Scanner
+                    </Button>
+                    <Button
+                        variant={scanMode === 'camera' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleModeSwitch('camera')}
+                        className="flex-1"
+                    >
+                        <Camera className="w-4 h-4 mr-1.5" />
+                        Camera Scanner
+                    </Button>
+                </div>
+
+                {/* Manual / USB / Bluetooth Scanner */}
+                {scanMode === 'manual' && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <QrCode className="w-5 h-5" /> Scan or Enter Reference
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleLookup} className="flex gap-2">
+                                <Input
+                                    ref={inputRef}
+                                    value={reference}
+                                    onChange={e => handleInputChange(e.target.value)}
+                                    placeholder="Scan QR code or type reference number (e.g. EVT-20260410-ABCD)"
+                                    className="flex-1 text-lg"
+                                    autoFocus
+                                />
+                                <Button type="submit" disabled={loading || !reference.trim()}>
+                                    <Search className="w-4 h-4 mr-1" /> Look Up
+                                </Button>
+                            </form>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Use a USB or Bluetooth barcode scanner, or type the reference number manually.
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Camera Scanner */}
+                {scanMode === 'camera' && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Camera className="w-5 h-5" /> Camera QR Scanner
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {!cameraActive && !cameraError && (
+                                <div className="text-center py-8">
+                                    <Video className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                        Use your device camera to scan attendee QR codes
+                                    </p>
+                                    <Button onClick={startCamera} size="lg">
+                                        <Camera className="w-4 h-4 mr-2" /> Start Camera
+                                    </Button>
+                                </div>
+                            )}
+
+                            {cameraError && (
+                                <div className="text-center py-8">
+                                    <VideoOff className="w-12 h-12 mx-auto text-destructive/40 mb-3" />
+                                    <p className="text-sm text-destructive font-medium mb-4">{cameraError}</p>
+                                    <Button onClick={startCamera} variant="outline">
+                                        Try Again
+                                    </Button>
+                                </div>
+                            )}
+
+                            <div
+                                id={scannerContainerId}
+                                className={`rounded-lg overflow-hidden ${cameraActive ? '' : 'hidden'}`}
                             />
-                            <Button type="submit" disabled={loading || !reference.trim()}>
-                                <Search className="w-4 h-4 mr-1" /> Look Up
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
+
+                            {cameraActive && (
+                                <div className="flex items-center justify-between">
+                                    <p className="text-xs text-muted-foreground">
+                                        Point your camera at a QR code to scan automatically
+                                    </p>
+                                    <Button variant="outline" size="sm" onClick={stopCamera}>
+                                        <VideoOff className="w-3.5 h-3.5 mr-1.5" /> Stop Camera
+                                    </Button>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Message */}
                 {message && (

@@ -1,11 +1,13 @@
 import UserDashboardLayout from '@/Layouts/UserDashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Card, CardContent } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
+import { Separator } from '@/Components/ui/separator';
 import { Link, router } from '@inertiajs/react';
-import { ShoppingBag, Search, Eye, Download, Receipt } from 'lucide-react';
+import { ShoppingBag, Search, Eye, Calendar, MapPin, Hash, Ticket, Package, User, Mail, Phone, Building2 } from 'lucide-react';
 import { type EventRegistration, type PaginatedData } from '@/types';
 import { useState } from 'react';
 
@@ -49,6 +51,7 @@ const PAYMENT_OPTIONS = [
 export default function Orders({ orders, filters, totals }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [paymentStatus, setPaymentStatus] = useState(filters.payment_status || '');
+    const [selectedOrder, setSelectedOrder] = useState<EventRegistration | null>(null);
 
     const applyFilters = () => {
         router.get('/dashboard/orders', { search, payment_status: paymentStatus }, { preserveState: true, preserveScroll: true });
@@ -164,7 +167,12 @@ export default function Orders({ orders, filters, totals }: Props) {
                                                     {order.event?.title ?? '—'}
                                                 </TableCell>
                                                 <TableCell className="text-sm">
-                                                    {order.ticket?.name ?? '—'}
+                                                    <div>{order.ticket?.name ?? '—'}</div>
+                                                    {order.products && order.products.length > 0 && (
+                                                        <div className="text-xs text-gray-400 mt-0.5">
+                                                            +{order.products.length} add-on{order.products.length > 1 ? 's' : ''}
+                                                        </div>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>{order.quantity}</TableCell>
                                                 <TableCell className="font-medium whitespace-nowrap">
@@ -188,11 +196,9 @@ export default function Orders({ orders, filters, totals }: Props) {
                                                     })}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Link href={`/dashboard/orders/${order.id}`}>
-                                                        <Button variant="ghost" size="sm">
-                                                            <Eye className="w-4 h-4" />
-                                                        </Button>
-                                                    </Link>
+                                                    <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)}>
+                                                        <Eye className="w-4 h-4" />
+                                                    </Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -225,6 +231,135 @@ export default function Orders({ orders, filters, totals }: Props) {
                     </Card>
                 )}
             </div>
+
+            {/* Order Detail Modal */}
+            <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <ShoppingBag className="w-5 h-5" />
+                            Order Details
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {selectedOrder && (() => {
+                        const o = selectedOrder;
+                        const event = o.event;
+                        return (
+                            <div className="space-y-4 text-sm">
+                                {/* Reference */}
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border">
+                                    <span className="flex items-center gap-1.5 text-gray-500">
+                                        <Hash className="w-4 h-4" /> Reference
+                                    </span>
+                                    <span className="font-mono font-bold">{o.reference_no}</span>
+                                </div>
+
+                                {/* Event */}
+                                {event && (
+                                    <div className="space-y-1">
+                                        <p className="font-semibold text-base">{event.title}</p>
+                                        <div className="flex flex-wrap gap-3 text-gray-500 text-xs">
+                                            {event.start_at && (
+                                                <span className="flex items-center gap-1">
+                                                    <Calendar className="w-3.5 h-3.5" />
+                                                    {new Date(event.start_at).toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                                                </span>
+                                            )}
+                                            {event.venue && (
+                                                <span className="flex items-center gap-1">
+                                                    <MapPin className="w-3.5 h-3.5" />
+                                                    {[event.venue, event.city].filter(Boolean).join(', ')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <Separator />
+
+                                {/* Attendee */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <p className="text-xs text-gray-400 flex items-center gap-1"><User className="w-3 h-3" /> Name</p>
+                                        <p className="font-medium">{o.name}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-400 flex items-center gap-1"><Mail className="w-3 h-3" /> Email</p>
+                                        <p className="font-medium break-all">{o.email}</p>
+                                    </div>
+                                    {o.phone && (
+                                        <div>
+                                            <p className="text-xs text-gray-400 flex items-center gap-1"><Phone className="w-3 h-3" /> Phone</p>
+                                            <p className="font-medium">{o.phone}</p>
+                                        </div>
+                                    )}
+                                    {o.company && (
+                                        <div>
+                                            <p className="text-xs text-gray-400 flex items-center gap-1"><Building2 className="w-3 h-3" /> Company</p>
+                                            <p className="font-medium">{o.company}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <Separator />
+
+                                {/* Ticket */}
+                                <div>
+                                    <p className="text-xs text-gray-400 flex items-center gap-1 mb-2"><Ticket className="w-3 h-3" /> Ticket</p>
+                                    <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                                        <span>{o.ticket?.name ?? '—'} × {o.quantity}</span>
+                                        <span className="font-medium">RM {Number(o.subtotal).toFixed(2)}</span>
+                                    </div>
+                                    {Number(o.discount_amount) > 0 && (
+                                        <div className="flex justify-between text-xs text-green-600 px-3 mt-1">
+                                            <span>Discount</span>
+                                            <span>− RM {Number(o.discount_amount).toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Add-ons */}
+                                {o.products && o.products.length > 0 && (
+                                    <div>
+                                        <p className="text-xs text-gray-400 flex items-center gap-1 mb-2"><Package className="w-3 h-3" /> Add-ons</p>
+                                        <div className="rounded-lg border divide-y">
+                                            {o.products.map((p) => (
+                                                <div key={p.id} className="flex items-center justify-between px-3 py-2">
+                                                    <span>
+                                                        {p.product?.name ?? 'Item'}
+                                                        {p.variant && <span className="text-gray-400 ml-1">({p.variant})</span>}
+                                                        <span className="text-gray-400 ml-1">× {p.quantity}</span>
+                                                    </span>
+                                                    <span className="font-medium">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <Separator />
+
+                                {/* Totals */}
+                                <div className="space-y-1">
+                                    <div className="flex justify-between font-bold text-base">
+                                        <span>Total</span>
+                                        <span>{Number(o.total_amount) > 0 ? `RM ${Number(o.total_amount).toFixed(2)}` : 'Free'}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs text-gray-500">
+                                        <span>Payment Status</span>
+                                        <Badge variant={PAYMENT_VARIANT[o.payment_status] ?? 'outline'} className="text-xs">{o.payment_status}</Badge>
+                                    </div>
+                                    <div className="flex justify-between text-xs text-gray-500">
+                                        <span>Registration Status</span>
+                                        <Badge variant={STATUS_VARIANT[o.status] ?? 'secondary'} className="text-xs">{o.status}</Badge>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+                </DialogContent>
+            </Dialog>
         </UserDashboardLayout>
     );
 }

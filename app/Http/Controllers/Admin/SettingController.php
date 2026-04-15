@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -148,11 +149,11 @@ class SettingController extends Controller
     public function updateGeneral(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'site_name'     => 'nullable|string|max:255',
-            'site_logo'     => 'nullable|string|max:500',
-            'footer_text'   => 'nullable|string|max:1000',
-            'contact_email' => 'nullable|email|max:255',
-            'contact_phone' => 'nullable|string|max:50',
+            'site_name'          => 'nullable|string|max:255',
+            'site_logo'          => 'nullable|string|max:500',
+            'footer_text'        => 'nullable|string|max:1000',
+            'contact_email'      => 'nullable|email|max:255',
+            'contact_phone'      => 'nullable|string|max:50',
         ]);
 
         Setting::setGroup('general', $validated);

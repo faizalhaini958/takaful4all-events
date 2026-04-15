@@ -8,7 +8,6 @@ import { type Event, type Media } from '@/types';
 interface Props {
     event: Event;
     mediaList: Pick<Media, 'id' | 'url' | 'title'>[];
-    venueMapMedia: Media | null;
 }
 
 function toDatetimeLocal(val: string | null): string {
@@ -16,7 +15,7 @@ function toDatetimeLocal(val: string | null): string {
     return val.length > 16 ? val.slice(0, 16) : val;
 }
 
-export default function EventEdit({ event, venueMapMedia }: Props) {
+export default function EventEdit({ event }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         title:            event.title,
         slug:             event.slug,
@@ -32,7 +31,6 @@ export default function EventEdit({ event, venueMapMedia }: Props) {
         gdrive_link:      event.gdrive_link ?? '',
         is_published:     event.is_published ? '1' : '0',
         media_id:         event.media_id ? String(event.media_id) : 'none',
-        venue_map_media_id: event.venue_map_media_id ? String(event.venue_map_media_id) : 'none',
         rsvp_enabled:     event.rsvp_enabled ?? false,
         rsvp_deadline:    toDatetimeLocal(event.rsvp_deadline ?? null),
         max_attendees:    event.max_attendees ? String(event.max_attendees) : '',
@@ -68,7 +66,6 @@ export default function EventEdit({ event, venueMapMedia }: Props) {
                     onSubmit={submit}
                     submitLabel="Update Event"
                     currentMedia={event.media}
-                    currentVenueMap={venueMapMedia}
                     eventSlug={event.slug}
                 />
             </div>

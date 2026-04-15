@@ -13,8 +13,12 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(): Response
+    public function index(): Response|\Illuminate\Http\RedirectResponse
     {
+        if (request()->user()?->isCheckinStaff()) {
+            return redirect()->route('admin.events.index');
+        }
+
         return Inertia::render('Admin/Dashboard', [
             'stats' => [
                 'events' => [

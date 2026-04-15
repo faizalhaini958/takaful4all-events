@@ -7,11 +7,13 @@ import { Label } from '@/Components/ui/label';
 import { Switch } from '@/Components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/Components/ui/dialog';
-import { Plus, Pencil, Trash2, GripVertical, ExternalLink } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
+import { Plus, Pencil, Trash2, GripVertical, ExternalLink, Monitor, Smartphone, X } from 'lucide-react';
 import { type Banner } from '@/types';
 
 interface Props {
     banners: Banner[];
+    slideshowEnabled: boolean;
 }
 
 function BannerFormDialog({
@@ -29,12 +31,16 @@ function BannerFormDialog({
     const { data, setData, post, processing, errors, reset } = useForm<{
         title: string;
         image: File | null;
+        mobile_image: File | null;
+        remove_mobile_image: boolean;
         link_url: string;
         sort_order: string;
         is_active: boolean;
     }>({
         title: banner?.title ?? '',
         image: null,
+        mobile_image: null,
+        remove_mobile_image: false,
         link_url: banner?.link_url ?? '',
         sort_order: String(banner?.sort_order ?? 0),
         is_active: banner?.is_active ?? true,
@@ -57,7 +63,7 @@ function BannerFormDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{isEdit ? 'Edit Banner' : 'Add Banner'}</DialogTitle>
                 </DialogHeader>
@@ -74,21 +80,103 @@ function BannerFormDialog({
                         {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title}</p>}
                     </div>
 
-                    <div>
-                        <Label htmlFor="image">Image {!isEdit && '*'}</Label>
-                        {isEdit && banner?.image_url && (
-                            <img src={banner.image_url} alt={banner.title} className="mt-1 rounded-lg h-32 w-full object-cover" />
-                        )}
-                        <Input
-                            id="image"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={e => setData('image', e.target.files?.[0] ?? null)}
-                            className="mt-1"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">Min 800px wide. JPEG, PNG, or WebP. Max 5MB.</p>
-                        {errors.image && <p className="text-sm text-red-600 mt-1">{errors.image}</p>}
-                    </div>
+                    {/* Desktop & Mobile Image Tabs */}
+                    <Tabs defaultValue="desktop" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="desktop" className="flex items-center gap-1.5">
+                                <Monitor className="w-4 h-4" /> Desktop Image *
+                            </TabsTrigger>
+                            <TabsTrigger value="mobile" className="flex items-center gap-1.5">
+                                <Smartphone className="w-4 h-4" /> Mobile Image
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="desktop" className="space-y-2 mt-3">
+                            {isEdit && banner?.image_url && !data.image && (
+                                <div className="relative rounded-lg overflow-hidden bg-gray-100">
+                                    <img
+                                        src={banner.image_url}
+                                        alt={banner.title}
+                                        className="w-full rounded-lg object-cover"
+                                        style={{ aspectRatio: '1250 / 430' }}
+                                    />
+                                </div>
+                            )}
+                            {data.image && (
+                                <div className="relative rounded-lg overflow-hidden bg-gray-100">
+                                    <img
+                                        src={URL.createObjectURL(data.image)}
+                                        alt="Desktop preview"
+                                        className="w-full rounded-lg object-cover"
+                                        style={{ aspectRatio: '1250 / 430' }}
+                                    />
+                                </div>
+                            )}
+                            <Input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={e => setData('image', e.target.files?.[0] ?? null)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Recommended: 1250 × 430px. Min 800px wide. JPEG, PNG, or WebP. Max 5MB.
+                            </p>
+                            {errors.image && <p className="text-sm text-red-600 mt-1">{errors.image}</p>}
+                        </TabsContent>
+
+                        <TabsContent value="mobile" className="space-y-2 mt-3">
+                            {isEdit && banner?.mobile_image_url && !data.mobile_image && !data.remove_mobile_image && (
+                                <div className="relative rounded-lg overflow-hidden bg-gray-100">
+                                    <img
+                                        src={banner.mobile_image_url}
+                                        alt={`${banner.title} (mobile)`}
+                                        className="w-full max-w-xs mx-auto rounded-lg object-cover"
+                                        style={{ aspectRatio: '3 / 4' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setData('remove_mobile_image', true)}
+                                        className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            )}
+                            {data.mobile_image && (
+                                <div className="relative rounded-lg overflow-hidden bg-gray-100">
+                                    <img
+                                        src={URL.createObjectURL(data.mobile_image)}
+                                        alt="Mobile preview"
+                                        className="w-full max-w-xs mx-auto rounded-lg object-cover"
+                                        style={{ aspectRatio: '3 / 4' }}
+                                    />
+                                </div>
+                            )}
+                            {data.remove_mobile_image && !data.mobile_image && (
+                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center text-sm text-muted-foreground">
+                                    Mobile image will be removed on save.
+                                    <button
+                                        type="button"
+                                        onClick={() => setData('remove_mobile_image', false)}
+                                        className="block mx-auto mt-2 text-brand hover:underline text-xs"
+                                    >
+                                        Undo
+                                    </button>
+                                </div>
+                            )}
+                            <Input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={e => {
+                                    setData('mobile_image', e.target.files?.[0] ?? null);
+                                    if (e.target.files?.[0]) setData('remove_mobile_image', false);
+                                }}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Recommended: 3:4 portrait aspect ratio (e.g. 600 × 800px). Optional — if not provided, the desktop image will be shown on mobile. JPEG, PNG, or WebP. Max 5MB.
+                            </p>
+                            {errors.mobile_image && <p className="text-sm text-red-600 mt-1">{errors.mobile_image}</p>}
+                        </TabsContent>
+                    </Tabs>
 
                     <div>
                         <Label htmlFor="link_url">Link URL <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
@@ -139,7 +227,14 @@ function BannerFormDialog({
     );
 }
 
-export default function BannersIndex({ banners }: Props) {
+export default function BannersIndex({ banners, slideshowEnabled }: Props) {
+    const [slideshow, setSlideshow] = useState(slideshowEnabled);
+
+    const handleToggleSlideshow = (checked: boolean) => {
+        setSlideshow(checked);
+        router.post('/admin/banners/slideshow', { enabled: checked }, { preserveScroll: true });
+    };
+
     const handleDelete = (banner: Banner) => {
         if (!confirm(`Delete banner "${banner.title}"?`)) return;
         router.delete(`/admin/banners/${banner.id}`);
@@ -162,6 +257,21 @@ export default function BannersIndex({ banners }: Props) {
                                 <Plus className="w-4 h-4 mr-1.5" /> Add Banner
                             </Button>
                         }
+                    />
+                </div>
+
+                {/* Slideshow Toggle */}
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="slideshow-toggle" className="text-base font-medium cursor-pointer">Homepage Slideshow</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Enable the banner slideshow on the homepage. When disabled, the default hero section will be shown.
+                        </p>
+                    </div>
+                    <Switch
+                        id="slideshow-toggle"
+                        checked={slideshow}
+                        onCheckedChange={handleToggleSlideshow}
                     />
                 </div>
 
@@ -207,6 +317,11 @@ export default function BannersIndex({ banners }: Props) {
                                                 <span className="text-xs text-muted-foreground">
                                                     Order: {banner.sort_order}
                                                 </span>
+                                                {banner.mobile_image_url && (
+                                                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 flex items-center gap-1">
+                                                        <Smartphone className="w-3 h-3" /> Mobile
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1 flex-shrink-0">

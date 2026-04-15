@@ -8,7 +8,7 @@ interface UserData {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'editor' | 'company' | 'public';
+    role: 'admin' | 'editor' | 'checkin_staff' | 'company' | 'public';
     company_name: string | null;
     company_registration_no: string | null;
     company_address: string | null;

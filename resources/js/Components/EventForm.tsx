@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Switch } from '@/Components/ui/switch';
 import { Link } from '@inertiajs/react';
-import { MapPin, Calendar, ExternalLink, Eye, Users, Ticket, Palette, QrCode, FolderOpen, FileText, Image, Loader2, Link2, Save } from 'lucide-react';
+import { MapPin, Calendar, ExternalLink, Eye, Users, Ticket, Palette, FolderOpen, FileText, Image, Loader2, Link2, Save } from 'lucide-react';
 import RichEditor from '@/Components/RichEditor';
 import ImageUpload from '@/Components/ImageUpload';
 import { type Media, type Event } from '@/types';
@@ -27,7 +27,6 @@ export interface EventFormData {
     gdrive_link: string;
     is_published: string;
     media_id: string;
-    venue_map_media_id: string;
     rsvp_enabled: boolean;
     rsvp_deadline: string;
     max_attendees: string;
@@ -42,7 +41,6 @@ interface Props {
     onSubmit: (e: React.FormEvent) => void;
     submitLabel: string;
     currentMedia?: Media | null;
-    currentVenueMap?: Media | null;
     /** For the "View on site" link in edit mode */
     eventSlug?: string;
 }
@@ -102,7 +100,6 @@ export default function EventForm({
     onSubmit,
     submitLabel,
     currentMedia,
-    currentVenueMap,
     eventSlug,
 }: Props) {
     const mapQuery = useMemo(
@@ -384,27 +381,6 @@ export default function EventForm({
                         </CardContent>
                     </Card>
 
-                    {/* Venue / Seating Map */}
-                    <Card className="rounded-xl border-border/60">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-primary" /> Venue / Seating Map
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-xs text-muted-foreground mb-3">
-                                Upload a seating layout or venue map image (PNG/JPG) shown on the registration page.
-                            </p>
-                            <ImageUpload
-                                value={data.venue_map_media_id}
-                                currentMedia={currentVenueMap}
-                                onChange={(id) => setData('venue_map_media_id', id)}
-                                onClear={() => setData('venue_map_media_id', 'none')}
-                            />
-                            {errors.venue_map_media_id && <p className="text-sm text-destructive mt-2">{errors.venue_map_media_id}</p>}
-                        </CardContent>
-                    </Card>
-
                     {/* RSVP / Registration Settings */}
                     <Card className="rounded-xl border-border/60">
                         <CardHeader>
@@ -486,12 +462,7 @@ export default function EventForm({
                                             >
                                                 <Palette className="w-3.5 h-3.5" /> Manage Zones
                                             </Link>
-                                            <Link
-                                                href={`/admin/events/${eventSlug}/check-in`}
-                                                className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
-                                            >
-                                                <QrCode className="w-3.5 h-3.5" /> Check-In Scanner
-                                            </Link>
+
                                         </div>
                                     )}
                                 </>

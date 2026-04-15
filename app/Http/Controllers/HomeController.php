@@ -6,6 +6,7 @@ use App\Models\Banner;
 use App\Models\Event;
 use App\Models\Page;
 use App\Models\Post;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -42,14 +43,18 @@ class HomeController extends Controller
             Post::published()->ofType('agent360')->latest('published_at')->take(6)->with('media')->get()
         );
 
+        $general = Setting::getCached('general');
+        $slideshowEnabled = ($general['slideshow_enabled'] ?? '0') === '1';
+
         return Inertia::render('Public/Home', [
-            'banners'        => $banners,
-            'upcomingEvents' => $upcomingEvents,
-            'pastEvents'     => $pastEvents,
-            'aboutPage'      => $aboutPage,
-            'podcasts'       => $podcasts,
-            'webinars'       => $webinars,
-            'agent360'       => $agent360,
+            'banners'          => $banners,
+            'slideshowEnabled' => $slideshowEnabled,
+            'upcomingEvents'   => $upcomingEvents,
+            'pastEvents'       => $pastEvents,
+            'aboutPage'        => $aboutPage,
+            'podcasts'         => $podcasts,
+            'webinars'         => $webinars,
+            'agent360'         => $agent360,
         ]);
     }
 }

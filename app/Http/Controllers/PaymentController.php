@@ -22,13 +22,13 @@ class PaymentController extends Controller
 
         // Try to find the registration by reference or purchase_id
         if ($reference) {
-            $registration = EventRegistration::with(['event.media', 'ticket'])
+            $registration = EventRegistration::with(['event.media', 'ticket', 'products.product'])
                 ->where('reference_no', $reference)
                 ->first();
         }
 
         if (! $registration && $purchaseId) {
-            $registration = EventRegistration::with(['event.media', 'ticket'])
+            $registration = EventRegistration::with(['event.media', 'ticket', 'products.product'])
                 ->where('payment_reference', $purchaseId)
                 ->orWhereJsonContains('meta_json->chipin_purchase_id', $purchaseId)
                 ->first();

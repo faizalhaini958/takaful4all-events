@@ -453,23 +453,31 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                                                 )}
                                             </div>
                                             <div>
-                                                <Label htmlFor={`phone_${index}`}>{t('register.phone')}</Label>
+                                                <Label htmlFor={`phone_${index}`}>{t('register.phone')} <span className="text-red-500">*</span></Label>
                                                 <Input
                                                     id={`phone_${index}`}
                                                     value={attendee.phone}
                                                     onChange={e => updateAttendee(index, 'phone', e.target.value)}
                                                     className="mt-1"
                                                     placeholder={t('register.phone_placeholder')}
+                                                    required
                                                 />
+                                                {(errors as Record<string, string>)[`attendees.${index}.phone`] && (
+                                                    <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.phone`]}</p>
+                                                )}
                                             </div>
                                             <div>
-                                                <Label htmlFor={`company_${index}`}>{t('register.company')}</Label>
+                                                <Label htmlFor={`company_${index}`}>{t('register.company')} <span className="text-red-500">*</span></Label>
                                                 <Input
                                                     id={`company_${index}`}
                                                     value={attendee.company}
                                                     onChange={e => updateAttendee(index, 'company', e.target.value)}
                                                     className="mt-1"
+                                                    required
                                                 />
+                                                {(errors as Record<string, string>)[`attendees.${index}.company`] && (
+                                                    <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.company`]}</p>
+                                                )}
                                             </div>
                                             <div>
                                                 <Label htmlFor={`job_title_${index}`}>{t('register.job_title')}</Label>

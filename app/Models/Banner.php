@@ -10,6 +10,7 @@ class Banner extends Model
     protected $fillable = [
         'title',
         'image_path',
+        'mobile_image_path',
         'link_url',
         'sort_order',
         'is_active',
@@ -34,5 +35,18 @@ class Banner extends Model
         return '/storage/' . $this->image_path;
     }
 
-    protected $appends = ['image_url'];
+    public function getMobileImageUrlAttribute(): ?string
+    {
+        if (! $this->mobile_image_path) {
+            return null;
+        }
+
+        if (str_starts_with($this->mobile_image_path, 'http')) {
+            return parse_url($this->mobile_image_path, PHP_URL_PATH) ?: $this->mobile_image_path;
+        }
+
+        return '/storage/' . $this->mobile_image_path;
+    }
+
+    protected $appends = ['image_url', 'mobile_image_url'];
 }

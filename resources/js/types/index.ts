@@ -5,6 +5,8 @@ export interface Banner {
     title: string;
     image_path: string;
     image_url: string;
+    mobile_image_path: string | null;
+    mobile_image_url: string | null;
     link_url: string | null;
     sort_order: number;
     is_active: boolean;
@@ -236,7 +238,7 @@ export interface PaginatedData<T> {
 
 // ─── Auth / User ──────────────────────────────────────────────────────────────
 
-export type UserRole = 'admin' | 'editor' | 'company' | 'public';
+export type UserRole = 'admin' | 'editor' | 'checkin_staff' | 'company' | 'public';
 
 export interface AuthUser {
     id: number;

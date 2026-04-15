@@ -12,6 +12,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 interface Props {
     banners: Banner[];
+    slideshowEnabled: boolean;
     upcomingEvents: Event[];
     pastEvents: Event[];
     aboutPage: Page | null;
@@ -20,15 +21,15 @@ interface Props {
     agent360: Post[];
 }
 
-export default function Home({ banners, upcomingEvents, pastEvents, aboutPage, podcasts, webinars, agent360 }: Props) {
+export default function Home({ banners, slideshowEnabled, upcomingEvents, pastEvents, aboutPage, podcasts, webinars, agent360 }: Props) {
     const [activePost, setActivePost] = useState<Post | null>(null);
     const { t } = useTranslation();
     return (
         <PublicLayout>
             <VideoModal post={activePost} onClose={() => setActivePost(null)} />
 
-            {/* ── Hero: Carousel if banners exist, otherwise static hero ── */}
-            {banners.length > 0 ? (
+            {/* ── Hero: Carousel if slideshow enabled & banners exist, otherwise static hero ── */}
+            {slideshowEnabled && banners.length > 0 ? (
                 <HeroCarousel banners={banners} />
             ) : (
             <section className="relative bg-brand-light overflow-hidden">

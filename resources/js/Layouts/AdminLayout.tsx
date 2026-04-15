@@ -54,7 +54,7 @@ import {
     DropdownMenuTrigger,
 } from '@/Components/ui/dropdown-menu';
 
-const NAV = [
+const NAV_FULL = [
     { href: '/admin',          label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/events',   label: 'Events',    icon: CalendarDays },
     { href: '/admin/orders',   label: 'Orders',    icon: ShoppingCart },
@@ -65,6 +65,10 @@ const NAV = [
     { href: '/admin/banners',  label: 'Banners',   icon: ImageIcon },
     { href: '/admin/menus',    label: 'Menus',     icon: Menu },
     { href: '/admin/settings', label: 'Settings',  icon: Settings },
+];
+
+const NAV_CHECKIN_STAFF = [
+    { href: '/admin/events',   label: 'Events',    icon: CalendarDays },
 ];
 
 const EVENTS_SUB = [
@@ -82,7 +86,9 @@ function getEventSlugFromPath(path: string): string | null {
     return match ? match[1] : null;
 }
 
-function AdminSidebar({ currentPath }: { currentPath: string }) {
+function AdminSidebar({ currentPath, userRole }: { currentPath: string; userRole?: string }) {
+    const isCheckinStaff = userRole === 'checkin_staff';
+    const NAV = isCheckinStaff ? NAV_CHECKIN_STAFF : NAV_FULL;
     const isEventsSection =
         currentPath.startsWith('/admin/events') ||
         currentPath.startsWith('/admin/registrations') ||
@@ -95,7 +101,7 @@ function AdminSidebar({ currentPath }: { currentPath: string }) {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/admin">
+                            <Link href={isCheckinStaff ? '/admin/events' : '/admin'}>
                                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                                     <LayoutDashboard className="size-4" />
                                 </div>
@@ -122,8 +128,25 @@ function AdminSidebar({ currentPath }: { currentPath: string }) {
                                     (item.href !== '/admin' && currentPath.startsWith(item.href));
                                 const Icon = item.icon;
 
-                                // Events with sub-items for global views
+                                // Events with sub-items for global views (not for checkin_staff)
                                 if (item.href === '/admin/events') {
+                                    if (isCheckinStaff) {
+                                        return (
+                                            <SidebarMenuItem key={item.href}>
+                                                <SidebarMenuButton
+                                                    asChild
+                                                    isActive={isEventsSection}
+                                                    tooltip={item.label}
+                                                >
+                                                    <Link href={item.href}>
+                                                        <Icon />
+                                                        <span>{item.label}</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        );
+                                    }
+
                                     return (
                                         <Collapsible
                                             key="events"
@@ -266,7 +289,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
 
     return (
         <SidebarProvider>
-            <AdminSidebar currentPath={currentPath} />
+            <AdminSidebar currentPath={currentPath} userRole={auth.user?.role} />
 
             <SidebarInset>
                 {/* Top bar */}

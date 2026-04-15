@@ -177,6 +177,16 @@ export default function Tickets({ registrations, filters }: Props) {
                                                         </Button>
                                                     </div>
                                                 )}
+                                                {reg.status !== 'confirmed' && reg.status !== 'attended' && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-xs mt-1"
+                                                        onClick={() => openTicketModal(reg)}
+                                                    >
+                                                        View Details
+                                                    </Button>
+                                                )}
                                             </div>
                                         </div>
 

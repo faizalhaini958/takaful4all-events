@@ -75,7 +75,7 @@ class EventRegistrationController extends Controller
     /**
      * Handle the registration/RSVP submission.
      */
-    public function store(StoreEventRegistrationRequest $request, string $slug): RedirectResponse
+    public function store(StoreEventRegistrationRequest $request, string $slug): RedirectResponse|\Illuminate\Http\Response
     {
         $event = Event::where('slug', $slug)
             ->where('is_published', true)
@@ -247,11 +247,11 @@ class EventRegistrationController extends Controller
                     $failureRedirect .= (str_contains($failureRedirect, '?') ? '&' : '?') . 'reference=' . $registration->reference_no;
 
                     $result = $chipIn->createPurchase([
-                        'client' => [
+                        'client' => array_filter([
                             'email'     => $registration->email,
                             'full_name' => $registration->name,
-                            'phone'     => $registration->phone,
-                        ],
+                            'phone'     => $registration->phone ?: null,
+                        ], fn($v) => $v !== null),
                         'purchase' => [
                             'products' => $purchaseProducts,
                             'currency' => $ticket->currency ?? 'MYR',
@@ -261,7 +261,11 @@ class EventRegistrationController extends Controller
                         'send_receipt'     => ($chipInSettings['send_receipt'] ?? '0') === '1',
                         'success_redirect' => $successRedirect,
                         'failure_redirect' => $failureRedirect,
-                        'success_callback' => "{$baseUrl}/webhooks/chipin",
+                        // Only include success_callback in production (Chip-In rejects custom ports like :8000)
+                        ...( parse_url($baseUrl, PHP_URL_PORT) === null
+                            ? ['success_callback' => "{$baseUrl}/webhooks/chipin"]
+                            : []
+                        ),
                     ]);
 
                     if ($result['success'] && !empty($result['checkout_url'])) {
@@ -275,7 +279,7 @@ class EventRegistrationController extends Controller
                             ),
                         ]);
 
-                        return redirect()->away($result['checkout_url']);
+                        return Inertia::location($result['checkout_url']);
                     }
 
                     // If Chip-In creation failed, log but still continue to confirmation

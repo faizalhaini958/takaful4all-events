@@ -100,7 +100,7 @@ Route::prefix('dashboard')
 
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth', 'verified', 'admin'])
+    ->middleware(['auth', 'verified', 'admin', 'restrict.checkin_staff'])
     ->group(function () {
 
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -113,6 +113,7 @@ Route::prefix('admin')
         Route::get('banners', [AdminBannerController::class, 'index'])->name('banners.index');
         Route::post('banners', [AdminBannerController::class, 'store'])->name('banners.store');
         Route::post('banners/reorder', [AdminBannerController::class, 'reorder'])->name('banners.reorder');
+        Route::post('banners/slideshow', [AdminBannerController::class, 'toggleSlideshow'])->name('banners.slideshow');
         Route::post('banners/{banner}', [AdminBannerController::class, 'update'])->name('banners.update')->where('banner', '[0-9]+');
         Route::delete('banners/{banner}', [AdminBannerController::class, 'destroy'])->name('banners.destroy');
 
@@ -127,6 +128,7 @@ Route::prefix('admin')
         Route::post('events/{event}/tickets', [AdminEventTicketController::class, 'store'])->name('events.tickets.store');
         Route::put('events/{event}/tickets/{ticket}', [AdminEventTicketController::class, 'update'])->name('events.tickets.update');
         Route::delete('events/{event}/tickets/{ticket}', [AdminEventTicketController::class, 'destroy'])->name('events.tickets.destroy');
+        Route::post('events/{event}/tickets/venue-map', [AdminEventTicketController::class, 'updateVenueMap'])->name('events.tickets.venue-map');
 
         // Event Zones
         Route::get('events/{event}/zones', [AdminEventZoneController::class, 'index'])->name('events.zones.index');

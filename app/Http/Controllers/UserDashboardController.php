@@ -17,9 +17,12 @@ class UserDashboardController extends Controller
 
     public function index(Request $request): Response
     {
-        $email = $request->user()->email;
+        $user = $request->user();
 
-        $registrations = EventRegistration::where('email', $email)
+        $registrations = EventRegistration::where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('email', $user->email);
+            })
             ->with(['event', 'ticket'])
             ->latest()
             ->get();
@@ -36,7 +39,7 @@ class UserDashboardController extends Controller
                 'totalTickets'   => $registrations->where('status', '!=', 'cancelled')->count(),
                 'upcomingEvents' => $upcomingRegistrations->count(),
                 'totalOrders'    => $registrations->count(),
-                'totalSpent'     => (float) $registrations->where('payment_status', 'paid')->sum('total_amount'),
+                'totalSpent'     => (float) $registrations->whereNotIn('status', ['cancelled'])->sum('total_amount'),
             ],
             'upcomingRegistrations' => $upcomingRegistrations,
             'recentOrders'         => $recentOrders,
@@ -93,9 +96,12 @@ class UserDashboardController extends Controller
 
     public function tickets(Request $request): Response
     {
-        $email = $request->user()->email;
+        $user = $request->user();
 
-        $query = EventRegistration::where('email', $email)
+        $query = EventRegistration::where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('email', $user->email);
+            })
             ->with(['event.media', 'ticket', 'products.product']);
 
         // Search filter
@@ -126,9 +132,12 @@ class UserDashboardController extends Controller
 
     public function orders(Request $request): Response
     {
-        $email = $request->user()->email;
+        $user = $request->user();
 
-        $baseQuery = EventRegistration::where('email', $email);
+        $baseQuery = EventRegistration::where(function ($q) use ($user) {
+            $q->where('user_id', $user->id)
+              ->orWhere('email', $user->email);
+        });
 
         $query = (clone $baseQuery)->with(['event', 'ticket', 'products.product']);
 
@@ -164,7 +173,10 @@ class UserDashboardController extends Controller
 
     public function orderDetail(Request $request, int $id): Response
     {
-        $order = EventRegistration::where('email', $request->user()->email)
+        $order = EventRegistration::where(function ($q) use ($request) {
+                $q->where('user_id', $request->user()->id)
+                  ->orWhere('email', $request->user()->email);
+            })
             ->with(['event.media', 'ticket', 'products.product', 'invoice'])
             ->findOrFail($id);
 

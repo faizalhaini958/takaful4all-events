@@ -9,7 +9,7 @@ interface UserFormData {
     name: string;
     email: string;
     password: string;
-    role: 'admin' | 'editor' | 'company' | 'public';
+    role: 'admin' | 'editor' | 'checkin_staff' | 'company' | 'public';
     company_name: string;
     company_registration_no: string;
     company_address: string;
@@ -81,6 +81,7 @@ export default function UserForm({ data, errors, processing, setData, onSubmit, 
                         <SelectContent>
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="editor">Editor</SelectItem>
+                            <SelectItem value="checkin_staff">Check-In Staff</SelectItem>
                             <SelectItem value="company">Company</SelectItem>
                             <SelectItem value="public">Public</SelectItem>
                         </SelectContent>

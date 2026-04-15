@@ -2,7 +2,7 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import { Card, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Link } from '@inertiajs/react';
-import { CheckCircle2, Calendar, MapPin, Ticket, Mail, Hash, ArrowRight, Home } from 'lucide-react';
+import { CheckCircle2, Calendar, MapPin, Ticket, Mail, Hash, ArrowRight, Home, Package } from 'lucide-react';
 import { type EventRegistration } from '@/types';
 
 interface Props {
@@ -105,6 +105,29 @@ export default function PaymentSuccess({ registration }: Props) {
                                     </span>
                                 </div>
                             </div>
+
+                            {/* Add-ons */}
+                            {registration.products && registration.products.length > 0 && (
+                                <div className="border rounded-lg p-4 space-y-2">
+                                    <p className="text-sm font-semibold flex items-center gap-1.5 text-gray-700">
+                                        <Package className="w-4 h-4" /> Add-ons Ordered
+                                    </p>
+                                    <div className="divide-y">
+                                        {registration.products.map((p) => (
+                                            <div key={p.id} className="flex items-center justify-between py-2 text-sm">
+                                                <span className="text-gray-700">
+                                                    {p.product?.name ?? 'Item'}
+                                                    {p.variant ? <span className="text-gray-400 ml-1">({p.variant})</span> : null}
+                                                    <span className="text-gray-400 ml-1">× {p.quantity}</span>
+                                                </span>
+                                                <span className="font-medium text-gray-900">
+                                                    RM {(Number(p.unit_price) * p.quantity).toFixed(2)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Confirmation note */}
                             <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 text-sm text-blue-800">

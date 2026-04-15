@@ -101,9 +101,15 @@ class ChipInService
     public function listWebhookEndpoints(): array
     {
         $response = Http::withToken($this->secretKey)
-            ->get("{$this->baseUrl}/webhook_endpoints/");
+            ->get("{$this->baseUrl}/webhook_endpoints/", [
+                'brand_id' => $this->brandId,
+            ]);
 
         if ($response->failed()) {
+            Log::error('ChipIn listWebhookEndpoints failed', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
             return ['success' => false, 'error' => 'Failed to list webhook endpoints'];
         }
 
@@ -116,8 +122,9 @@ class ChipInService
     public function createWebhookEndpoint(string $url, array $events = []): array
     {
         $payload = [
-            'url'    => $url,
-            'events' => $events ?: [
+            'brand_id' => $this->brandId,
+            'url'      => $url,
+            'events'   => $events ?: [
                 'purchase.paid',
                 'purchase.payment_failure',
                 'purchase.cancelled',
@@ -130,14 +137,19 @@ class ChipInService
             ->post("{$this->baseUrl}/webhook_endpoints/", $payload);
 
         if ($response->failed()) {
+            $raw = $response->json('__all__') ?? $response->json('detail') ?? $response->json('error') ?? 'Webhook creation failed';
+            if (is_array($raw)) {
+                $raw = implode(' ', array_map(fn($v) => is_array($v) ? json_encode($v) : (string) $v, $raw));
+            }
+
             Log::error('ChipIn createWebhookEndpoint failed', [
                 'status' => $response->status(),
-                'body'   => $response->json(),
+                'body'   => $response->body(),
             ]);
 
             return [
                 'success' => false,
-                'error'   => $response->json('__all__', 'Webhook creation failed'),
+                'error'   => (string) $raw,
                 'status'  => $response->status(),
             ];
         }
@@ -168,19 +180,39 @@ class ChipInService
         try {
             $response = Http::withToken($secretKey)
                 ->timeout(10)
-                ->get("https://gate.chip-in.asia/api/v1/payment_methods/", [
+                ->get('https://gate.chip-in.asia/api/v1/payment_methods/', [
                     'brand_id' => $brandId,
+                    'currency' => 'MYR',
                 ]);
+
+            Log::debug('ChipIn testConnection response', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
 
             if ($response->successful()) {
                 return ['success' => true, 'message' => 'Connection successful'];
             }
 
-            return [
-                'success' => false,
-                'message' => 'API returned status ' . $response->status() . ': ' . ($response->json('__all__') ?? 'Unknown error'),
-            ];
+            $body = $response->json() ?? [];
+            $raw  = $body['__all__'] ?? $body['detail'] ?? $body['message'] ?? $body['error'] ?? null;
+
+            if (is_array($raw)) {
+                $raw = implode(' ', array_map(
+                    fn($v) => is_array($v) ? json_encode($v) : (string) $v,
+                    $raw
+                ));
+            }
+
+            $errorMsg = is_array($raw) ? json_encode($raw) : ($raw ? (string) $raw : 'HTTP ' . $response->status());
+
+            return ['success' => false, 'message' => 'Connection failed: ' . $errorMsg];
         } catch (\Throwable $e) {
+            Log::error('ChipIn testConnection exception', [
+                'class'   => get_class($e),
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
             return ['success' => false, 'message' => 'Connection failed: ' . $e->getMessage()];
         }
     }
