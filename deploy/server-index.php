@@ -37,4 +37,7 @@ require $app_path . '/vendor/autoload.php';
 /** @var Application $app */
 $app = require_once $app_path . '/bootstrap/app.php';
 
+// Override the public path to point to this document root
+$app->usePublicPath(__DIR__);
+
 $app->handleRequest(Request::capture());

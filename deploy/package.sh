@@ -45,6 +45,7 @@ zip -r "$DIST_DIR/takaful_app.zip" \
   bootstrap/ \
   config/ \
   database/ \
+  lang/ \
   resources/ \
   routes/ \
   storage/ \
@@ -74,7 +75,12 @@ zip -r "$DIST_DIR/takaful_public.zip" \
 rm ./index_server.php
 echo "   Created: $DIST_DIR/takaful_public.zip"
 
-# ---------- 5. Report ----------
+# ---------- 5. Restore dev dependencies for local development ----------
+echo "==> Restoring dev dependencies..."
+cd "$ROOT_DIR"
+composer install --no-interaction 2>&1
+
+# ---------- 6. Report ----------
 echo ""
 echo "============================================================"
 echo "  DONE! Files ready in deploy/dist/"

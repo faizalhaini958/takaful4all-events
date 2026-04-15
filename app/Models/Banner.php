@@ -28,10 +28,10 @@ class Banner extends Model
     public function getImageUrlAttribute(): string
     {
         if (str_starts_with($this->image_path, 'http')) {
-            return $this->image_path;
+            return parse_url($this->image_path, PHP_URL_PATH) ?: $this->image_path;
         }
 
-        return config('app.url') . '/storage/' . $this->image_path;
+        return '/storage/' . $this->image_path;
     }
 
     protected $appends = ['image_url'];

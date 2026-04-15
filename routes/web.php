@@ -180,6 +180,8 @@ Route::prefix('admin')
         Route::post('settings/smtp/test', [AdminSettingController::class, 'testSmtp'])->name('settings.smtp.test');
         Route::post('settings/chipin', [AdminSettingController::class, 'updateChipIn'])->name('settings.chipin');
         Route::post('settings/chipin/test', [AdminSettingController::class, 'testChipIn'])->name('settings.chipin.test');
+        Route::get('settings/chipin/webhook', [AdminSettingController::class, 'checkChipInWebhook'])->name('settings.chipin.webhook.check');
+        Route::post('settings/chipin/webhook', [AdminSettingController::class, 'createChipInWebhook'])->name('settings.chipin.webhook.create');
         Route::post('settings/general', [AdminSettingController::class, 'updateGeneral'])->name('settings.general');
         Route::post('settings/booking', [AdminSettingController::class, 'updateBooking'])->name('settings.booking');
         Route::post('settings/notifications', [AdminSettingController::class, 'updateNotifications'])->name('settings.notifications');

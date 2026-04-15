@@ -343,6 +343,10 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
     const [showWebhookSecret, setShowWebhookSecret] = useState(false);
     const [copied, setCopied] = useState(false);
     const [testingConnection, setTestingConnection] = useState(false);
+    const [checkingWebhook, setCheckingWebhook] = useState(false);
+    const [registeringWebhook, setRegisteringWebhook] = useState(false);
+    const [webhookStatus, setWebhookStatus] = useState<null | { is_registered: boolean; endpoints: any[] }>(null);
+    const [webhookMessage, setWebhookMessage] = useState<string | null>(null);
 
     const webhookUrl = `${window.location.origin}/webhooks/chipin`;
 
@@ -378,6 +382,51 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
         navigator.clipboard.writeText(webhookUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+    }
+
+    function checkWebhookStatus() {
+        setCheckingWebhook(true);
+        setWebhookMessage(null);
+        fetch(route('admin.settings.chipin.webhook.check'), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    setWebhookMessage(data.error);
+                } else {
+                    setWebhookStatus(data);
+                    setWebhookMessage(data.is_registered ? 'Webhook is registered with Chip-In.' : 'Webhook is NOT registered with Chip-In.');
+                }
+            })
+            .catch(() => setWebhookMessage('Failed to check webhook status.'))
+            .finally(() => setCheckingWebhook(false));
+    }
+
+    function registerWebhook() {
+        setRegisteringWebhook(true);
+        setWebhookMessage(null);
+        const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
+        fetch(route('admin.settings.chipin.webhook.create'), {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken || '',
+            },
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    setWebhookMessage(data.error);
+                } else {
+                    setWebhookMessage(data.message);
+                    setWebhookStatus(prev => prev ? { ...prev, is_registered: true } : { is_registered: true, endpoints: [] });
+                }
+            })
+            .catch(() => setWebhookMessage('Failed to register webhook.'))
+            .finally(() => setRegisteringWebhook(false));
     }
 
     return (
@@ -587,8 +636,47 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
                             </Button>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                            Copy this URL and add it as a webhook endpoint in your Chip-In dashboard.
+                            Copy this URL and add it as a webhook endpoint in your Chip-In dashboard, or use the buttons below to manage it automatically.
                         </p>
+                        <div className="flex items-center gap-2 mt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={checkWebhookStatus}
+                                disabled={checkingWebhook || !chipin.secret_key}
+                            >
+                                {checkingWebhook ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Search className="mr-2 h-4 w-4" />
+                                )}
+                                Check Status
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={registerWebhook}
+                                disabled={registeringWebhook || !chipin.secret_key || (webhookStatus?.is_registered === true)}
+                            >
+                                {registeringWebhook ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Plus className="mr-2 h-4 w-4" />
+                                )}
+                                Register Webhook
+                            </Button>
+                        </div>
+                        {webhookMessage && (
+                            <div className={`mt-2 flex items-center gap-2 text-sm ${webhookStatus?.is_registered ? 'text-green-600' : 'text-amber-600'}`}>
+                                {webhookStatus?.is_registered ? (
+                                    <Check className="h-4 w-4" />
+                                ) : (
+                                    <AlertCircle className="h-4 w-4" />
+                                )}
+                                {webhookMessage}
+                            </div>
+                        )}
                     </div>
 
                     {/* Webhook Secret */}

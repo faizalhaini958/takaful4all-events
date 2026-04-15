@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\ShippingZone;
 use App\Services\ChipInService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -225,6 +226,72 @@ class SettingController extends Controller
         Setting::setGroup('localisation', $validated);
 
         return back()->with('success', 'Localisation settings updated successfully.');
+    }
+
+    /**
+     * Check existing Chip-In webhook endpoints.
+     */
+    public function checkChipInWebhook(): JsonResponse
+    {
+        $chipIn = new ChipInService();
+
+        if (! $chipIn->isConfigured()) {
+            return response()->json(['error' => 'Chip-In is not configured.'], 422);
+        }
+
+        $result = $chipIn->listWebhookEndpoints();
+
+        if (! $result['success']) {
+            return response()->json(['error' => $result['error']], 500);
+        }
+
+        $webhookUrl = url('/webhooks/chipin');
+        $endpoints  = $result['data'] ?? [];
+        $existing   = collect($endpoints)->first(fn ($ep) => ($ep['url'] ?? '') === $webhookUrl);
+
+        return response()->json([
+            'endpoints'    => $endpoints,
+            'webhook_url'  => $webhookUrl,
+            'is_registered' => ! empty($existing),
+            'existing'     => $existing,
+        ]);
+    }
+
+    /**
+     * Register the webhook URL with Chip-In.
+     */
+    public function createChipInWebhook(): JsonResponse
+    {
+        $chipIn = new ChipInService();
+
+        if (! $chipIn->isConfigured()) {
+            return response()->json(['error' => 'Chip-In is not configured.'], 422);
+        }
+
+        $webhookUrl = url('/webhooks/chipin');
+
+        // Check if already registered
+        $listResult = $chipIn->listWebhookEndpoints();
+        if ($listResult['success']) {
+            $existing = collect($listResult['data'] ?? [])->first(fn ($ep) => ($ep['url'] ?? '') === $webhookUrl);
+            if ($existing) {
+                return response()->json([
+                    'message'  => 'Webhook URL is already registered.',
+                    'endpoint' => $existing,
+                ]);
+            }
+        }
+
+        $result = $chipIn->createWebhookEndpoint($webhookUrl);
+
+        if (! $result['success']) {
+            return response()->json(['error' => $result['error']], 500);
+        }
+
+        return response()->json([
+            'message'  => 'Webhook URL registered successfully.',
+            'endpoint' => $result['data'],
+        ]);
     }
 
     /**

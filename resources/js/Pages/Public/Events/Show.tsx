@@ -44,11 +44,11 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                 <meta property="og:description" content={event.excerpt ?? `${event.title} — Takaful Events`} />
                 <meta property="og:url" content={ogUrl} />
                 <meta property="og:type" content="website" />
-                {event.media && <meta property="og:image" content={event.media.url} />}
+                {event.media && <meta property="og:image" content={event.media.url.startsWith('/') ? `${window.location.origin}${event.media.url}` : event.media.url} />}
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content={event.title} />
                 <meta name="twitter:description" content={event.excerpt ?? `${event.title} — Takaful Events`} />
-                {event.media && <meta name="twitter:image" content={event.media.url} />}
+                {event.media && <meta name="twitter:image" content={event.media.url.startsWith('/') ? `${window.location.origin}${event.media.url}` : event.media.url} />}
             </Head>
             {/* ── Hero ── */}
             <div className="relative w-full bg-brand-navy overflow-hidden" style={{ minHeight: '170px' }}>
