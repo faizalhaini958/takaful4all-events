@@ -167,12 +167,23 @@ export default function EventCheckIn({ event }: Props) {
     const startCamera = useCallback(async () => {
         setCameraError(null);
 
-        // Small delay to ensure the DOM container is rendered
-        await new Promise(r => setTimeout(r, 100));
+        // Ensure any previous scanner is fully stopped
+        if (scannerRef.current) {
+            try { await scannerRef.current.stop(); } catch { /* */ }
+            try { scannerRef.current.clear(); } catch { /* */ }
+            scannerRef.current = null;
+        }
+
+        // Show container first so it has dimensions before camera starts
+        setCameraActive(true);
+
+        // Give DOM time to render the visible container
+        await new Promise(r => setTimeout(r, 300));
 
         const container = document.getElementById(scannerContainerId);
         if (!container) {
             setCameraError('Scanner container not found.');
+            setCameraActive(false);
             return;
         }
 
@@ -182,7 +193,7 @@ export default function EventCheckIn({ event }: Props) {
 
             await scanner.start(
                 { facingMode: 'environment' },
-                { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
                 (decodedText) => {
                     const parsed = parseInput(decodedText);
                     doLookup(parsed);
@@ -191,18 +202,19 @@ export default function EventCheckIn({ event }: Props) {
                     // ignore scan failures (no QR in frame)
                 },
             );
-
-            setCameraActive(true);
         } catch (err: any) {
             const msg = typeof err === 'string' ? err : err?.message ?? 'Unknown error';
             if (msg.includes('NotAllowedError') || msg.includes('Permission')) {
-                setCameraError('Camera permission denied. Please allow camera access and try again.');
+                setCameraError('Camera permission denied. Please allow camera access in your browser settings and try again.');
             } else if (msg.includes('NotFoundError') || msg.includes('no camera')) {
                 setCameraError('No camera found on this device.');
+            } else if (msg.includes('NotReadableError') || msg.includes('in use')) {
+                setCameraError('Camera is already in use by another app. Close other camera apps and try again.');
             } else {
                 setCameraError(`Camera error: ${msg}`);
             }
             scannerRef.current = null;
+            setCameraActive(false);
         }
     }, [parseInput, doLookup]);
 
@@ -338,9 +350,11 @@ export default function EventCheckIn({ event }: Props) {
                                 </div>
                             )}
 
+                            {/* Container must always be in DOM and visible when camera is active */}
                             <div
                                 id={scannerContainerId}
-                                className={`rounded-lg overflow-hidden ${cameraActive ? '' : 'hidden'}`}
+                                style={{ minHeight: cameraActive ? '300px' : '0', display: cameraActive ? 'block' : 'none' }}
+                                className="rounded-lg overflow-hidden"
                             />
 
                             {cameraActive && (
