@@ -64,10 +64,17 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                         ))}
                         <LanguageSwitcher />
                         {auth?.user ? (
-                            <Link href="/dashboard" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-navy text-white hover:bg-brand transition-colors text-xs">
-                                <UserCircle className="w-4 h-4" />
-                                {t('nav.my_account')}
-                            </Link>
+                            ['admin', 'editor', 'checkin_staff'].includes(auth.user.role) ? (
+                                <Link href="/admin" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand text-white hover:bg-brand-navy transition-colors text-xs font-bold">
+                                    <UserCircle className="w-4 h-4" />
+                                    {t('nav.management')}
+                                </Link>
+                            ) : (
+                                <Link href="/dashboard" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-navy text-white hover:bg-brand transition-colors text-xs">
+                                    <UserCircle className="w-4 h-4" />
+                                    {t('nav.my_account')}
+                                </Link>
+                            )
                         ) : (
                             <button
                                 onClick={() => setLoginOpen(true)}
@@ -131,14 +138,25 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                             <LanguageSwitcher />
                         </div>
                         {auth?.user ? (
-                            <Link
-                                href="/dashboard"
-                                onClick={() => setMobileOpen(false)}
-                                className="flex items-center gap-2 py-3 px-3 rounded-md text-sm font-semibold text-brand-navy bg-brand-navy/5 hover:bg-brand-navy/10 transition-colors"
-                            >
-                                <UserCircle className="w-5 h-5" />
-                                {t('nav.my_account')}
-                            </Link>
+                            ['admin', 'editor', 'checkin_staff'].includes(auth.user.role) ? (
+                                <Link
+                                    href="/admin"
+                                    onClick={() => setMobileOpen(false)}
+                                    className="flex items-center gap-2 py-3 px-3 rounded-md text-sm font-semibold text-white bg-brand hover:bg-brand-navy transition-colors"
+                                >
+                                    <UserCircle className="w-5 h-5" />
+                                    {t('nav.management')}
+                                </Link>
+                            ) : (
+                                <Link
+                                    href="/dashboard"
+                                    onClick={() => setMobileOpen(false)}
+                                    className="flex items-center gap-2 py-3 px-3 rounded-md text-sm font-semibold text-brand-navy bg-brand-navy/5 hover:bg-brand-navy/10 transition-colors"
+                                >
+                                    <UserCircle className="w-5 h-5" />
+                                    {t('nav.my_account')}
+                                </Link>
+                            )
                         ) : (
                             <button
                                 onClick={() => {

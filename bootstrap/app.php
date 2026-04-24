@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminOnly::class,
             'restrict.checkin_staff' => \App\Http\Middleware\RestrictCheckinStaff::class,
+            'restrict.admin_from_dashboard' => \App\Http\Middleware\RestrictAdminFromUserDashboard::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

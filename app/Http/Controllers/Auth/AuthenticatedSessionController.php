@@ -34,7 +34,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         // Redirect admins to admin dashboard, regular users to user dashboard
-        $redirectRoute = in_array($request->user()->role, ['admin', 'editor'])
+        $redirectRoute = in_array($request->user()->role, ['admin', 'editor', 'checkin_staff'])
             ? route('admin.dashboard', absolute: false)
             : route('user.dashboard', absolute: false);
 

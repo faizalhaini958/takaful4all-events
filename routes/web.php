@@ -72,7 +72,7 @@ Route::get('/invoices/{invoiceNumber}/download', [InvoiceController::class, 'dow
 
 Route::prefix('dashboard')
     ->name('user.')
-    ->middleware(['auth'])
+    ->middleware(['auth', 'restrict.admin_from_dashboard'])
     ->group(function () {
 
         Route::get('/', [UserDashboardController::class, 'index'])->name('dashboard');
