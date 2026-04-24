@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
+use App\Mail\EventReminderMail;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Media;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -102,5 +106,42 @@ class EventController extends Controller
 
         return redirect()->route('admin.events.index')
             ->with('success', 'Event deleted.');
+    }
+
+    /**
+     * Broadcast a reminder email to all paid/confirmed attendees of an event.
+     */
+    public function sendReminder(Request $request, Event $event): RedirectResponse
+    {
+        $request->validate([
+            'message' => 'nullable|string|max:2000',
+        ]);
+
+        $customMessage = $request->input('message', '');
+
+        $registrations = EventRegistration::where('event_id', $event->id)
+            ->whereIn('status', ['confirmed', 'attended'])
+            ->where('payment_status', 'paid')
+            ->get();
+
+        if ($registrations->isEmpty()) {
+            return back()->with('error', 'No confirmed & paid registrations found for this event.');
+        }
+
+        $queued = 0;
+        foreach ($registrations as $registration) {
+            try {
+                Mail::to($registration->email)
+                    ->queue(new EventReminderMail($registration, $customMessage));
+                $queued++;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to queue reminder email', [
+                    'registration_id' => $registration->id,
+                    'error'           => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return back()->with('success', "Reminder email queued for {$queued} attendee(s).");
     }
 }

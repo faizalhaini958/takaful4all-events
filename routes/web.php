@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\EventProductController as AdminEventProductContro
 use App\Http\Controllers\Admin\EventRegistrationController as AdminEventRegistrationController;
 use App\Http\Controllers\Admin\EventZoneController as AdminEventZoneController;
 use App\Http\Controllers\Admin\CheckInController as AdminCheckInController;
+use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
@@ -161,6 +162,14 @@ Route::prefix('admin')
         Route::get('events/{event}/check-in', [AdminCheckInController::class, 'scanner'])->name('events.check-in');
         Route::post('events/{event}/check-in/lookup', [AdminCheckInController::class, 'lookup'])->name('events.check-in.lookup');
         Route::post('events/{event}/check-in/confirm', [AdminCheckInController::class, 'checkIn'])->name('events.check-in.confirm');
+
+        // Ticket Downloads (admin + owner access, secured in controller)
+        Route::get('registrations/{registration}/tickets/{attendee_no}/download', [AdminTicketController::class, 'download'])
+            ->name('tickets.download')
+            ->where('attendee_no', '[0-9]+');
+
+        // Event Reminder Broadcast
+        Route::post('events/{event}/send-reminder', [AdminEventController::class, 'sendReminder'])->name('events.send-reminder');
 
         // Pages
         Route::resource('pages', AdminPageController::class)

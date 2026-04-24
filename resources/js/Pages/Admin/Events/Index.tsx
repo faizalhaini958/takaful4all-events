@@ -4,9 +4,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
+import { Textarea } from '@/Components/ui/textarea';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Ticket, Package, ShoppingCart, Users, Pencil, Copy, Trash2, MapPin, CalendarDays, Globe, Shield, QrCode } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Ticket, Package, ShoppingCart, Users, Pencil, Copy, Trash2, MapPin, CalendarDays, Globe, Shield, QrCode, Bell } from 'lucide-react';
 import { type Event, type PaginatedData, type SharedProps } from '@/types';
 
 interface Props {
@@ -36,6 +37,9 @@ export default function EventsIndex({ events }: Props) {
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Event | null>(null);
     const [duplicating, setDuplicating] = useState<string | null>(null);
+    const [reminderTarget, setReminderTarget] = useState<Event | null>(null);
+    const [reminderMessage, setReminderMessage] = useState('');
+    const [sendingReminder, setSendingReminder] = useState(false);
 
     function toggleExpand(id: number) {
         setExpandedId(prev => (prev === id ? null : id));
@@ -57,6 +61,18 @@ export default function EventsIndex({ events }: Props) {
 
     function handlePerPageChange(value: string) {
         router.get('/admin/events', { per_page: value }, { preserveState: true, preserveScroll: true });
+    }
+
+    function sendReminder() {
+        if (!reminderTarget) return;
+        setSendingReminder(true);
+        router.post(`/admin/events/${reminderTarget.slug}/send-reminder`, { message: reminderMessage }, {
+            onFinish: () => {
+                setSendingReminder(false);
+                setReminderTarget(null);
+                setReminderMessage('');
+            },
+        });
     }
 
     // Pagination helpers
@@ -103,6 +119,7 @@ export default function EventsIndex({ events }: Props) {
                                         onDuplicate={() => duplicateEvent(event)}
                                         isDuplicating={duplicating === event.slug}
                                         isCheckinStaff={isCheckinStaff}
+                                        onSendReminder={() => { setReminderTarget(event); setReminderMessage(''); }}
                                     />
                                 );
                             })}
@@ -168,6 +185,40 @@ export default function EventsIndex({ events }: Props) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Send Reminder dialog */}
+            <Dialog open={!!reminderTarget} onOpenChange={open => !open && setReminderTarget(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Bell className="w-4 h-4 text-primary" />
+                            Send Reminder
+                        </DialogTitle>
+                        <DialogDescription>
+                            Send a reminder email to all <strong>confirmed & paid</strong> attendees of{' '}
+                            <strong>{reminderTarget?.title}</strong>.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-2">
+                        <label className="text-sm font-medium text-foreground block mb-1.5">Custom Message <span className="text-muted-foreground font-normal">(optional)</span></label>
+                        <Textarea
+                            placeholder="e.g. Don't forget to bring your ID card and dress code is smart casual..."
+                            value={reminderMessage}
+                            onChange={e => setReminderMessage(e.target.value)}
+                            rows={5}
+                            className="resize-none"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1.5">This message will appear in the email body alongside the event details.</p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setReminderTarget(null)} disabled={sendingReminder}>Cancel</Button>
+                        <Button onClick={sendReminder} disabled={sendingReminder}>
+                            <Bell className="w-4 h-4 mr-1.5" />
+                            {sendingReminder ? 'Sending…' : 'Send Reminder'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AdminLayout>
     );
 }
@@ -182,6 +233,7 @@ function EventRowBlock({
     onDuplicate,
     isDuplicating,
     isCheckinStaff,
+    onSendReminder,
 }: {
     event: EventRow;
     isExpanded: boolean;
@@ -190,6 +242,7 @@ function EventRowBlock({
     onDuplicate: () => void;
     isDuplicating: boolean;
     isCheckinStaff: boolean;
+    onSendReminder: () => void;
 }) {
     return (
         <>
@@ -319,7 +372,15 @@ function EventRowBlock({
                                         <ActionLink href={`/admin/events/${event.slug}/check-in`} icon={QrCode} label="Check-In Scanner" />
                                         <ActionLink href={`/admin/events/${event.slug}/registrations`} icon={Users} label="Registrations" />
                                         {!isCheckinStaff && (
+                                        <>
                                         <ActionLink href={`/events/${event.slug}`} icon={Eye} label="View Public Page" external />
+                                        <button
+                                            onClick={e => { e.stopPropagation(); onSendReminder(); }}
+                                            className="flex items-center gap-2.5 h-9 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors rounded-md w-full text-left"
+                                        >
+                                            <Bell className="h-4 w-4 text-primary/70" /> Send Reminder
+                                        </button>
+                                        </>
                                         )}
                                     </div>
                                 </div>

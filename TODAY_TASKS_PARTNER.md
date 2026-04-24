@@ -11,7 +11,7 @@ Goal: Improve admin attendee visibility and search usability.
 - [x] Verify attendee details render in admin registration detail modal
     - Page: `resources/js/Pages/Admin/Events/Registrations/Index.tsx`
 
-## Priority 2 - Admin Search Improvement
+## Priority 2 - Admin Search Improvement 
 
 - [x] Extend global registration search to include attendee fields
     - Include attendee name and attendee email in search scope
