@@ -15,8 +15,11 @@ import { type EventRegistration } from '@/types';
 import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
 import { useState } from 'react';
+import { usePage } from '@inertiajs/react';
 
 interface Attendee {
+    id?: number;
+    attendee_no?: number;
     name: string;
     email: string;
     phone?: string | null;
@@ -40,27 +43,57 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function TicketPreviewModal({ registration, open, onOpenChange }: Props) {
+    const { auth } = usePage<{ auth: { user: { email: string } } }>().props;
     const ticketRef = useRef<HTMLDivElement>(null);
     const [currentTicket, setCurrentTicket] = useState(0);
 
-    // Build a flat list of all attendees (primary buyer + additional from meta_json)
+    // Build attendee list from attendee rows first, then fallback to legacy meta_json.
     const attendees = useMemo<Attendee[]>(() => {
         if (!registration) return [];
 
-        const primary: Attendee = {
-            name: registration.name,
-            email: registration.email,
-            phone: registration.phone,
-            company: registration.company,
-            job_title: registration.job_title,
-            dietary_requirements: registration.dietary_requirements,
-        };
+        const relationAttendees = (registration.attendees ?? []).map((attendee) => ({
+            id: attendee.id,
+            attendee_no: attendee.attendee_no,
+            name: attendee.name,
+            email: attendee.email,
+            phone: attendee.phone,
+            company: attendee.company,
+            job_title: attendee.job_title,
+            dietary_requirements: attendee.dietary_requirements,
+        }));
 
-        const additional: Attendee[] =
-            (registration.meta_json as { attendees?: Attendee[] })?.attendees ?? [];
+        const allAttendees = relationAttendees.length > 0
+            ? relationAttendees
+            : (() => {
+                const primary: Attendee = {
+                    attendee_no: 1,
+                    name: registration.name,
+                    email: registration.email,
+                    phone: registration.phone,
+                    company: registration.company,
+                    job_title: registration.job_title,
+                    dietary_requirements: registration.dietary_requirements,
+                };
 
-        return [primary, ...additional];
-    }, [registration]);
+                const additional: Attendee[] =
+                    (registration.meta_json as { attendees?: Attendee[] })?.attendees ?? [];
+
+                return [primary, ...additional.map((attendee, idx) => ({ ...attendee, attendee_no: idx + 2 }))];
+            })();
+
+        const currentUserEmail = auth?.user?.email?.toLowerCase?.() ?? '';
+        const isPrimaryBuyer = registration.email.toLowerCase() === currentUserEmail;
+
+        // Primary buyer can view all group tickets; invited attendees only see their own ticket.
+        if (!isPrimaryBuyer && currentUserEmail) {
+            const ownTicket = allAttendees.find((attendee) => attendee.email.toLowerCase() === currentUserEmail);
+            if (ownTicket) {
+                return [ownTicket];
+            }
+        }
+
+        return allAttendees;
+    }, [registration, auth]);
 
     const totalTickets = attendees.length;
     const attendee = attendees[currentTicket];
@@ -136,12 +169,14 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
     const endDate = event?.end_at ? new Date(event.end_at) : null;
     const location = [event?.venue, event?.city, event?.state].filter(Boolean).join(', ');
 
-    // QR payload unique per attendee — includes attendee index for scanning
+    const attendeeNo = attendee.attendee_no ?? (currentTicket + 1);
+
+    // QR payload unique per attendee — includes attendee number for strict per-attendee check-in
     const qrPayload = JSON.stringify({
         ref: registration.reference_no,
         id: registration.id,
         event_id: registration.event_id,
-        attendee_index: currentTicket,
+        attendee_no: attendeeNo,
         attendee_name: attendee.name,
         attendee_email: attendee.email,
     });
@@ -362,7 +397,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                                     Scan for attendance
                                 </p>
                                 <p className="font-mono text-[10px] text-gray-400 text-center mt-0.5">
-                                    {registration.reference_no}-{String(currentTicket + 1).padStart(2, '0')}
+                                    {registration.reference_no}-{String(attendeeNo).padStart(2, '0')}
                                 </p>
                             </div>
                         </div>

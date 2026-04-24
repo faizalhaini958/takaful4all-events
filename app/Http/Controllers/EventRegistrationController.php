@@ -8,6 +8,7 @@ use App\Models\EventProduct;
 use App\Models\EventRegistration;
 use App\Models\EventTicket;
 use App\Models\Setting;
+use App\Models\User;
 use App\Services\ChipInService;
 use App\Services\RegistrationPricingService;
 use Illuminate\Http\RedirectResponse;
@@ -135,9 +136,14 @@ class EventRegistrationController extends Controller
                         return redirect()->back()->with('error', "Not enough stock for {$product->name}. Only {$product->stock} remaining.");
                     }
 
+                    // Handle variants as array or convert to JSON string
+                    $variants = $productData['variants'] ?? [];
+                    // Filter out empty variants and convert to JSON string
+                    $variantString = !empty($variants) ? json_encode(array_filter($variants)) : null;
+
                     $productItems[] = [
                         'product_id' => $product->id,
-                        'variant'    => $productData['variant'] ?? null,
+                        'variant'    => $variantString,
                         'quantity'   => $productData['quantity'],
                         'unit_price' => $product->price,
                     ];
@@ -197,6 +203,36 @@ class EventRegistrationController extends Controller
                 $registration->products()->create($item);
             }
 
+            // Create attendee rows (1 row per ticket seat) so each attendee can access their own ticket later.
+            $attendees = $validated['attendees'] ?? [];
+            $attendeeEmails = collect($attendees)
+                ->pluck('email')
+                ->filter()
+                ->map(fn ($email) => strtolower(trim((string) $email)))
+                ->unique()
+                ->values()
+                ->all();
+
+            $usersByEmail = User::whereIn('email', $attendeeEmails)
+                ->get()
+                ->keyBy(fn (User $user) => strtolower($user->email));
+
+            foreach ($attendees as $index => $attendee) {
+                $emailKey = strtolower(trim((string) ($attendee['email'] ?? '')));
+                $matchedUser = $emailKey !== '' ? $usersByEmail->get($emailKey) : null;
+
+                $registration->attendees()->create([
+                    'user_id' => $matchedUser?->id,
+                    'attendee_no' => $index + 1,
+                    'name' => $attendee['name'] ?? ('Attendee ' . ($index + 1)),
+                    'email' => $attendee['email'] ?? '',
+                    'phone' => $attendee['phone'] ?? null,
+                    'company' => $attendee['company'] ?? null,
+                    'job_title' => $attendee['job_title'] ?? null,
+                    'dietary_requirements' => $attendee['dietary_requirements'] ?? null,
+                ]);
+            }
+
             // Decrement product stock (within transaction so it rolls back on failure)
             foreach ($productItems as $item) {
                 EventProduct::where('id', $item['product_id'])
@@ -229,8 +265,19 @@ class EventRegistrationController extends Controller
                     foreach ($productItems as $item) {
                         $product = EventProduct::find($item['product_id']);
                         if ($product) {
+                            // Decode variant JSON and format it nicely
+                            $variantDisplay = '';
+                            if ($item['variant']) {
+                                $variants = json_decode($item['variant'], true) ?? [$item['variant']];
+                                // Show first and last variant or count if many
+                                if (count($variants) <= 2) {
+                                    $variantDisplay = ' (' . implode(', ', $variants) . ')';
+                                } else {
+                                    $variantDisplay = ' (' . count($variants) . ' items)';
+                                }
+                            }
                             $purchaseProducts[] = [
-                                'name'     => $product->name . ($item['variant'] ? " ({$item['variant']})" : ''),
+                                'name'     => $product->name . $variantDisplay,
                                 'price'    => (int) round($item['unit_price'] * $item['quantity'] * 100),
                                 'quantity' => 1,
                             ];

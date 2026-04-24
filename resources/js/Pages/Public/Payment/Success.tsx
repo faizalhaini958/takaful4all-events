@@ -113,18 +113,38 @@ export default function PaymentSuccess({ registration }: Props) {
                                         <Package className="w-4 h-4" /> Add-ons Ordered
                                     </p>
                                     <div className="divide-y">
-                                        {registration.products.map((p) => (
-                                            <div key={p.id} className="flex items-center justify-between py-2 text-sm">
-                                                <span className="text-gray-700">
-                                                    {p.product?.name ?? 'Item'}
-                                                    {p.variant ? <span className="text-gray-400 ml-1">({p.variant})</span> : null}
-                                                    <span className="text-gray-400 ml-1">× {p.quantity}</span>
-                                                </span>
-                                                <span className="font-medium text-gray-900">
-                                                    RM {(Number(p.unit_price) * p.quantity).toFixed(2)}
-                                                </span>
-                                            </div>
-                                        ))}
+                                        {registration.products.map((p) => {
+                                            let variants: string[] = [];
+                                            if (p.variant) {
+                                                try {
+                                                    const parsed = JSON.parse(p.variant);
+                                                    variants = Array.isArray(parsed) ? parsed : [p.variant];
+                                                } catch {
+                                                    variants = [p.variant];
+                                                }
+                                            }
+
+                                            return (
+                                                <div key={p.id} className="flex items-center justify-between py-2 text-sm">
+                                                    <span className="text-gray-700">
+                                                        {p.product?.name ?? 'Item'}
+                                                        {variants.length > 0 && (
+                                                            <>
+                                                                {variants.length === 1 ? (
+                                                                    <span className="text-gray-400 ml-1">({variants[0]})</span>
+                                                                ) : (
+                                                                    <span className="text-gray-400 ml-1">({variants.join(', ')})</span>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                        <span className="text-gray-400 ml-1">× {p.quantity}</span>
+                                                    </span>
+                                                    <span className="font-medium text-gray-900">
+                                                        RM {(Number(p.unit_price) * p.quantity).toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}

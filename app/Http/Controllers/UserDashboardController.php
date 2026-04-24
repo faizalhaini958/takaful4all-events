@@ -100,9 +100,13 @@ class UserDashboardController extends Controller
 
         $query = EventRegistration::where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
-                  ->orWhere('email', $user->email);
+                  ->orWhere('email', $user->email)
+                  ->orWhereHas('attendees', function ($attendeeQuery) use ($user) {
+                      $attendeeQuery->where('user_id', $user->id)
+                          ->orWhere('email', $user->email);
+                  });
             })
-            ->with(['event.media', 'ticket', 'products.product']);
+            ->with(['event.media', 'ticket', 'products.product', 'attendees']);
 
         // Search filter
         if ($search = $request->input('search')) {

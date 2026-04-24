@@ -134,6 +134,22 @@ export interface EventRegistrationProduct {
     updated_at: string;
 }
 
+export interface EventRegistrationAttendee {
+    id: number;
+    registration_id: number;
+    user_id: number | null;
+    attendee_no: number;
+    name: string;
+    email: string;
+    phone: string | null;
+    company: string | null;
+    job_title: string | null;
+    dietary_requirements: string | null;
+    checked_in_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface EventRegistration {
     id: number;
     event_id: number;
@@ -161,6 +177,7 @@ export interface EventRegistration {
     notes: string | null;
     checked_in_at: string | null;
     products?: EventRegistrationProduct[];
+    attendees?: EventRegistrationAttendee[];
     invoice?: Invoice | null;
     meta_json: Record<string, unknown> | null;
     created_at: string;

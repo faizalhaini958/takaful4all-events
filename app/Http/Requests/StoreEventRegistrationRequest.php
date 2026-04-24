@@ -26,7 +26,8 @@ class StoreEventRegistrationRequest extends FormRequest
             'notes'                               => 'nullable|string|max:1000',
             'products'                            => 'nullable|array',
             'products.*.product_id'               => 'required|exists:event_products,id',
-            'products.*.variant'                  => 'nullable|string|max:100',
+            'products.*.variants'                 => 'nullable|array',
+            'products.*.variants.*'               => 'nullable|string|max:100',
             'products.*.quantity'                  => 'required|integer|min:1|max:20',
         ];
     }

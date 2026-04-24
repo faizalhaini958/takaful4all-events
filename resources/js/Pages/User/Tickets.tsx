@@ -195,11 +195,32 @@ export default function Tickets({ registrations, filters }: Props) {
                                             <div className="mt-3 pt-3 border-t">
                                                 <p className="text-xs font-medium text-gray-400 uppercase mb-1">Add-ons</p>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {reg.products.map((p) => (
-                                                        <span key={p.id} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                                            {p.product?.name ?? 'Product'} {p.variant ? `(${p.variant})` : ''} × {p.quantity}
-                                                        </span>
-                                                    ))}
+                                                    {reg.products.map((p) => {
+                                                        let variants: string[] = [];
+                                                        if (p.variant) {
+                                                            try {
+                                                                const parsed = JSON.parse(p.variant);
+                                                                variants = Array.isArray(parsed) ? parsed : [p.variant];
+                                                            } catch {
+                                                                variants = [p.variant];
+                                                            }
+                                                        }
+
+                                                        return (
+                                                            <span key={p.id} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                                                {p.product?.name ?? 'Product'}
+                                                                {variants.length > 0 && (
+                                                                    <>
+                                                                        {variants.length === 1 ? (
+                                                                            <span> ({variants[0]})</span>
+                                                                        ) : (
+                                                                            <span> ({variants.join(', ')})</span>
+                                                                        )}
+                                                                    </>
+                                                                )} × {p.quantity}
+                                                            </span>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}

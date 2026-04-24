@@ -74,7 +74,7 @@ class EventRegistrationController extends Controller
         $status = request('status', 'all');
 
         $query = $event->registrations()
-            ->with(['ticket', 'products.product'])
+            ->with(['ticket', 'products.product', 'attendees'])
             ->latest();
 
         if (in_array($status, ['pending', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {

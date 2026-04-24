@@ -123,18 +123,44 @@ export default function OrderDetail({ order }: Props) {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-3">
-                                        {order.products.map((p) => (
-                                            <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{p.product?.name ?? 'Product'}</p>
-                                                    {p.variant && <p className="text-xs text-gray-500">Variant: {p.variant}</p>}
+                                        {order.products.map((p) => {
+                                            let variants: string[] = [];
+                                            if (p.variant) {
+                                                try {
+                                                    const parsed = JSON.parse(p.variant);
+                                                    variants = Array.isArray(parsed) ? parsed : [p.variant];
+                                                } catch {
+                                                    variants = [p.variant];
+                                                }
+                                            }
+
+                                            return (
+                                                <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                    <div className="flex-1">
+                                                        <p className="font-medium text-gray-900">{p.product?.name ?? 'Product'}</p>
+                                                        {variants.length > 0 && (
+                                                            <div className="text-xs text-gray-500 mt-1">
+                                                                {variants.length === 1 ? (
+                                                                    <p>{variants[0]}</p>
+                                                                ) : (
+                                                                    <div className="flex flex-wrap gap-1">
+                                                                        {variants.map((v, i) => (
+                                                                            <span key={i} className="inline-block bg-gray-200 px-2 py-0.5 rounded">
+                                                                                {v}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-right ml-4 flex-shrink-0">
+                                                        <p className="font-medium">RM {Number(p.unit_price).toFixed(2)} × {p.quantity}</p>
+                                                        <p className="text-sm text-gray-500">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="font-medium">RM {Number(p.unit_price).toFixed(2)} × {p.quantity}</p>
-                                                    <p className="text-sm text-gray-500">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</p>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </CardContent>
                             </Card>

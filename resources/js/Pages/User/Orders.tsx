@@ -324,16 +324,36 @@ export default function Orders({ orders, filters, totals }: Props) {
                                     <div>
                                         <p className="text-xs text-gray-400 flex items-center gap-1 mb-2"><Package className="w-3 h-3" /> Add-ons</p>
                                         <div className="rounded-lg border divide-y">
-                                            {o.products.map((p) => (
-                                                <div key={p.id} className="flex items-center justify-between px-3 py-2">
-                                                    <span>
-                                                        {p.product?.name ?? 'Item'}
-                                                        {p.variant && <span className="text-gray-400 ml-1">({p.variant})</span>}
-                                                        <span className="text-gray-400 ml-1">× {p.quantity}</span>
-                                                    </span>
-                                                    <span className="font-medium">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</span>
-                                                </div>
-                                            ))}
+                                            {o.products.map((p) => {
+                                                let variants: string[] = [];
+                                                if (p.variant) {
+                                                    try {
+                                                        const parsed = JSON.parse(p.variant);
+                                                        variants = Array.isArray(parsed) ? parsed : [p.variant];
+                                                    } catch {
+                                                        variants = [p.variant];
+                                                    }
+                                                }
+
+                                                return (
+                                                    <div key={p.id} className="flex items-center justify-between px-3 py-2">
+                                                        <span>
+                                                            {p.product?.name ?? 'Item'}
+                                                            {variants.length > 0 && (
+                                                                <>
+                                                                    {variants.length === 1 ? (
+                                                                        <span className="text-gray-400 ml-1">({variants[0]})</span>
+                                                                    ) : (
+                                                                        <span className="text-gray-400 ml-1">({variants.join(', ')})</span>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                            <span className="text-gray-400 ml-1">× {p.quantity}</span>
+                                                        </span>
+                                                        <span className="font-medium">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</span>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}

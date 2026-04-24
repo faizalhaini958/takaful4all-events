@@ -88,6 +88,12 @@ class EventRegistration extends Model
         return $this->hasMany(EventRegistrationProduct::class, 'registration_id');
     }
 
+    public function attendees(): HasMany
+    {
+        return $this->hasMany(EventRegistrationAttendee::class, 'registration_id')
+            ->orderBy('attendee_no');
+    }
+
     public function invoice(): HasOne
     {
         return $this->hasOne(Invoice::class, 'registration_id');

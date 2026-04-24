@@ -17,6 +17,7 @@ interface Props {
 interface LookupResult {
     id: number;
     reference_no: string;
+    attendee_no: number;
     name: string;
     email: string;
     phone: string | null;
@@ -33,6 +34,7 @@ type ScanMode = 'manual' | 'camera';
 
 export default function EventCheckIn({ event }: Props) {
     const [reference, setReference] = useState('');
+    const [attendeeNo, setAttendeeNo] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<LookupResult | null>(null);
     const [message, setMessage] = useState<{ type: MessageType; text: string } | null>(null);
@@ -46,13 +48,45 @@ export default function EventCheckIn({ event }: Props) {
     // Guard to prevent double-lookup from rapid scans
     const lookupInProgress = useRef(false);
 
-    // Extract reference from QR URL (handles full URLs like /events/.../confirmation/EVT-...)
-    const parseInput = useCallback((value: string): string => {
-        const match = value.match(/confirmation\/(EVT-[A-Z0-9-]+)/i);
-        return match ? match[1] : value;
+    // Extract reference/attendee from QR value (JSON payload, confirmation URL, or attendee code suffix).
+    const parseInput = useCallback((value: string): { reference: string; attendeeNo: number | null } => {
+        const raw = value.trim();
+
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object' && parsed.ref) {
+                return {
+                    reference: String(parsed.ref),
+                    attendeeNo: parsed.attendee_no ? Number(parsed.attendee_no) : null,
+                };
+            }
+        } catch {
+            // not JSON payload, continue to URL/raw parsing
+        }
+
+        // URL style: /confirmation/EVT-YYYYMMDD-XXXX or /confirmation/EVT-YYYYMMDD-XXXX-01
+        const urlMatch = raw.match(/confirmation\/(EVT-\d{8}-[A-Z0-9]{4})(?:-(\d{1,3}))?/i);
+        if (urlMatch) {
+            return {
+                reference: urlMatch[1].toUpperCase(),
+                attendeeNo: urlMatch[2] ? Number(urlMatch[2]) : null,
+            };
+        }
+
+        // Manual style: EVT-YYYYMMDD-XXXX-01 (attendee-specific code)
+        const attendeeCodeMatch = raw.match(/^(EVT-\d{8}-[A-Z0-9]{4})-(\d{1,3})$/i);
+        if (attendeeCodeMatch) {
+            return {
+                reference: attendeeCodeMatch[1].toUpperCase(),
+                attendeeNo: Number(attendeeCodeMatch[2]),
+            };
+        }
+
+        // Base registration reference
+        return { reference: raw.toUpperCase(), attendeeNo: null };
     }, []);
 
-    const doLookup = useCallback(async (ref: string) => {
+    const doLookup = useCallback(async (ref: string, attendeeNoArg: number | null = null) => {
         if (!ref.trim() || lookupInProgress.current) return;
 
         lookupInProgress.current = true;
@@ -60,6 +94,7 @@ export default function EventCheckIn({ event }: Props) {
         setMessage(null);
         setResult(null);
         setReference(ref);
+        setAttendeeNo(attendeeNoArg);
 
         try {
             const res = await fetch(`/admin/events/${event.slug}/check-in/lookup`, {
@@ -69,7 +104,7 @@ export default function EventCheckIn({ event }: Props) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ reference: ref.trim() }),
+                body: JSON.stringify({ reference: ref.trim(), attendee_no: attendeeNoArg }),
             });
 
             const data = await res.json();
@@ -92,7 +127,8 @@ export default function EventCheckIn({ event }: Props) {
 
     async function handleLookup(e?: React.FormEvent) {
         e?.preventDefault();
-        await doLookup(reference);
+        const parsed = parseInput(reference);
+        await doLookup(parsed.reference, parsed.attendeeNo ?? attendeeNo);
     }
 
     async function handleCheckIn() {
@@ -107,7 +143,7 @@ export default function EventCheckIn({ event }: Props) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ reference: result.reference_no }),
+                body: JSON.stringify({ reference: result.reference_no, attendee_no: result.attendee_no }),
             });
 
             const data = await res.json();
@@ -137,8 +173,9 @@ export default function EventCheckIn({ event }: Props) {
     }
 
     function handleInputChange(value: string) {
+        setReference(value);
         const parsed = parseInput(value);
-        setReference(parsed);
+        setAttendeeNo(parsed.attendeeNo);
     }
 
     // ── Camera scanner management ──
@@ -196,7 +233,7 @@ export default function EventCheckIn({ event }: Props) {
                 { fps: 10, qrbox: { width: 250, height: 250 } },
                 (decodedText) => {
                     const parsed = parseInput(decodedText);
-                    doLookup(parsed);
+                    doLookup(parsed.reference, parsed.attendeeNo);
                 },
                 () => {
                     // ignore scan failures (no QR in frame)
@@ -231,6 +268,7 @@ export default function EventCheckIn({ event }: Props) {
         setMessage(null);
         setResult(null);
         setReference('');
+        setAttendeeNo(null);
         setCameraError(null);
         if (mode === 'manual') {
             setTimeout(() => inputRef.current?.focus(), 100);

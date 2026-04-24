@@ -205,7 +205,20 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
                                                 )}
                                                 <div>
                                                     <span className="text-sm font-medium text-foreground">{order.product?.name ?? '—'}</span>
-                                                    {order.variant && <span className="block text-xs text-muted-foreground">{order.variant}</span>}
+                                                    {order.variant && (() => {
+                                                        let variants: string[] = [];
+                                                        try {
+                                                            const parsed = JSON.parse(order.variant);
+                                                            variants = Array.isArray(parsed) ? parsed : [order.variant];
+                                                        } catch {
+                                                            variants = [order.variant];
+                                                        }
+                                                        return (
+                                                            <span className="block text-xs text-muted-foreground">
+                                                                {variants.length === 1 ? variants[0] : variants.join(', ')}
+                                                            </span>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </div>
                                         </TableCell>
@@ -312,11 +325,24 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
                                         )}
                                         <div className="flex-1 min-w-0">
                                             <p className="font-semibold text-foreground">{selectedOrder.product?.name ?? '—'}</p>
-                                            {selectedOrder.variant && (
-                                                <span className="inline-flex items-center gap-1 mt-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                                                    <Tag className="w-3 h-3" /> {selectedOrder.variant}
-                                                </span>
-                                            )}
+                                            {selectedOrder.variant && (() => {
+                                                let variants: string[] = [];
+                                                try {
+                                                    const parsed = JSON.parse(selectedOrder.variant);
+                                                    variants = Array.isArray(parsed) ? parsed : [selectedOrder.variant];
+                                                } catch {
+                                                    variants = [selectedOrder.variant];
+                                                }
+                                                return (
+                                                    <div className="mt-1 flex flex-wrap gap-1">
+                                                        {variants.map((v, i) => (
+                                                            <span key={i} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                                                <Tag className="w-3 h-3" /> {v}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     </div>
                                 </div>

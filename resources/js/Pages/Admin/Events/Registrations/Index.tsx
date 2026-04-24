@@ -389,6 +389,44 @@ function RegistrationDetailModal({
                         )}
                     </div>
 
+                    {/* Sub-Attendees (when qty > 1) */}
+                    {reg.attendees && reg.attendees.length > 0 && (
+                        <>
+                            <Separator className="bg-border/50" />
+                            <div>
+                                <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest mb-3">
+                                    Attendees ({reg.attendees.length})
+                                </h4>
+                                <div className="rounded-lg border border-border/60 overflow-hidden divide-y divide-border/40">
+                                    {reg.attendees.map(att => (
+                                        <div key={att.id} className="flex items-center justify-between px-4 py-3 gap-3">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <span className="shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums">
+                                                    {att.attendee_no}
+                                                </span>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium text-foreground truncate">{att.name}</p>
+                                                    <p className="text-xs text-muted-foreground truncate">{att.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="shrink-0">
+                                                {att.checked_in_at ? (
+                                                    <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                                                        <UserCheck className="w-3 h-3" /> Checked In
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold bg-muted text-muted-foreground border-muted-foreground/20">
+                                                        Not Checked In
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
                     <Separator className="bg-border/50" />
 
                     {/* Order Summary */}

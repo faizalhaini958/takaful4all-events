@@ -26,7 +26,7 @@ interface Props {
 
 interface ProductSelection {
     product_id: number;
-    variant: string;
+    variants: string[]; // Array of variants, one per item in quantity
     quantity: number;
 }
 
@@ -106,16 +106,38 @@ export default function EventRegister({ event, tickets, products, zones }: Props
         if (exists) {
             updated = selectedProducts.filter(p => p.product_id !== productId);
         } else {
-            updated = [...selectedProducts, { product_id: productId, variant: '', quantity: 1 }];
+            updated = [...selectedProducts, { product_id: productId, variants: [''], quantity: 1 }];
         }
         setSelectedProducts(updated);
         setData('products', updated);
     }
 
-    function updateProductSelection(productId: number, field: 'variant' | 'quantity', value: string | number) {
+    function updateProductSelection(productId: number, field: 'quantity', value: number) {
         const updated = selectedProducts.map(p => {
             if (p.product_id === productId) {
-                return { ...p, [field]: value };
+                const currentVariants = p.variants || [];
+                // Adjust variants array to match new quantity
+                if (value > currentVariants.length) {
+                    // Add empty variants
+                    const newVariants = [...currentVariants, ...Array(value - currentVariants.length).fill('')];
+                    return { ...p, quantity: value, variants: newVariants };
+                } else {
+                    // Trim variants array
+                    return { ...p, quantity: value, variants: currentVariants.slice(0, value) };
+                }
+            }
+            return p;
+        });
+        setSelectedProducts(updated);
+        setData('products', updated);
+    }
+
+    function updateProductVariant(productId: number, itemIndex: number, variant: string) {
+        const updated = selectedProducts.map(p => {
+            if (p.product_id === productId) {
+                const newVariants = [...(p.variants || [])];
+                newVariants[itemIndex] = variant;
+                return { ...p, variants: newVariants };
             }
             return p;
         });
@@ -361,26 +383,6 @@ export default function EventRegister({ event, tickets, products, zones }: Props
 
                                                                 {isSelected && (
                                                                     <>
-                                                                        {/* Variant selector */}
-                                                                        {product.variants_json?.map(v => (
-                                                                            <div key={v.label} className="flex items-center gap-1">
-                                                                                <span className="text-xs text-muted-foreground">{v.label}:</span>
-                                                                                <Select
-                                                                                    value={selection?.variant ?? ''}
-                                                                                    onValueChange={val => updateProductSelection(product.id, 'variant', val)}
-                                                                                >
-                                                                                    <SelectTrigger className="h-8 w-20 text-xs">
-                                                                                        <SelectValue placeholder="Select" />
-                                                                                    </SelectTrigger>
-                                                                                    <SelectContent>
-                                                                                        {v.options.map(opt => (
-                                                                                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                                                                        ))}
-                                                                                    </SelectContent>
-                                                                                </Select>
-                                                                            </div>
-                                                                        ))}
-
                                                                         {/* Quantity */}
                                                                         <div className="flex items-center border rounded">
                                                                             <button
@@ -399,6 +401,33 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                                                                                 <Plus className="w-3 h-3" />
                                                                             </button>
                                                                         </div>
+
+                                                                        {/* Per-item variant selectors */}
+                                                                        {product.variants_json && product.variants_json.length > 0 && (
+                                                                            <div className="w-full mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                                                <p className="text-xs font-semibold text-gray-700 mb-2">Select {product.variants_json[0].label} for each item:</p>
+                                                                                <div className="space-y-2">
+                                                                                    {Array.from({ length: selection?.quantity ?? 1 }).map((_, itemIndex) => (
+                                                                                        <div key={itemIndex} className="flex items-center gap-2">
+                                                                                            <span className="text-xs text-gray-500 min-w-fit">Item {itemIndex + 1}:</span>
+                                                                                            <Select
+                                                                                                value={(selection?.variants?.[itemIndex] ?? '')}
+                                                                                                onValueChange={val => updateProductVariant(product.id, itemIndex, val)}
+                                                                                            >
+                                                                                                <SelectTrigger className="h-8 flex-1 text-xs">
+                                                                                                    <SelectValue placeholder="Select" />
+                                                                                                </SelectTrigger>
+                                                                                                <SelectContent>
+                                                                                                    {product.variants_json[0].options.map(opt => (
+                                                                                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                                                                                    ))}
+                                                                                                </SelectContent>
+                                                                                            </Select>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
                                                                     </>
                                                                 )}
                                                             </div>
