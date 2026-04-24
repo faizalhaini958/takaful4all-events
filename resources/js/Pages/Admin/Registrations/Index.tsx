@@ -356,6 +356,49 @@ function RegistrationDetailModal({
                         )}
                     </div>
 
+                    {/* Sub-Attendees (when qty > 1) */}
+                    {reg.attendees && reg.attendees.length > 0 && (
+                        <>
+                            <Separator className="bg-border/50" />
+                            <div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest">
+                                        Attendees ({reg.attendees.length})
+                                    </h4>
+                                    <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                                        {reg.attendees.filter(a => a.checked_in_at).length} / {reg.attendees.length} checked in
+                                    </span>
+                                </div>
+                                <div className="rounded-lg border border-border/60 overflow-hidden divide-y divide-border/40">
+                                    {reg.attendees.map(att => (
+                                        <div key={att.id} className="flex items-center justify-between px-4 py-3 gap-3 hover:bg-muted/30 transition-colors">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <span className="shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-[11px] font-bold tabular-nums">
+                                                    {att.attendee_no}
+                                                </span>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium text-foreground truncate">{att.name}</p>
+                                                    <p className="text-xs text-muted-foreground truncate">{att.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="shrink-0">
+                                                {att.checked_in_at ? (
+                                                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                                                        <UserCheck className="w-3 h-3" /> Checked In
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                                                        <Clock className="w-3 h-3" /> Pending
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
                     <Separator className="bg-border/50" />
 
                     {/* Event & Ticket */}

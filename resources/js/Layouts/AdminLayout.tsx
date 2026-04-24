@@ -68,7 +68,7 @@ const NAV_FULL = [
 ];
 
 const NAV_CHECKIN_STAFF = [
-    { href: '/admin/events',   label: 'Events',    icon: CalendarDays },
+    { href: '/admin/events', label: 'Events', icon: CalendarDays },
 ];
 
 const EVENTS_SUB = [

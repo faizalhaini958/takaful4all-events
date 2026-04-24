@@ -21,7 +21,7 @@ class EventRegistrationController extends Controller
         $status = request('status', 'all');
         $eventSlug = request('event', '');
 
-        $query = EventRegistration::with(['event.media', 'ticket', 'products.product'])
+        $query = EventRegistration::with(['event.media', 'ticket', 'products.product', 'attendees'])
             ->latest();
 
         if ($search) {
@@ -29,7 +29,11 @@ class EventRegistrationController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('reference_no', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhereHas('attendees', function ($aq) use ($search) {
+                      $aq->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -104,7 +108,7 @@ class EventRegistrationController extends Controller
 
     public function show(Event $event, EventRegistration $registration): Response
     {
-        $registration->load(['ticket', 'products.product.media', 'event']);
+        $registration->load(['ticket', 'products.product.media', 'event', 'attendees']);
 
         return Inertia::render('Admin/Events/Registrations/Show', [
             'event'        => $event->load('media'),

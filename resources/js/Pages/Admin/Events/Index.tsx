@@ -311,13 +311,13 @@ function EventRowBlock({
                                     <div className="flex flex-col gap-1.5">
                                         {!isCheckinStaff && (
                                         <>
-                                        <ActionLink href={`/admin/events/${event.slug}/registrations`} icon={Users} label="Registrations" />
                                         <ActionLink href={`/admin/events/${event.slug}/tickets`} icon={Ticket} label="Manage Tickets" />
                                         <ActionLink href={`/admin/events/${event.slug}/products`} icon={Package} label="Manage Products" />
                                         <ActionLink href="/admin/orders" icon={ShoppingCart} label="Manage Orders" />
                                         </>
                                         )}
                                         <ActionLink href={`/admin/events/${event.slug}/check-in`} icon={QrCode} label="Check-In Scanner" />
+                                        <ActionLink href={`/admin/events/${event.slug}/registrations`} icon={Users} label="Registrations" />
                                         {!isCheckinStaff && (
                                         <ActionLink href={`/events/${event.slug}`} icon={Eye} label="View Public Page" external />
                                         )}
