@@ -127,13 +127,15 @@ class SettingController extends Controller
     public function testChipIn(Request $request): RedirectResponse
     {
         $request->validate([
-            'secret_key' => 'required|string',
-            'brand_id'   => 'required|string',
+            'secret_key'   => 'required|string',
+            'brand_id'     => 'required|string',
+            'is_test_mode' => 'nullable|in:0,1',
         ]);
 
         $result = ChipInService::testConnection(
             $request->secret_key,
-            $request->brand_id
+            $request->brand_id,
+            ($request->input('is_test_mode', '1') === '1')
         );
 
         if ($result['success']) {

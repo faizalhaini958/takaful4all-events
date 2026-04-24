@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -10,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin','editor','checkin_staff','company','public') NOT NULL DEFAULT 'public'");
     }
 
@@ -18,6 +23,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        DB::table('users')->where('role', 'checkin_staff')->update(['role' => 'public']);
+
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin','editor','company','public') NOT NULL DEFAULT 'public'");
     }
 };

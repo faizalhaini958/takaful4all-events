@@ -418,7 +418,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                                                                                                     <SelectValue placeholder="Select" />
                                                                                                 </SelectTrigger>
                                                                                                 <SelectContent>
-                                                                                                    {product.variants_json[0].options.map(opt => (
+                                                                                                    {(product.variants_json?.[0]?.options ?? []).map(opt => (
                                                                                                         <SelectItem key={opt} value={opt}>{opt}</SelectItem>
                                                                                                     ))}
                                                                                                 </SelectContent>
@@ -561,7 +561,9 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                                                     <div key={sp.product_id} className="flex justify-between text-sm">
                                                         <span>
                                                             {product.name}
-                                                            {sp.variant && <span className="text-muted-foreground"> ({sp.variant})</span>}
+                                                            {sp.variants.filter(Boolean).length > 0 && (
+                                                                <span className="text-muted-foreground"> ({sp.variants.filter(Boolean).join(', ')})</span>
+                                                            )}
                                                             {' '} x {sp.quantity}
                                                         </span>
                                                         <span>RM {(product.price * sp.quantity).toFixed(2)}</span>

@@ -130,4 +130,90 @@ class EventRegistration extends Model
     {
         $this->update(['status' => 'cancelled']);
     }
+
+    public function ensureAttendeesExist(): void
+    {
+        $payloads = $this->buildAttendeePayloads();
+        $emails = collect($payloads)
+            ->pluck('email')
+            ->filter()
+            ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->unique()
+            ->values();
+
+        $usersByEmail = User::query()
+            ->when(
+                $emails->isNotEmpty(),
+                fn (Builder $query) => $query->whereIn('email', $emails->all()),
+                fn (Builder $query) => $query->whereRaw('1 = 0')
+            )
+            ->get()
+            ->keyBy(fn (User $user) => strtolower($user->email));
+
+        foreach ($payloads as $payload) {
+            $emailKey = strtolower(trim((string) ($payload['email'] ?? '')));
+            $matchedUser = $emailKey !== '' ? $usersByEmail->get($emailKey) : null;
+
+            $this->attendees()->updateOrCreate(
+                ['attendee_no' => $payload['attendee_no']],
+                [
+                    'user_id' => $matchedUser?->id,
+                    'name' => $payload['name'],
+                    'email' => $payload['email'],
+                    'phone' => $payload['phone'],
+                    'company' => $payload['company'],
+                    'job_title' => $payload['job_title'],
+                    'dietary_requirements' => $payload['dietary_requirements'],
+                ]
+            );
+        }
+    }
+
+    private function buildAttendeePayloads(): array
+    {
+        $attendees = [[
+            'attendee_no' => 1,
+            'name' => $this->name,
+            'email' => $this->email,
+            'phone' => $this->phone,
+            'company' => $this->company,
+            'job_title' => $this->job_title,
+            'dietary_requirements' => $this->dietary_requirements,
+        ]];
+
+        $additionalAttendees = [];
+        if (is_array($this->meta_json) && is_array($this->meta_json['attendees'] ?? null)) {
+            $additionalAttendees = array_values(array_filter(
+                $this->meta_json['attendees'],
+                static fn ($attendee) => is_array($attendee)
+            ));
+        }
+
+        foreach ($additionalAttendees as $index => $attendee) {
+            $attendees[] = [
+                'attendee_no' => $index + 2,
+                'name' => $attendee['name'] ?? ('Attendee ' . ($index + 2)),
+                'email' => $attendee['email'] ?? '',
+                'phone' => $attendee['phone'] ?? null,
+                'company' => $attendee['company'] ?? null,
+                'job_title' => $attendee['job_title'] ?? null,
+                'dietary_requirements' => $attendee['dietary_requirements'] ?? null,
+            ];
+        }
+
+        $seatCount = max((int) $this->quantity, count($attendees));
+        for ($attendeeNo = count($attendees) + 1; $attendeeNo <= $seatCount; $attendeeNo++) {
+            $attendees[] = [
+                'attendee_no' => $attendeeNo,
+                'name' => 'Attendee ' . $attendeeNo,
+                'email' => '',
+                'phone' => null,
+                'company' => null,
+                'job_title' => null,
+                'dietary_requirements' => null,
+            ];
+        }
+
+        return $attendees;
+    }
 }

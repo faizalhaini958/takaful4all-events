@@ -11,7 +11,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import { Calendar, MapPin, Download, Printer, User, Mail, Ticket, Hash, Package, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { type EventRegistration } from '@/types';
+import { type EventRegistration, type SharedProps } from '@/types';
 import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
 import { useState } from 'react';
@@ -43,7 +43,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function TicketPreviewModal({ registration, open, onOpenChange }: Props) {
-    const { auth } = usePage<{ auth: { user: { email: string } } }>().props;
+    const { auth } = usePage().props as { auth: SharedProps['auth'] };
     const ticketRef = useRef<HTMLDivElement>(null);
     const [currentTicket, setCurrentTicket] = useState(0);
 

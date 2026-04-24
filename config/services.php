@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'chipin' => [
+        'base_url' => 'https://gate.chip-in.asia/api/v1',
+        'test_base_url' => 'https://gate.chip-in.asia/api/v1',
+    ],
+
 ];

@@ -203,36 +203,6 @@ class EventRegistrationController extends Controller
                 $registration->products()->create($item);
             }
 
-            // Create attendee rows (1 row per ticket seat) so each attendee can access their own ticket later.
-            $attendees = $validated['attendees'] ?? [];
-            $attendeeEmails = collect($attendees)
-                ->pluck('email')
-                ->filter()
-                ->map(fn ($email) => strtolower(trim((string) $email)))
-                ->unique()
-                ->values()
-                ->all();
-
-            $usersByEmail = User::whereIn('email', $attendeeEmails)
-                ->get()
-                ->keyBy(fn (User $user) => strtolower($user->email));
-
-            foreach ($attendees as $index => $attendee) {
-                $emailKey = strtolower(trim((string) ($attendee['email'] ?? '')));
-                $matchedUser = $emailKey !== '' ? $usersByEmail->get($emailKey) : null;
-
-                $registration->attendees()->create([
-                    'user_id' => $matchedUser?->id,
-                    'attendee_no' => $index + 1,
-                    'name' => $attendee['name'] ?? ('Attendee ' . ($index + 1)),
-                    'email' => $attendee['email'] ?? '',
-                    'phone' => $attendee['phone'] ?? null,
-                    'company' => $attendee['company'] ?? null,
-                    'job_title' => $attendee['job_title'] ?? null,
-                    'dietary_requirements' => $attendee['dietary_requirements'] ?? null,
-                ]);
-            }
-
             // Decrement product stock (within transaction so it rolls back on failure)
             foreach ($productItems as $item) {
                 EventProduct::where('id', $item['product_id'])
@@ -314,6 +284,18 @@ class EventRegistrationController extends Controller
                             : []
                         ),
                     ]);
+
+                    if (($result['success'] ?? false) && ($chipInSettings['is_test_mode'] ?? '1') === '1' && !($result['is_test'] ?? false)) {
+                        Log::warning('Chip-In test mode is enabled, but purchase was created as live. Check test credentials.', [
+                            'registration_id' => $registration->id,
+                            'purchase_id'     => $result['data']['id'] ?? null,
+                        ]);
+
+                        return redirect()->route('events.register.confirmation', [
+                            'slug'      => $event->slug,
+                            'reference' => $registration->reference_no,
+                        ])->with('error', 'Payment test mode is enabled, but current Chip-In API credentials are not test credentials. Please update test API key and brand ID in Settings > Payment.');
+                    }
 
                     if ($result['success'] && !empty($result['checkout_url'])) {
                         // Store the Chip-In purchase ID on the registration

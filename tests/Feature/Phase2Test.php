@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Event;
 use App\Models\EventRegistration;
+use App\Models\EventRegistrationAttendee;
 use App\Models\EventTicket;
 use App\Models\EventZone;
 use App\Models\Invoice;
@@ -449,6 +450,56 @@ class Phase2Test extends TestCase
         $registration->refresh();
         $this->assertEquals('attended', $registration->status);
         $this->assertNotNull($registration->checked_in_at);
+    }
+
+    public function test_checkin_with_suffixed_reference_marks_only_selected_attendee(): void
+    {
+        $admin = $this->createAdmin();
+        $event = $this->createEvent();
+        $ticket = $this->createTicket($event);
+
+        $registration = EventRegistration::create([
+            'event_id'       => $event->id,
+            'ticket_id'      => $ticket->id,
+            'name'           => 'Primary Attendee',
+            'email'          => 'primary@test.com',
+            'quantity'       => 2,
+            'subtotal'       => 200,
+            'total_amount'   => 200,
+            'status'         => 'confirmed',
+            'payment_status' => 'paid',
+        ]);
+
+        $registration->attendees()->where('attendee_no', 1)->update([
+            'name' => 'Primary Attendee',
+            'email' => 'primary@test.com',
+        ]);
+
+        $registration->attendees()->where('attendee_no', 2)->update([
+            'name' => 'Guest Attendee',
+            'email' => 'guest@test.com',
+        ]);
+
+        $firstAttendee = $registration->attendees()->where('attendee_no', 1)->firstOrFail();
+        $secondAttendee = $registration->attendees()->where('attendee_no', 2)->firstOrFail();
+
+        $response = $this->actingAs($admin)
+            ->postJson("/admin/events/{$event->slug}/check-in/confirm", [
+                'reference' => $registration->reference_no . '-02',
+            ]);
+
+        $response->assertOk();
+        $response->assertJson(['success' => true]);
+        $response->assertJsonPath('registration.attendee_no', 2);
+
+        $firstAttendee->refresh();
+        $secondAttendee->refresh();
+        $registration->refresh();
+
+        $this->assertNull($firstAttendee->checked_in_at);
+        $this->assertNotNull($secondAttendee->checked_in_at);
+        $this->assertEquals('confirmed', $registration->status);
+        $this->assertNull($registration->checked_in_at);
     }
 
     public function test_checkin_prevents_double_checkin(): void

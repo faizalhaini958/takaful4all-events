@@ -13,6 +13,11 @@ class EventRegistrationObserver
         private readonly InvoiceService $invoiceService,
     ) {}
 
+    public function created(EventRegistration $registration): void
+    {
+        $registration->ensureAttendeesExist();
+    }
+
     /**
      * Handle the "updated" event — auto-generate invoice when payment_status becomes 'paid'.
      */

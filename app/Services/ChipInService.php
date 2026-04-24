@@ -9,14 +9,25 @@ use App\Models\Setting;
 class ChipInService
 {
     protected string $baseUrl = 'https://gate.chip-in.asia/api/v1';
+    protected bool $isTestMode = false;
     protected ?string $secretKey;
     protected ?string $brandId;
 
     public function __construct()
     {
         $settings = Setting::getCached('chipin');
+        $this->isTestMode = ($settings['is_test_mode'] ?? '1') === '1';
+        $this->baseUrl = self::resolveBaseUrl($this->isTestMode);
         $this->secretKey = $settings['secret_key'] ?? null;
         $this->brandId   = $settings['brand_id']   ?? null;
+    }
+
+    /**
+     * Whether Chip-In is running in test mode from settings.
+     */
+    public function isTestMode(): bool
+    {
+        return $this->isTestMode;
     }
 
     /**
@@ -36,8 +47,24 @@ class ChipInService
             'brand_id' => $this->brandId,
         ], $data);
 
+        if ($this->isTestMode) {
+            // Hint to gateway that this purchase is intended for test mode.
+            $payload['is_test'] = true;
+        }
+
         $response = Http::withToken($this->secretKey)
             ->post("{$this->baseUrl}/purchases/", $payload);
+
+        // Backward-compatibility: some gateway versions may reject unknown `is_test` field.
+        if ($response->failed() && $this->isTestMode) {
+            $errorBody = $response->json();
+            $errorText = is_array($errorBody) ? json_encode($errorBody) : (string) $response->body();
+            if (str_contains(strtolower((string) $errorText), 'is_test')) {
+                unset($payload['is_test']);
+                $response = Http::withToken($this->secretKey)
+                    ->post("{$this->baseUrl}/purchases/", $payload);
+            }
+        }
 
         if ($response->failed()) {
             Log::error('ChipIn createPurchase failed', [
@@ -56,6 +83,7 @@ class ChipInService
             'success'      => true,
             'data'         => $response->json(),
             'checkout_url' => $response->json('checkout_url'),
+            'is_test'      => self::normalizeBool($response->json('is_test', false)),
         ];
     }
 
@@ -175,12 +203,18 @@ class ChipInService
     /**
      * Test the API connection with the provided credentials.
      */
-    public static function testConnection(string $secretKey, string $brandId): array
+    public static function testConnection(string $secretKey, string $brandId, ?bool $isTestMode = null): array
     {
         try {
+            if ($isTestMode === null) {
+                $isTestMode = Setting::get('chipin', 'is_test_mode', '1') === '1';
+            }
+
+            $baseUrl = self::resolveBaseUrl($isTestMode);
+
             $response = Http::withToken($secretKey)
                 ->timeout(10)
-                ->get('https://gate.chip-in.asia/api/v1/payment_methods/', [
+                ->get("{$baseUrl}/payment_methods/", [
                     'brand_id' => $brandId,
                     'currency' => 'MYR',
                 ]);
@@ -215,5 +249,44 @@ class ChipInService
             ]);
             return ['success' => false, 'message' => 'Connection failed: ' . $e->getMessage()];
         }
+    }
+
+    /**
+     * Resolve API base URL based on mode.
+     */
+    private static function resolveBaseUrl(bool $isTestMode): string
+    {
+        $liveBaseUrl = rtrim((string) config('services.chipin.base_url', 'https://gate.chip-in.asia/api/v1'), '/');
+        $testBaseUrl = rtrim((string) config('services.chipin.test_base_url', $liveBaseUrl), '/');
+
+        return $isTestMode ? $testBaseUrl : $liveBaseUrl;
+    }
+
+    /**
+     * Normalize mixed boolean-like API values safely.
+     */
+    private static function normalizeBool(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return ((int) $value) === 1;
+        }
+
+        if (is_string($value)) {
+            $normalized = strtolower(trim($value));
+
+            if (in_array($normalized, ['1', 'true', 'yes', 'on'], true)) {
+                return true;
+            }
+
+            if (in_array($normalized, ['0', 'false', 'no', 'off', ''], true)) {
+                return false;
+            }
+        }
+
+        return false;
     }
 }

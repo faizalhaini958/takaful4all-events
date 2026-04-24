@@ -368,6 +368,7 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
         router.post(route('admin.settings.chipin.test'), {
             secret_key: form.data.secret_key,
             brand_id: form.data.brand_id,
+            is_test_mode: form.data.is_test_mode,
         }, {
             preserveScroll: true,
             onFinish: () => setTestingConnection(false),
@@ -462,7 +463,7 @@ function ChipInSettingsTab({ chipin }: { chipin: ChipInSettings }) {
                             <div className="space-y-0.5">
                                 <Label htmlFor="chipin-test-mode" className="text-base">Test Mode</Label>
                                 <p className="text-sm text-muted-foreground">
-                                    Enable test mode to use sandbox credentials. No real payments will be processed.
+                                    Enable test mode with test API key and test brand ID. If live credentials are used, payments may still be treated as live.
                                 </p>
                             </div>
                             <Switch

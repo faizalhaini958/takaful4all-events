@@ -68,6 +68,9 @@ class CheckInController extends Controller
             ]);
         }
 
+        $registration->ensureAttendeesExist();
+        $registration->load(['ticket', 'attendees']);
+
         $attendeeNo = (int) ($parsedAttendeeNo ?: 0);
         if ($attendeeNo === 0) {
             $attendeeNo = $registration->quantity > 1 ? 0 : 1;
@@ -91,6 +94,12 @@ class CheckInController extends Controller
             ]);
         }
 
+        $checkedInAt = $attendee->checked_in_at;
+        if (!$checkedInAt && $registration->quantity === 1 && $registration->checked_in_at) {
+            $attendee->update(['checked_in_at' => $registration->checked_in_at]);
+            $checkedInAt = $attendee->checked_in_at;
+        }
+
         return response()->json([
             'found' => true,
             'registration' => [
@@ -105,7 +114,7 @@ class CheckInController extends Controller
                 'quantity'       => $registration->quantity,
                 'status'         => $registration->status,
                 'payment_status' => $registration->payment_status,
-                'checked_in_at'  => $attendee->checked_in_at?->toIso8601String(),
+                'checked_in_at'  => $checkedInAt?->toIso8601String(),
             ],
         ]);
     }
@@ -137,6 +146,9 @@ class CheckInController extends Controller
             return redirect()->back()->with('error', 'Registration not found.');
         }
 
+        $registration->ensureAttendeesExist();
+        $registration->load('attendees');
+
         $attendeeNo = (int) ($parsedAttendeeNo ?: 0);
         if ($attendeeNo === 0) {
             $attendeeNo = $registration->quantity > 1 ? 0 : 1;
@@ -157,8 +169,14 @@ class CheckInController extends Controller
             return redirect()->back()->with('error', 'Attendee ticket not found.');
         }
 
-        if ($attendee->checked_in_at) {
-            $checkedInTime = $attendee->checked_in_at->format('d M Y, g:i A');
+        $checkedInAt = $attendee->checked_in_at;
+        if (!$checkedInAt && $registration->quantity === 1 && $registration->checked_in_at) {
+            $attendee->update(['checked_in_at' => $registration->checked_in_at]);
+            $checkedInAt = $attendee->checked_in_at;
+        }
+
+        if ($checkedInAt) {
+            $checkedInTime = $checkedInAt->format('d M Y, g:i A');
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -166,7 +184,7 @@ class CheckInController extends Controller
                     'registration' => [
                         'name'          => $attendee->name,
                         'attendee_no'   => $attendee->attendee_no,
-                        'checked_in_at' => $attendee->checked_in_at->toIso8601String(),
+                        'checked_in_at' => $checkedInAt->toIso8601String(),
                     ],
                 ]);
             }
