@@ -16,7 +16,7 @@ function toDatetimeLocal(val: string | null): string {
 }
 
 export default function EventEdit({ event }: Props) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, processing, errors, transform } = useForm({
         title:            event.title,
         slug:             event.slug,
         excerpt:          event.excerpt ?? '',
@@ -35,10 +35,21 @@ export default function EventEdit({ event }: Props) {
         rsvp_deadline:    toDatetimeLocal(event.rsvp_deadline ?? null),
         max_attendees:    event.max_attendees ? String(event.max_attendees) : '',
         require_approval: event.require_approval ?? false,
+        faqs:             (event.meta_json?.faqs as any[]) ?? [],
+        sponsors:         (event.meta_json?.sponsors as any[]) ?? [],
     });
 
     const submit: FormEventHandler = e => {
         e.preventDefault();
+        
+        transform((data) => ({
+            ...data,
+            meta_json: {
+                faqs: data.faqs,
+                sponsors: data.sponsors,
+            }
+        }));
+
         put(`/admin/events/${event.slug}`);
     };
 

@@ -5,7 +5,7 @@ import { type FormEventHandler } from 'react';
 import { ChevronLeft, CalendarPlus } from 'lucide-react';
 
 export default function EventCreate() {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
         title: '',
         slug: '',
         excerpt: '',
@@ -24,10 +24,21 @@ export default function EventCreate() {
         rsvp_deadline: '',
         max_attendees: '',
         require_approval: false,
+        faqs: [] as { question: string; answer: string }[],
+        sponsors: [] as { name: string; role: string; logo_url: string }[],
     });
 
     const submit: FormEventHandler = e => {
         e.preventDefault();
+        
+        transform((data) => ({
+            ...data,
+            meta_json: {
+                faqs: data.faqs,
+                sponsors: data.sponsors,
+            }
+        }));
+        
         post('/admin/events');
     };
 

@@ -2,7 +2,7 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import EventCard from '@/Components/EventCard';
 import ShareButtons from '@/Components/ShareButtons';
 import { Head, Link } from '@inertiajs/react';
-import { Calendar, Clock, MapPin, ExternalLink, ChevronRight, Ticket, FolderOpen, Check, Star, Info, HelpCircle, Map as MapIcon, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Clock, MapPin, ExternalLink, ChevronRight, Ticket, FolderOpen, Check, Star, Info, HelpCircle, Map as MapIcon, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { type Event, type EventTicket, type EventZone } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
 import { useState, useEffect } from 'react';
@@ -31,6 +31,10 @@ export default function EventShow({ event, related, ogUrl }: Props) {
 
     const startDate = new Date(event.start_at);
     const endDate = event.end_at ? new Date(event.end_at) : null;
+    const location = [event.venue, event.city, event.state].filter(Boolean).join(', ');
+
+    const faqs = (event.meta_json?.faqs as { question: string; answer: string }[]) ?? [];
+    const sponsors = (event.meta_json?.sponsors as { name: string; role: string; logo_url: string }[]) ?? [];
 
     const formatLongDate = (d: Date) =>
         d.toLocaleDateString('en-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -42,7 +46,6 @@ export default function EventShow({ event, related, ogUrl }: Props) {
         d.toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     const statusCfg = STATUS_CONFIG[event.status] ?? STATUS_CONFIG.draft;
-    const location = [event.venue, event.city, event.state, event.country].filter(Boolean).join(', ');
 
     // Scroll listener for mobile sticky bar
     useEffect(() => {
@@ -187,14 +190,16 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                                         </div>
                                     </Tab>
                                 )}
-                                <Tab className={({ selected }) => classNames(
-                                    'w-full min-w-[120px] rounded-xl py-3 text-sm font-bold leading-5 transition-all outline-none',
-                                    selected ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:bg-white/40 hover:text-gray-700'
-                                )}>
-                                    <div className="flex items-center justify-center gap-2">
-                                        <HelpCircle className="w-4 h-4" /> FAQ
-                                    </div>
-                                </Tab>
+                                {faqs.length > 0 && (
+                                    <Tab className={({ selected }) => classNames(
+                                        'w-full min-w-[120px] rounded-xl py-3 text-sm font-bold leading-5 transition-all outline-none',
+                                        selected ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:bg-white/40 hover:text-gray-700'
+                                    )}>
+                                        <div className="flex items-center justify-center gap-2">
+                                            <HelpCircle className="w-4 h-4" /> FAQ
+                                        </div>
+                                    </Tab>
+                                )}
                             </Tab.List>
 
                             <Tab.Panels>
@@ -249,31 +254,26 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                                     </Tab.Panel>
                                 )}
 
-                                <Tab.Panel className="focus:outline-none">
-                                    <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-                                        <h3 className="text-xl font-bold text-brand-navy mb-2">Frequently Asked Questions</h3>
-                                        <div className="space-y-4">
-                                            <details className="group p-4 rounded-2xl border border-gray-100 bg-gray-50/50 open:bg-white open:border-brand/20 transition-all">
-                                                <summary className="flex items-center justify-between font-bold text-gray-900 cursor-pointer list-none">
-                                                    How do I get my ticket?
-                                                    <ChevronDown className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" />
-                                                </summary>
-                                                <p className="mt-3 text-gray-600 text-sm leading-relaxed">
-                                                    Once your registration is confirmed, you will receive an email with your e-ticket and QR code. You can also download it from your dashboard.
-                                                </p>
-                                            </details>
-                                            <details className="group p-4 rounded-2xl border border-gray-100 bg-gray-50/50 open:bg-white open:border-brand/20 transition-all">
-                                                <summary className="flex items-center justify-between font-bold text-gray-900 cursor-pointer list-none">
-                                                    Is there a refund policy?
-                                                    <ChevronDown className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" />
-                                                </summary>
-                                                <p className="mt-3 text-gray-600 text-sm leading-relaxed">
-                                                    Refunds are generally not provided unless the event is cancelled. However, you can transfer your ticket to another person.
-                                                </p>
-                                            </details>
+                                {faqs.length > 0 && (
+                                    <Tab.Panel className="focus:outline-none">
+                                        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+                                            <h3 className="text-xl font-bold text-brand-navy mb-2">Frequently Asked Questions</h3>
+                                            <div className="space-y-4">
+                                                {faqs.map((faq, i) => (
+                                                    <details key={i} className="group p-4 rounded-2xl border border-gray-100 bg-gray-50/50 open:bg-white open:border-brand/20 transition-all">
+                                                        <summary className="flex items-center justify-between font-bold text-gray-900 cursor-pointer list-none">
+                                                            {faq.question}
+                                                            <ChevronDown className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" />
+                                                        </summary>
+                                                        <p className="mt-3 text-gray-600 text-sm leading-relaxed">
+                                                            {faq.answer}
+                                                        </p>
+                                                    </details>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                </Tab.Panel>
+                                    </Tab.Panel>
+                                )}
                             </Tab.Panels>
                         </Tab.Group>
 
@@ -314,21 +314,46 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                             </div>
                         )}
 
-                        {/* Organizer Card */}
+                        {/* Sponsors & Organizers Card */}
                         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl ring-1 ring-black/5">
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Organized By</h3>
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center p-2">
-                                    <img src="/images/logo.png" alt="MTA" className="max-w-full max-h-full object-contain" />
-                                </div>
-                                <div>
-                                    <p className="font-bold text-brand-navy">Malaysian Takaful Association</p>
-                                    <p className="text-xs text-gray-500">Official Organizer</p>
-                                </div>
+                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Partners &amp; Organizers</h3>
+                            
+                            <div className="space-y-8">
+                                {sponsors.length > 0 ? (
+                                    sponsors.map((sponsor, i) => (
+                                        <div key={i} className="flex items-center gap-4">
+                                            <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center p-2 overflow-hidden">
+                                                {sponsor.logo_url ? (
+                                                    <img src={sponsor.logo_url} alt={sponsor.name} className="max-w-full max-h-full object-contain" />
+                                                ) : (
+                                                    <Users className="w-8 h-8 text-gray-200" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-brand-navy leading-tight">{sponsor.name}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">{sponsor.role}</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    /* Fallback to default organizer if none specified */
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center p-2">
+                                            <img src="/images/logo.png" alt="MTA" className="max-w-full max-h-full object-contain" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-brand-navy">Malaysian Takaful Association</p>
+                                            <p className="text-xs text-gray-500">Official Organizer</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <p className="text-sm text-gray-600 leading-relaxed italic">
-                                "Empowering the takaful industry through professional development and networking."
-                            </p>
+                            
+                            {!sponsors.length && (
+                                <p className="text-sm text-gray-600 leading-relaxed italic mt-6 pt-6 border-t border-gray-100">
+                                    "Empowering the takaful industry through professional development and networking."
+                                </p>
+                            )}
                         </div>
                     </aside>
                 </div>

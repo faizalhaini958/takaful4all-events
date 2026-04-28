@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Switch } from '@/Components/ui/switch';
 import { Link } from '@inertiajs/react';
-import { MapPin, Calendar, ExternalLink, Eye, Users, Ticket, Palette, FolderOpen, FileText, Image, Loader2, Link2, Save } from 'lucide-react';
+import { MapPin, Calendar, ExternalLink, Eye, Users, Ticket, Palette, FolderOpen, FileText, Image, Loader2, Link2, Save, Plus, Trash2, HelpCircle } from 'lucide-react';
 import RichEditor from '@/Components/RichEditor';
 import ImageUpload from '@/Components/ImageUpload';
 import { type Media, type Event } from '@/types';
@@ -31,6 +31,8 @@ export interface EventFormData {
     rsvp_deadline: string;
     max_attendees: string;
     require_approval: boolean;
+    faqs: { question: string; answer: string }[];
+    sponsors: { name: string; role: string; logo_url: string }[];
 }
 
 interface Props {
@@ -280,6 +282,158 @@ export default function EventForm({
                                 <Label className="mb-1.5 block">Map preview</Label>
                                 <MapPreview query={deferredMapQuery} />
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* FAQ Section */}
+                    <Card className="rounded-xl border-border/60">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                            <CardTitle className="flex items-center gap-2">
+                                <HelpCircle className="w-4 h-4 text-primary" /> FAQ Section
+                            </CardTitle>
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setData('faqs', [...data.faqs, { question: '', answer: '' }])}
+                                className="h-8 gap-1"
+                            >
+                                <Plus className="w-3.5 h-3.5" /> Add Question
+                            </Button>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {data.faqs.length === 0 ? (
+                                <p className="text-xs text-muted-foreground text-center py-4 italic">No FAQs added yet. This section will be hidden on the site.</p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {data.faqs.map((faq, index) => (
+                                        <div key={index} className="p-4 rounded-xl border border-border/60 bg-muted/20 relative group">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newFaqs = [...data.faqs];
+                                                    newFaqs.splice(index, 1);
+                                                    setData('faqs', newFaqs);
+                                                }}
+                                                className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Question {index + 1}</Label>
+                                                    <Input
+                                                        value={faq.question}
+                                                        onChange={e => {
+                                                            const newFaqs = [...data.faqs];
+                                                            newFaqs[index].question = e.target.value;
+                                                            setData('faqs', newFaqs);
+                                                        }}
+                                                        placeholder="eg. Is parking available?"
+                                                        className="mt-1"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Answer</Label>
+                                                    <Textarea
+                                                        value={faq.answer}
+                                                        onChange={e => {
+                                                            const newFaqs = [...data.faqs];
+                                                            newFaqs[index].answer = e.target.value;
+                                                            setData('faqs', newFaqs);
+                                                        }}
+                                                        placeholder="eg. Yes, there is free parking at the venue."
+                                                        className="mt-1 resize-none"
+                                                        rows={2}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Sponsors & Organizers Section */}
+                    <Card className="rounded-xl border-border/60">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="w-4 h-4 text-primary" /> Sponsors &amp; Organizers
+                            </CardTitle>
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setData('sponsors', [...data.sponsors, { name: '', role: '', logo_url: '' }])}
+                                className="h-8 gap-1"
+                            >
+                                <Plus className="w-3.5 h-3.5" /> Add Partner
+                            </Button>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {data.sponsors.length === 0 ? (
+                                <p className="text-xs text-muted-foreground text-center py-4 italic">No sponsors or organizers added yet.</p>
+                            ) : (
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    {data.sponsors.map((sponsor, index) => (
+                                        <div key={index} className="p-4 rounded-xl border border-border/60 bg-muted/20 relative group">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newSponsors = [...data.sponsors];
+                                                    newSponsors.splice(index, 1);
+                                                    setData('sponsors', newSponsors);
+                                                }}
+                                                className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Partner Name</Label>
+                                                    <Input
+                                                        value={sponsor.name}
+                                                        onChange={e => {
+                                                            const newSponsors = [...data.sponsors];
+                                                            newSponsors[index].name = e.target.value;
+                                                            setData('sponsors', newSponsors);
+                                                        }}
+                                                        placeholder="eg. Maybank Takaful"
+                                                        className="mt-1 h-8 text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Role</Label>
+                                                    <Input
+                                                        value={sponsor.role}
+                                                        onChange={e => {
+                                                            const newSponsors = [...data.sponsors];
+                                                            newSponsors[index].role = e.target.value;
+                                                            setData('sponsors', newSponsors);
+                                                        }}
+                                                        placeholder="eg. Platinum Sponsor"
+                                                        className="mt-1 h-8 text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Logo URL</Label>
+                                                    <Input
+                                                        value={sponsor.logo_url}
+                                                        onChange={e => {
+                                                            const newSponsors = [...data.sponsors];
+                                                            newSponsors[index].logo_url = e.target.value;
+                                                            setData('sponsors', newSponsors);
+                                                        }}
+                                                        placeholder="https://…"
+                                                        className="mt-1 h-8 text-sm font-mono"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
