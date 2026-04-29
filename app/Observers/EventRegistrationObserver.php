@@ -25,9 +25,9 @@ class EventRegistrationObserver
     /**
      * Handle the "updated" event.
      * Triggers when payment_status changes to 'paid':
-     *  1. Auto-generates the Invoice PDF.
-     *  2. Pre-generates all attendee ticket PDFs.
-     *  3. Queues the confirmation email with download links.
+     *  1. Creates invoice record (PDF generated on-demand when clicked).
+     *  2. Queues the confirmation email with download links.
+     *  3. Tickets/invoices PDFs are generated on-demand in HTTP context (faster & more reliable).
      */
     public function updated(EventRegistration $registration): void
     {
@@ -38,30 +38,33 @@ class EventRegistrationObserver
             return;
         }
 
-        // 1. Generate / retrieve invoice
+        // 1. Create invoice record (PDF generated asynchronously)
         try {
             if (!Invoice::where('registration_id', $registration->id)->exists()) {
                 $this->invoiceService->generate($registration);
             }
         } catch (\Throwable $e) {
-            Log::error('Failed to auto-generate invoice', [
+            Log::error('Failed to create invoice record', [
                 'registration_id' => $registration->id,
                 'error'           => $e->getMessage(),
             ]);
         }
 
-        // 2. Pre-generate all attendee ticket PDFs so download links work immediately
+        // 2. Dispatch async PDF generation job
         try {
-            $registration->loadMissing(['event', 'ticket', 'attendees']);
-            $this->ticketService->generateForRegistration($registration);
-        } catch (\Throwable $e) {
-            Log::error('Failed to pre-generate ticket PDFs', [
+            \App\Jobs\GenerateRegistrationPdfs::dispatch($registration);
+            Log::info('Dispatched PDF generation job', [
                 'registration_id' => $registration->id,
-                'error'           => $e->getMessage(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to dispatch PDF generation job', [
+                'registration_id' => $registration->id,
+                'error' => $e->getMessage(),
+                'note' => 'PDFs will be generated on-demand when downloaded',
             ]);
         }
 
-        // 3. Queue the confirmation email
+        // 3. Queue confirmation email immediately
         try {
             $registration->loadMissing(['invoice']);
             Mail::to($registration->email)

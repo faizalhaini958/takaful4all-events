@@ -12,8 +12,6 @@ import { Separator } from '@/Components/ui/separator';
 import { Calendar, MapPin, Download, Printer, User, Mail, Ticket, Hash, Package, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { type EventRegistration, type SharedProps } from '@/types';
-import html2canvas from 'html2canvas-pro';
-import jsPDF from 'jspdf';
 import { useState } from 'react';
 import { usePage } from '@inertiajs/react';
 
@@ -98,69 +96,23 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
     const totalTickets = attendees.length;
     const attendee = attendees[currentTicket];
 
-    const generatePdf = useCallback(async () => {
-        if (!ticketRef.current || !registration) return;
+    const handleDownload = useCallback(() => {
+        if (!registration || !attendee) return;
 
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4',
-            compress: true,
+        const attendeeNo = attendee.attendee_no ?? (currentTicket + 1);
+        const downloadUrl = route('tickets.download', {
+            registration: registration.id,
+            attendee_no: attendeeNo,
         });
 
-        const prevTicket = currentTicket;
+        window.location.href = downloadUrl;
+    }, [registration, attendee, currentTicket]);
 
-        for (let i = 0; i < totalTickets; i++) {
-            // We need to render each ticket page — set state and wait for re-render
-            if (i > 0) pdf.addPage();
+    const handlePrint = useCallback(() => {
+        if (!ticketRef.current) return;
 
-            // Capture the current ticket content
-            setCurrentTicket(i);
-            // Wait a tick for React to render
-            await new Promise((r) => setTimeout(r, 100));
-
-            const canvas = await html2canvas(ticketRef.current!, {
-                scale: 1.5,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                logging: false,
-            });
-
-            const imgData = canvas.toDataURL('image/jpeg', 0.75);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const margin = 10;
-            const contentWidth = pdfWidth - margin * 2;
-            const contentHeight = (canvas.height * contentWidth) / canvas.width;
-
-            pdf.addImage(imgData, 'JPEG', margin, margin, contentWidth, contentHeight, undefined, 'FAST');
-        }
-
-        // Restore view
-        setCurrentTicket(prevTicket);
-
-        return pdf;
-    }, [registration, totalTickets, currentTicket]);
-
-    const handleDownload = useCallback(async () => {
-        const pdf = await generatePdf();
-        if (pdf && registration) {
-            pdf.save(`tickets-${registration.reference_no}.pdf`);
-        }
-    }, [generatePdf, registration]);
-
-    const handlePrint = useCallback(async () => {
-        const pdf = await generatePdf();
-        if (pdf) {
-            const pdfBlob = pdf.output('blob');
-            const url = URL.createObjectURL(pdfBlob);
-            const printWindow = window.open(url);
-            if (printWindow) {
-                printWindow.addEventListener('load', () => {
-                    printWindow.print();
-                });
-            }
-        }
-    }, [generatePdf]);
+        window.print();
+    }, []);
 
     if (!registration || !attendee) return null;
 
@@ -189,6 +141,23 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                     <DialogDescription>Tickets for {event?.title}</DialogDescription>
                 </DialogHeader>
 
+                <style>{`
+                    @media print {
+                        body * {
+                            visibility: hidden;
+                        }
+                        .ticket-printable, .ticket-printable * {
+                            visibility: visible;
+                        }
+                        .ticket-printable {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                        }
+                    }
+                `}</style>
+
                 {/* Action buttons (sticky top) */}
                 <div className="sticky top-0 z-10 bg-white border-b px-6 py-3 flex items-center justify-between">
                     <h3 className="font-semibold text-sm text-gray-700 flex items-center gap-1.5">
@@ -201,7 +170,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={handlePrint}>
                             <Printer className="w-4 h-4 mr-1.5" />
-                            Print All
+                            Print
                         </Button>
                         <Button size="sm" onClick={handleDownload}>
                             <Download className="w-4 h-4 mr-1.5" />
@@ -250,7 +219,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                 )}
 
                 {/* Ticket content (captured for PDF) */}
-                <div ref={ticketRef} className="bg-white">
+                <div ref={ticketRef} className="bg-white ticket-printable">
                     {/* Header / Event banner */}
                     <div className="bg-[#1a2332] text-white px-6 py-5">
                         <div className="flex items-start gap-4">

@@ -4,14 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceController extends Controller
 {
     /**
      * Download an invoice PDF.
-     * Accessible by the registration owner or admin.
+     * Uses cached PDF or generates on-demand (synchronous fallback).
      */
     public function download(Request $request, string $invoiceNumber): StreamedResponse
     {
@@ -33,20 +32,8 @@ class InvoiceController extends Controller
             abort(403);
         }
 
-        if (!$invoice->pdf_path || !Storage::disk('local')->exists($invoice->pdf_path)) {
-            // Regenerate the PDF if missing
-            $invoiceService = app(\App\Services\InvoiceService::class);
-            $invoiceService->regeneratePdf($invoice);
-            $invoice->refresh();
-        }
-
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
-        $disk = Storage::disk('local');
-
-        return $disk->download(
-            $invoice->pdf_path,
-            $invoice->invoice_number . '.pdf',
-            ['Content-Type' => 'application/pdf']
-        );
+        // Use cached PDF or generate on-demand
+        $invoiceService = app(\App\Services\InvoiceService::class);
+        return $invoiceService->download($invoice);
     }
 }

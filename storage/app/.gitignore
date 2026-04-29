@@ -2,3 +2,8 @@
 !private/
 !public/
 !.gitignore
+
+# Generated PDF caches (invoices and tickets)
+# These are regenerated on-demand if missing
+invoices/
+tickets/

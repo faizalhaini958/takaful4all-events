@@ -69,6 +69,12 @@ Route::get('/invoices/{invoiceNumber}/download', [InvoiceController::class, 'dow
     ->middleware('auth')
     ->name('invoices.download');
 
+// Ticket download (authenticated - owner or admin access checked in controller)
+Route::get('/registrations/{registration}/tickets/{attendee_no}/download', [AdminTicketController::class, 'download'])
+    ->middleware('auth')
+    ->name('tickets.download')
+    ->where('attendee_no', '[0-9]+');
+
 // ─── User Dashboard Routes ────────────────────────────────────────────────────
 
 Route::prefix('dashboard')
@@ -160,13 +166,12 @@ Route::prefix('admin')
 
         // Check-in Scanner
         Route::get('events/{event}/check-in', [AdminCheckInController::class, 'scanner'])->name('events.check-in');
-        Route::post('events/{event}/check-in/lookup', [AdminCheckInController::class, 'lookup'])->name('events.check-in.lookup');
-        Route::post('events/{event}/check-in/confirm', [AdminCheckInController::class, 'checkIn'])->name('events.check-in.confirm');
-
-        // Ticket Downloads (admin + owner access, secured in controller)
-        Route::get('registrations/{registration}/tickets/{attendee_no}/download', [AdminTicketController::class, 'download'])
-            ->name('tickets.download')
-            ->where('attendee_no', '[0-9]+');
+        Route::post('events/{event}/check-in/lookup', [AdminCheckInController::class, 'lookup'])
+            ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+            ->name('events.check-in.lookup');
+        Route::post('events/{event}/check-in/confirm', [AdminCheckInController::class, 'checkIn'])
+            ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+            ->name('events.check-in.confirm');
 
         // Event Reminder Broadcast
         Route::post('events/{event}/send-reminder', [AdminEventController::class, 'sendReminder'])->name('events.send-reminder');

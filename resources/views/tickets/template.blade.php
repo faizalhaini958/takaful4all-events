@@ -1,211 +1,255 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Ticket – {{ $attendee->name }}</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @page {
+            margin: 15px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 12px;
-            background: #ffffff;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 11px;
             color: #1a1a2e;
         }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
         .ticket {
-            width: 540px;
-            margin: 20px auto;
             border: 1px solid #d1dce8;
             border-radius: 10px;
             overflow: hidden;
         }
-        /* Top bar */
+
+        /* Header */
         .ticket-header {
             background-color: #1e3a5f;
             color: #ffffff;
-            padding: 20px 28px;
-            display: table;
-            width: 100%;
+            padding: 16px 24px;
         }
-        .ticket-header-left { display: table-cell; vertical-align: middle; }
-        .ticket-header-right { display: table-cell; vertical-align: middle; text-align: right; }
-        .org-name { font-size: 11px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
-        .event-name { font-size: 18px; font-weight: bold; margin-top: 4px; }
+
+        .ticket-header td {
+            vertical-align: middle;
+            color: #fff;
+        }
+
+        .org-name {
+            font-size: 10px;
+            color: #c8d4e3;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .event-name {
+            font-size: 17px;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+
         .ticket-label {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
+            background: #2a5285;
+            border: 1px solid #4a6fa3;
             border-radius: 4px;
             padding: 6px 14px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             letter-spacing: 1px;
-            text-transform: uppercase;
+            color: #fff;
+            white-space: nowrap;
         }
+
         /* Body */
-        .ticket-body {
-            display: table;
-            width: 100%;
-        }
         .ticket-main {
-            display: table-cell;
+            padding: 18px 24px;
             vertical-align: top;
-            padding: 24px 28px;
-            width: 68%;
             border-right: 2px dashed #d1dce8;
         }
+
         .ticket-qr {
-            display: table-cell;
-            vertical-align: middle;
+            padding: 18px 12px;
             text-align: center;
-            padding: 24px 20px;
-            width: 32%;
             background: #f8fafc;
+            vertical-align: middle;
+            width: 32%;
         }
-        /* Attendee section */
+
+        .ticket-type-badge {
+            display: inline-block;
+            background-color: #eaf2ff;
+            color: #1e3a5f;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 3px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
         .attendee-name {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: #1e3a5f;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
+
         .attendee-meta {
-            font-size: 11px;
+            font-size: 10px;
             color: #888;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
-        /* Info grid */
-        .info-grid {
-            display: table;
-            width: 100%;
-        }
-        .info-cell {
-            display: table-cell;
+
+        .info-table td {
             vertical-align: top;
+            padding: 4px 8px 4px 0;
             width: 50%;
-            padding: 6px 0;
         }
+
         .info-label {
-            font-size: 9px;
+            font-size: 8px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #aaa;
             margin-bottom: 2px;
         }
+
         .info-value {
-            font-size: 12px;
+            font-size: 11px;
             color: #222;
-            font-weight: 600;
-        }
-        /* Badge */
-        .ticket-type-badge {
-            display: inline-block;
-            background-color: #eaf2ff;
-            color: #1e3a5f;
-            font-size: 10px;
             font-weight: bold;
-            padding: 3px 10px;
-            border-radius: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 14px;
         }
-        /* Reference */
+
         .reference-code {
             font-family: monospace;
-            font-size: 13px;
+            font-size: 12px;
             letter-spacing: 1px;
             color: #1e3a5f;
             background: #eaf2ff;
             padding: 4px 10px;
             border-radius: 4px;
             display: inline-block;
-            margin-top: 14px;
+            margin-top: 12px;
         }
-        /* QR section */
-        .qr-code img { width: 130px; height: 130px; }
+
         .qr-attendee-no {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             color: #1e3a5f;
             margin-bottom: 4px;
         }
-        .qr-label { font-size: 9px; color: #aaa; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        /* Footer */
+
+        .qr-code svg {
+            width: 110px;
+            height: 110px;
+            display: inline-block;
+        }
+
+        .qr-label {
+            font-size: 8px;
+            color: #aaa;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .ticket-footer {
             background: #f8fafc;
             border-top: 1px solid #e2e8f0;
-            padding: 10px 28px;
-            font-size: 10px;
+            padding: 8px 24px;
+            font-size: 9px;
             color: #aaa;
             text-align: center;
         }
     </style>
 </head>
+
 <body>
     <div class="ticket">
-        <!-- Header -->
-        <div class="ticket-header">
-            <div class="ticket-header-left">
-                <div class="org-name">Malaysian Takaful Association</div>
-                <div class="event-name">{{ $registration->event->title }}</div>
-            </div>
-            <div class="ticket-header-right">
-                <div class="ticket-label">Entry Ticket</div>
-            </div>
-        </div>
+        <table class="ticket-header">
+            <tr>
+                <td>
+                    <div class="org-name">Malaysian Takaful Association</div>
+                    <div class="event-name">{{ $registration->event->title }}</div>
+                </td>
+                <td style="text-align: right; width: 130px;">
+                    <span class="ticket-label">Entry Ticket</span>
+                </td>
+            </tr>
+        </table>
 
-        <!-- Body -->
-        <div class="ticket-body">
-            <div class="ticket-main">
-                <div class="ticket-type-badge">{{ $registration->ticket?->name ?? 'General Admission' }}</div>
-                <div class="attendee-name">{{ $attendee->name }}</div>
-                <div class="attendee-meta">
-                    {{ $attendee->email }}
-                    @if($attendee->company) · {{ $attendee->company }}@endif
-                </div>
-
-                <div class="info-grid">
-                    <div class="info-cell">
-                        <div class="info-label">Date</div>
-                        <div class="info-value">
-                            {{ \Carbon\Carbon::parse($registration->event->start_at)->format('d M Y') }}
-                        </div>
+        <table>
+            <tr>
+                <td class="ticket-main">
+                    <span class="ticket-type-badge">{{ $registration->ticket?->name ?? 'General Admission' }}</span>
+                    <div class="attendee-name">{{ $attendee->name }}</div>
+                    <div class="attendee-meta">
+                        {{ $attendee->email }}@if ($attendee->company)
+                            · {{ $attendee->company }}
+                        @endif
                     </div>
-                    <div class="info-cell">
-                        <div class="info-label">Time</div>
-                        <div class="info-value">
-                            {{ \Carbon\Carbon::parse($registration->event->start_at)->format('g:i A') }}
-                        </div>
-                    </div>
-                    <div class="info-cell" style="padding-top: 10px;">
-                        <div class="info-label">Venue</div>
-                        <div class="info-value">
-                            {{ $registration->event->venue ?? '—' }}
-                            @if($registration->event->city)<br>{{ $registration->event->city }}@endif
-                        </div>
-                    </div>
-                    <div class="info-cell" style="padding-top: 10px;">
-                        <div class="info-label">Attendee</div>
-                        <div class="info-value">{{ $attendee->attendee_no }} of {{ $registration->quantity }}</div>
-                    </div>
-                </div>
 
-                <div class="reference-code">{{ $registration->reference_no }}-{{ str_pad($attendee->attendee_no, 2, '0', STR_PAD_LEFT) }}</div>
-            </div>
+                    <table class="info-table">
+                        <tr>
+                            <td>
+                                <div class="info-label">Date</div>
+                                <div class="info-value">
+                                    {{ \Carbon\Carbon::parse($registration->event->start_at)->format('d M Y') }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="info-label">Time</div>
+                                <div class="info-value">
+                                    {{ \Carbon\Carbon::parse($registration->event->start_at)->format('g:i A') }}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="info-label">Venue</div>
+                                <div class="info-value">
+                                    {{ $registration->event->venue ?? '—' }}@if ($registration->event->city)
+                                        , {{ $registration->event->city }}
+                                    @endif
+                                </div>
+                            </td>
+                            <td>
+                                <div class="info-label">Attendee</div>
+                                <div class="info-value">{{ $attendee->attendee_no }} of {{ $registration->quantity }}
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
 
-            <div class="ticket-qr">
-                <div class="qr-attendee-no">#{{ str_pad($attendee->attendee_no, 2, '0', STR_PAD_LEFT) }}</div>
-                <div class="qr-code">
-                    <img src="data:image/png;base64,{{ $qrCode }}" alt="QR Code">
-                </div>
-                <div class="qr-label">Scan to check in</div>
-            </div>
-        </div>
+                    <div class="reference-code">
+                        {{ $registration->reference_no }}-{{ str_pad($attendee->attendee_no, 2, '0', STR_PAD_LEFT) }}
+                    </div>
+                </td>
+                <td class="ticket-qr">
+                    <div class="qr-attendee-no">#{{ str_pad($attendee->attendee_no, 2, '0', STR_PAD_LEFT) }}</div>
+                    <div class="qr-code">
+                        {!! $qrCode !!}
+                    </div>
+                    <div class="qr-label">Scan to check in</div>
+                </td>
+            </tr>
+        </table>
 
-        <!-- Footer -->
         <div class="ticket-footer">
             This ticket is valid for one entry. Please present this at the event entrance.
         </div>
     </div>
 </body>
+
 </html>
