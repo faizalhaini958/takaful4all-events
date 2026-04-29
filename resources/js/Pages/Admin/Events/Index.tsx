@@ -248,6 +248,7 @@ function EventRowBlock({
         <>
             {/* Main row */}
             <TableRow
+                key={`${event.id}-main`}
                 className={`cursor-pointer transition-colors ${isExpanded ? 'bg-accent/30' : ''}`}
                 onClick={onToggle}
             >
@@ -314,7 +315,10 @@ function EventRowBlock({
 
             {/* Expanded detail row */}
             {isExpanded && (
-                <TableRow className="bg-accent/10 hover:bg-accent/10 border-b border-border/40">
+                <TableRow
+                    key={`${event.id}-detail`}
+                    className="bg-accent/10 hover:bg-accent/10 border-b border-border/40"
+                >
                     <TableCell colSpan={6} className="p-0">
                         <div className="px-6 py-5 border-l-2 border-primary/40 ml-4">
                             <div className={`grid grid-cols-1 ${isCheckinStaff ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-8`}>
