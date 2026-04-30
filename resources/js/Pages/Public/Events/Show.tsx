@@ -186,7 +186,7 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                                         selected ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:bg-white/40 hover:text-gray-700'
                                     )}>
                                         <div className="flex items-center justify-center gap-2">
-                                            <MapIcon className="w-4 h-4" /> Venue Map
+                                            <MapIcon className="w-4 h-4" /> View Seating
                                         </div>
                                     </Tab>
                                 )}
