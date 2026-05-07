@@ -138,10 +138,10 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                 {/* Tabs */}
                 <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
                     <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 border-b border-gray-200 mb-6">
-                        <Tab.List className="flex gap-2 overflow-x-auto scrollbar-none py-3">
+                        <Tab.List className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-none py-3 sm:py-4">
                             {tabs.map(tab => (
                                 <Tab key={tab.key} className={({ selected }) => classNames(
-                                    'flex flex-shrink-0 items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap outline-none transition-all',
+                                    'flex flex-shrink-0 items-center gap-1.5 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-sm sm:text-base font-semibold whitespace-nowrap outline-none transition-all',
                                     selected
                                         ? 'bg-brand text-white shadow-sm shadow-brand/30'
                                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
