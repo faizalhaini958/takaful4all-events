@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             PostSeeder::class,
             MenuSeeder::class,
             EventRegistrationSeeder::class,
+            BentongMonsoonMarathonSeeder::class,
         ]);
     }
 }
