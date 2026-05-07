@@ -6,6 +6,7 @@ import { Input } from '@/Components/ui/input';
 import { Link } from '@inertiajs/react';
 import { Ticket, Calendar, MapPin, Search, Download, QrCode } from 'lucide-react';
 import { type EventRegistration, type PaginatedData } from '@/types';
+import { getRegistrationStatusLabel } from '@/lib/status-colors';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import TicketPreviewModal from '@/Components/TicketPreviewModal';
@@ -143,7 +144,7 @@ export default function Tickets({ registrations, filters }: Props) {
 
                                                 <div className="flex flex-wrap items-center gap-2 mt-3">
                                                     <Badge variant={STATUS_VARIANT[reg.status] ?? 'secondary'}>
-                                                        {reg.status}
+                                                        {getRegistrationStatusLabel(reg.status, reg.payment_status)}
                                                     </Badge>
                                                     {reg.ticket && (
                                                         <Badge variant="outline" className="text-xs">
@@ -177,16 +178,7 @@ export default function Tickets({ registrations, filters }: Props) {
                                                         </Button>
                                                     </div>
                                                 )}
-                                                {reg.status !== 'confirmed' && reg.status !== 'attended' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-xs mt-1"
-                                                        onClick={() => openTicketModal(reg)}
-                                                    >
-                                                        View Details
-                                                    </Button>
-                                                )}
+
                                             </div>
                                         </div>
 

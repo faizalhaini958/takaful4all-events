@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\EventProduct;
 use App\Models\EventRegistration;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -131,6 +132,16 @@ class EventRegistrationController extends Controller
 
         $registration->update($update);
 
+        // Bug 4 fix: restore product stock when admin manually cancels a registration
+        if ($request->status === 'cancelled') {
+            $registration->loadMissing('products');
+            foreach ($registration->products as $item) {
+                EventProduct::where('id', $item->product_id)
+                    ->whereNotNull('stock')
+                    ->increment('stock', $item->quantity);
+            }
+        }
+
         return redirect()->back()->with('success', 'Registration status updated.');
     }
 
@@ -149,11 +160,48 @@ class EventRegistrationController extends Controller
             'status' => 'required|in:pending,confirmed,cancelled,waitlisted,attended',
         ]);
 
+        $update = ['status' => $request->status];
+
+        // Bug 3 fix: set checked_in_at when bulk-marking as attended
+        if ($request->status === 'attended') {
+            $update['checked_in_at'] = now();
+        }
+
         EventRegistration::whereIn('id', $request->ids)
             ->where('event_id', $event->id)
-            ->update(['status' => $request->status]);
+            ->update($update);
+
+        // Bug 4 fix: restore product stock for all bulk-cancelled registrations
+        if ($request->status === 'cancelled') {
+            $registrations = EventRegistration::with('products')
+                ->whereIn('id', $request->ids)
+                ->where('event_id', $event->id)
+                ->get();
+
+            foreach ($registrations as $reg) {
+                foreach ($reg->products as $item) {
+                    EventProduct::where('id', $item->product_id)
+                        ->whereNotNull('stock')
+                        ->increment('stock', $item->quantity);
+                }
+            }
+        }
 
         return redirect()->back()->with('success', count($request->ids) . ' registration(s) updated.');
+    }
+
+    public function bulkDestroy(Request $request, Event $event): RedirectResponse
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'exists:event_registrations,id',
+        ]);
+
+        EventRegistration::whereIn('id', $request->ids)
+            ->where('event_id', $event->id)
+            ->delete();
+
+        return redirect()->back()->with('success', count($request->ids) . ' registration(s) deleted.');
     }
 
     public function destroy(Event $event, EventRegistration $registration): RedirectResponse

@@ -2,6 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Tiptap table styles (editor + public prose) ── */
+.ProseMirror table,
+.prose table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    overflow: hidden;
+}
+.ProseMirror table td,
+.ProseMirror table th,
+.prose table td,
+.prose table th {
+    border: 1px solid hsl(var(--border));
+    padding: 0.5rem 0.75rem;
+    vertical-align: top;
+    min-width: 2rem;
+}
+.ProseMirror table th,
+.prose table th {
+    background: hsl(var(--muted));
+    font-weight: 600;
+    text-align: left;
+}
+.ProseMirror .selectedCell:after {
+    background: hsl(var(--primary) / 0.15);
+    content: "";
+    left: 0; right: 0; top: 0; bottom: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 2;
+}
+.ProseMirror .column-resize-handle {
+    background-color: hsl(var(--primary));
+    bottom: -2px;
+    position: absolute;
+    right: -2px;
+    top: 0;
+    width: 4px;
+    pointer-events: none;
+}
+.ProseMirror.resize-cursor { cursor: col-resize; }
+
 @layer base {
   :root {
     /* Brand: teal #009FBB = 191 100% 37% | navy #003366 = 210 100% 20% */
@@ -75,5 +117,14 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 210 100% 10%;
     --sidebar-ring: 191 100% 37%;
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Edge */
   }
 }

@@ -1,12 +1,14 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Separator } from '@/Components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Users, Eye, Trash2, CheckCircle, CheckCircle2, XCircle, Clock, UserCheck, AlertCircle, DollarSign, Mail, Phone, Building2, Utensils, FileText, CalendarDays, CreditCard, Hash, ExternalLink } from 'lucide-react';
 import { type Event, type EventRegistration, type RegistrationStats, type PaginatedData, type RegistrationStatus } from '@/types';
+import { getRegistrationStatusLabel } from '@/lib/status-colors';
 
 interface Props {
     event: Event;
@@ -52,6 +54,7 @@ export default function RegistrationIndex({ event, registrations, stats, current
     const [deleteTarget, setDeleteTarget] = useState<EventRegistration | null>(null);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [viewReg, setViewReg] = useState<EventRegistration | null>(null);
+    const [bulkAction, setBulkAction] = useState<string>('');
 
     function handleFilter(status: string) {
         router.get(`/admin/events/${event.slug}/registrations`, status !== 'all' ? { status } : {}, { preserveScroll: true });
@@ -75,8 +78,25 @@ export default function RegistrationIndex({ event, registrations, stats, current
             ids: selectedIds,
             status,
         }, {
-            onSuccess: () => setSelectedIds([]),
+            onSuccess: () => { setSelectedIds([]); setBulkAction(''); },
         });
+    }
+
+    function bulkDelete() {
+        if (selectedIds.length === 0) return;
+        router.delete(`/admin/events/${event.slug}/registrations/bulk`, {
+            data: { ids: selectedIds },
+            onSuccess: () => { setSelectedIds([]); setBulkAction(''); },
+        });
+    }
+
+    function applyBulkAction() {
+        if (!bulkAction || selectedIds.length === 0) return;
+        if (bulkAction === 'delete') {
+            bulkDelete();
+        } else {
+            bulkUpdate(bulkAction as RegistrationStatus);
+        }
     }
 
     function quickStatusUpdate(registration: EventRegistration, status: RegistrationStatus) {
@@ -167,13 +187,61 @@ export default function RegistrationIndex({ event, registrations, stats, current
                     ))}
 
                     {selectedIds.length > 0 && (
-                        <div className="ml-auto flex items-center gap-2 text-sm">
-                            <span className="text-muted-foreground font-medium">{selectedIds.length} selected</span>
-                            <Button size="sm" variant="outline" onClick={() => bulkUpdate('confirmed')} className="h-7">
-                                <CheckCircle className="w-3.5 h-3.5 mr-1" /> Confirm
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => bulkUpdate('cancelled')} className="h-7">
-                                <XCircle className="w-3.5 h-3.5 mr-1" /> Cancel
+                        <div className="ml-auto flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground font-medium">
+                                {selectedIds.length} selected
+                            </span>
+                            <Select value={bulkAction} onValueChange={setBulkAction}>
+                                <SelectTrigger className="h-8 w-48 text-xs">
+                                    <SelectValue placeholder="Select action…" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="confirmed">
+                                        <span className="flex items-center gap-2">
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                            <span className="text-emerald-700 dark:text-emerald-400 font-medium">Confirm</span>
+                                        </span>
+                                    </SelectItem>
+                                    <SelectItem value="attended">
+                                        <span className="flex items-center gap-2">
+                                            <UserCheck className="w-3.5 h-3.5 text-sky-500" />
+                                            <span className="text-sky-700 dark:text-sky-400 font-medium">Mark as Attended</span>
+                                        </span>
+                                    </SelectItem>
+                                    <SelectItem value="pending">
+                                        <span className="flex items-center gap-2">
+                                            <Clock className="w-3.5 h-3.5 text-amber-500" />
+                                            <span className="text-amber-700 dark:text-amber-400 font-medium">Set to Pending</span>
+                                        </span>
+                                    </SelectItem>
+                                    <SelectItem value="waitlisted">
+                                        <span className="flex items-center gap-2">
+                                            <AlertCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                                            <span className="text-muted-foreground font-medium">Waitlist</span>
+                                        </span>
+                                    </SelectItem>
+                                    <SelectItem value="cancelled">
+                                        <span className="flex items-center gap-2">
+                                            <XCircle className="w-3.5 h-3.5 text-destructive" />
+                                            <span className="text-destructive font-medium">Cancel</span>
+                                        </span>
+                                    </SelectItem>
+                                    <SelectSeparator />
+                                    <SelectItem value="delete">
+                                        <span className="flex items-center gap-2">
+                                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                                            <span className="text-destructive font-medium">Delete</span>
+                                        </span>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button
+                                size="sm"
+                                className="h-8"
+                                disabled={!bulkAction}
+                                onClick={applyBulkAction}
+                            >
+                                Apply
                             </Button>
                         </div>
                     )}
@@ -204,6 +272,7 @@ export default function RegistrationIndex({ event, registrations, stats, current
                         <TableBody>
                             {registrations.data.map(reg => {
                                 const pill = STATUS_PILL[reg.status] ?? STATUS_PILL.pending;
+                                const statusLabel = getRegistrationStatusLabel(reg.status, reg.payment_status);
                                 return (
                                     <TableRow key={reg.id}>
                                         <TableCell>
@@ -228,7 +297,7 @@ export default function RegistrationIndex({ event, registrations, stats, current
                                         </TableCell>
                                         <TableCell>
                                             <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${pill.class}`}>
-                                                {pill.label}
+                                                {statusLabel}
                                             </span>
                                         </TableCell>
                                         <TableCell>
@@ -331,6 +400,7 @@ function RegistrationDetailModal({
     if (!reg) return null;
 
     const statusPill = STATUS_PILL[reg.status] ?? STATUS_PILL.pending;
+    const statusLabel = getRegistrationStatusLabel(reg.status, reg.payment_status);
     const paymentPill = PAYMENT_PILL[reg.payment_status] ?? PAYMENT_PILL.na;
 
     function updateStatus(status: string) {
@@ -360,7 +430,7 @@ function RegistrationDetailModal({
                             <p className="font-mono text-sm text-muted-foreground">{reg.reference_no}</p>
                         </DialogHeader>
                         <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold shrink-0 ${statusPill.class}`}>
-                            {statusPill.label}
+                            {statusLabel}
                         </span>
                     </div>
                 </div>

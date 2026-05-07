@@ -176,6 +176,9 @@ class EventRegistrationController extends Controller
             if ($pricing['discount_label']) {
                 $meta['discount_label'] = $pricing['discount_label'];
             }
+            if (!empty($primary['custom_fields'])) {
+                $meta['custom_fields'] = $primary['custom_fields'];
+            }
 
             $registration = EventRegistration::create([
                 'event_id'             => $event->id,

@@ -4,7 +4,8 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Link, router } from '@inertiajs/react';
 import { ChevronLeft, UserCheck, Clock, Mail, Phone, Building2, Utensils, FileText, Users } from 'lucide-react';
-import { type Event, type EventRegistration, type RegistrationStatus } from '@/types';
+import { type Event, type EventRegistration, type RegistrationStatus, type RegistrationField } from '@/types';
+import { getRegistrationStatusLabel } from '@/lib/status-colors';
 
 interface Attendee {
     name: string;
@@ -13,6 +14,7 @@ interface Attendee {
     company?: string | null;
     job_title?: string | null;
     dietary_requirements?: string | null;
+    custom_fields?: Record<string, string> | null;
 }
 
 interface Props {
@@ -30,6 +32,7 @@ const STATUS_BADGE: Record<RegistrationStatus, { variant: 'default' | 'secondary
 
 export default function RegistrationShow({ event, registration }: Props) {
     const statusCfg = STATUS_BADGE[registration.status];
+    const statusLabel = getRegistrationStatusLabel(registration.status, registration.payment_status);
 
     function updateStatus(status: RegistrationStatus) {
         router.patch(`/admin/events/${event.slug}/registrations/${registration.id}/status`, { status });
@@ -54,7 +57,7 @@ export default function RegistrationShow({ event, registration }: Props) {
                         </div>
                     </div>
                     <Badge variant={statusCfg.variant} className="text-sm px-3 py-1">
-                        {statusCfg.label}
+                        {statusLabel}
                     </Badge>
                 </div>
 
@@ -102,6 +105,23 @@ export default function RegistrationShow({ event, registration }: Props) {
                                             <p className="font-medium">{registration.dietary_requirements}</p>
                                         </div>
                                     )}
+                                    {/* Custom field answers for events with registration_fields */}
+                                    {event.registration_fields && (() => {
+                                        const cf = (registration.meta_json as { custom_fields?: Record<string, string> })?.custom_fields;
+                                        if (!cf) return null;
+                                        return event.registration_fields!
+                                            .filter(f => !['name', 'email', 'phone'].includes(f.key))
+                                            .sort((a, b) => a.sort_order - b.sort_order)
+                                            .filter(f => cf[f.key] !== undefined && cf[f.key] !== '' && cf[f.key] !== 'false')
+                                            .map(f => (
+                                                <div key={f.key}>
+                                                    <p className="text-xs text-muted-foreground mb-0.5">{f.label_en}</p>
+                                                    <p className="font-medium">
+                                                        {f.type === 'checkbox' ? '✓ Yes' : cf[f.key]}
+                                                    </p>
+                                                </div>
+                                            ));
+                                    })()}
                                 </div>
                                 {registration.notes && (
                                     <div className="pt-2 border-t">
@@ -154,6 +174,21 @@ export default function RegistrationShow({ event, registration }: Props) {
                                                 <p className="text-xs text-muted-foreground mb-0.5 flex items-center gap-1"><Utensils className="w-3 h-3" /> Dietary</p>
                                                 <p className="font-medium">{attendee.dietary_requirements}</p>
                                             </div>
+                                        )}
+                                        {/* Custom field answers */}
+                                        {event.registration_fields && attendee.custom_fields && (
+                                            event.registration_fields
+                                                .filter(f => !['name', 'email', 'phone'].includes(f.key))
+                                                .sort((a, b) => a.sort_order - b.sort_order)
+                                                .filter(f => attendee.custom_fields![f.key] !== undefined && attendee.custom_fields![f.key] !== '' && attendee.custom_fields![f.key] !== 'false')
+                                                .map(f => (
+                                                    <div key={f.key}>
+                                                        <p className="text-xs text-muted-foreground mb-0.5">{f.label_en}</p>
+                                                        <p className="font-medium">
+                                                            {f.type === 'checkbox' ? '✓ Yes' : attendee.custom_fields![f.key]}
+                                                        </p>
+                                                    </div>
+                                                ))
                                         )}
                                     </div>
                                 </CardContent>

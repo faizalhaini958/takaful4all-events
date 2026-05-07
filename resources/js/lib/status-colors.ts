@@ -38,6 +38,21 @@ export function paymentStatusBadge(status: PaymentStatus) {
     return PAYMENT_STATUS_MAP[status] ?? { variant: 'secondary' as const };
 }
 
+// ─── Pending Label Helper ─────────────────────────────────────────────────────
+
+/**
+ * Returns a human-readable label for a registration status, distinguishing
+ * between the two "pending" sub-states:
+ *   - status=pending + payment_status=pending  → "Pending Payment"
+ *   - status=pending + payment_status=na       → "Pending Approval"
+ */
+export function getRegistrationStatusLabel(status: string, paymentStatus: string): string {
+    if (status === 'pending') {
+        return paymentStatus === 'pending' ? 'Pending Payment' : 'Pending Approval';
+    }
+    return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
 // ─── Event / Ticket Availability ─────────────────────────────────────────────
 
 type AvailabilityStatus = 'available' | 'limited' | 'fully_booked';

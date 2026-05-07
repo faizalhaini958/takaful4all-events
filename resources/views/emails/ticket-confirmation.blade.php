@@ -377,6 +377,35 @@
                                                                     </tr>
                                                                 </table>
                                                             @endif
+                                                            @php
+                                                                $customFields =
+                                                                    $attendee->meta_json['custom_fields'] ?? [];
+                                                                $regFields =
+                                                                    $registration->event->registration_fields ?? [];
+                                                            @endphp
+                                                            @if (!empty($customFields) && !empty($regFields))
+                                                                <table role="presentation" cellpadding="0"
+                                                                    cellspacing="0" border="0"
+                                                                    style="margin-top: 8px; background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; width: 100%;">
+                                                                    <tr>
+                                                                        <td style="padding: 6px 12px;">
+                                                                            @foreach ($regFields as $field)
+                                                                                @if (!in_array($field['key'], ['name', 'email', 'phone']))
+                                                                                    @php $cfVal = $customFields[$field['key']] ?? null; @endphp
+                                                                                    @if (!empty($cfVal) && $cfVal !== 'false')
+                                                                                        <p
+                                                                                            style="margin: 2px 0; font-size: 12px; color: #374151; font-family: Arial, Helvetica, sans-serif;">
+                                                                                            <span
+                                                                                                style="color: #6B7280;">{{ $field['label_en'] }}:</span>
+                                                                                            <strong>{{ $field['type'] === 'checkbox' ? '✓ Yes' : $cfVal }}</strong>
+                                                                                        </p>
+                                                                                    @endif
+                                                                                @endif
+                                                                            @endforeach
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            @endif
                                                         </td>
                                                     </tr>
                                                 </table>

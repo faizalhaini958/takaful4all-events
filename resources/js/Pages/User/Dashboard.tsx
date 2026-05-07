@@ -4,6 +4,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Link } from '@inertiajs/react';
 import { Ticket, ShoppingBag, Calendar, CreditCard } from 'lucide-react';
 import { type EventRegistration } from '@/types';
+import { getRegistrationStatusLabel } from '@/lib/status-colors';
 
 interface DashboardStats {
     totalTickets: number;
@@ -121,7 +122,7 @@ export default function Dashboard({ stats, upcomingRegistrations, recentOrders }
                                         </div>
                                         <div className="flex items-center gap-2 ml-4">
                                             <Badge variant={STATUS_VARIANT[reg.status] ?? 'secondary'}>
-                                                {reg.status}
+                                                {getRegistrationStatusLabel(reg.status, reg.payment_status)}
                                             </Badge>
                                             <span className="text-xs font-mono text-gray-400">{reg.reference_no}</span>
                                         </div>

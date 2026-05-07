@@ -9,6 +9,7 @@ import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Users, CheckCircle2, Clock, UserCheck, XCircle, AlertCircle, DollarSign, Search, Eye, ChevronLeft, ChevronRight, Mail, Phone, Building2, Utensils, FileText, CalendarDays, CreditCard, Hash, ExternalLink } from 'lucide-react';
 import { type EventRegistration, type RegistrationStats, type PaginatedData, type Event } from '@/types';
+import { getRegistrationStatusLabel } from '@/lib/status-colors';
 
 interface Props {
     registrations: PaginatedData<EventRegistration & { event: Event }>;
@@ -184,6 +185,7 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
                         <TableBody>
                             {registrations.data.map(reg => {
                                 const statusPill = STATUS_PILL[reg.status] ?? STATUS_PILL.pending;
+                                const statusLabel = getRegistrationStatusLabel(reg.status, reg.payment_status);
                                 const paymentPill = PAYMENT_PILL[reg.payment_status] ?? PAYMENT_PILL.na;
                                 return (
                                     <TableRow key={reg.id}>
@@ -209,7 +211,7 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
                                         </TableCell>
                                         <TableCell>
                                             <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${statusPill.class}`}>
-                                                {statusPill.label}
+                                                {statusLabel}
                                             </span>
                                         </TableCell>
                                         <TableCell>
@@ -297,6 +299,7 @@ function RegistrationDetailModal({
     if (!reg) return null;
 
     const statusPill = STATUS_PILL[reg.status] ?? STATUS_PILL.pending;
+    const statusLabel = getRegistrationStatusLabel(reg.status, reg.payment_status);
     const paymentPill = PAYMENT_PILL[reg.payment_status] ?? PAYMENT_PILL.na;
 
     function updateStatus(status: string) {
@@ -326,7 +329,7 @@ function RegistrationDetailModal({
                             <p className="font-mono text-sm text-muted-foreground">{reg.reference_no}</p>
                         </DialogHeader>
                         <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold shrink-0 ${statusPill.class}`}>
-                            {statusPill.label}
+                            {statusLabel}
                         </span>
                     </div>
                 </div>

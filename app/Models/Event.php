@@ -34,6 +34,9 @@ class Event extends Model
         'max_attendees',
         'require_approval',
         'meta_json',
+        'event_category',
+        'registration_fields',
+        'terms_conditions',
     ];
 
     protected $appends = ['status'];
@@ -45,8 +48,9 @@ class Event extends Model
         'rsvp_enabled'     => 'boolean',
         'rsvp_deadline'    => 'datetime',
         'max_attendees'    => 'integer',
-        'require_approval' => 'boolean',
-        'meta_json'        => 'array',
+        'require_approval'      => 'boolean',
+        'meta_json'            => 'array',
+        'registration_fields'  => 'array',
     ];
 
     public function getSlugOptions(): SlugOptions

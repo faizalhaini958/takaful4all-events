@@ -3,6 +3,7 @@ import EventForm from '@/Components/EventForm';
 import { Link, useForm } from '@inertiajs/react';
 import { type FormEventHandler } from 'react';
 import { ChevronLeft, CalendarPlus } from 'lucide-react';
+import { type EventCategory, type RegistrationField } from '@/types';
 
 export default function EventCreate() {
     const { data, setData, post, processing, errors, transform } = useForm({
@@ -26,6 +27,11 @@ export default function EventCreate() {
         require_approval: false,
         faqs: [] as { question: string; answer: string }[],
         sponsors: [] as { name: string; role: string; logo_url: string }[],
+        tshirt_images: [] as { id: string; url: string }[],
+        custom_tabs: [] as { label: string; type: 'text' | 'image'; content_html: string; images: { id: string; url: string }[] }[],
+        event_category: '' as EventCategory | '',
+        registration_fields: [] as RegistrationField[],
+        terms_conditions: '',
     });
 
     const submit: FormEventHandler = e => {
@@ -33,9 +39,19 @@ export default function EventCreate() {
         
         transform((data) => ({
             ...data,
+            media_id: data.media_id && data.media_id !== 'none' ? data.media_id : null,
             meta_json: {
                 faqs: data.faqs,
                 sponsors: data.sponsors,
+                tshirt_images: data.tshirt_images.filter(img => img.id && img.id !== 'none'),
+                custom_tabs: data.custom_tabs
+                    .filter(t => t.label.trim())
+                    .map(t => ({
+                        label: t.label,
+                        type: t.type,
+                        content_html: t.type === 'text' ? t.content_html : '',
+                        images: t.type === 'image' ? t.images.filter(img => img.id && img.id !== 'none') : [],
+                    })),
             }
         }));
         

@@ -167,6 +167,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                             : 'Event Ticket'
                         }
                     </h3>
+                    {(registration.status === 'confirmed' || registration.status === 'attended') && (
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={handlePrint}>
                             <Printer className="w-4 h-4 mr-1.5" />
@@ -177,6 +178,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                             Download PDF
                         </Button>
                     </div>
+                    )}
                 </div>
 
                 {/* Ticket navigation (only for multi-ticket) */}
@@ -352,22 +354,31 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                                 )}
                             </div>
 
-                            {/* QR Code — unique per attendee */}
+                            {/* QR Code — only shown for confirmed/attended registrations */}
                             <div className="flex flex-col items-center justify-center sm:border-l sm:pl-5">
-                                <div className="bg-white p-3 rounded-lg border">
-                                    <QRCodeSVG
-                                        value={qrPayload}
-                                        size={140}
-                                        level="M"
-                                        includeMargin={false}
-                                    />
-                                </div>
-                                <p className="text-[10px] text-gray-400 mt-2 text-center">
-                                    Scan for attendance
-                                </p>
-                                <p className="font-mono text-[10px] text-gray-400 text-center mt-0.5">
-                                    {registration.reference_no}-{String(attendeeNo).padStart(2, '0')}
-                                </p>
+                                {(registration.status === 'confirmed' || registration.status === 'attended') ? (
+                                    <>
+                                        <div className="bg-white p-3 rounded-lg border">
+                                            <QRCodeSVG
+                                                value={qrPayload}
+                                                size={140}
+                                                level="M"
+                                                includeMargin={false}
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 mt-2 text-center">
+                                            Scan for attendance
+                                        </p>
+                                        <p className="font-mono text-[10px] text-gray-400 text-center mt-0.5">
+                                            {registration.reference_no}-{String(attendeeNo).padStart(2, '0')}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center w-[140px] h-[140px] rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 text-center p-3">
+                                        <p className="text-xs font-medium text-amber-700">Pending Approval</p>
+                                        <p className="text-[10px] text-amber-600 mt-1">QR code will be available once confirmed</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

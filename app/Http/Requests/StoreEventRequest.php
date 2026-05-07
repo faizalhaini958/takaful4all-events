@@ -35,6 +35,24 @@ class StoreEventRequest extends FormRequest
             'max_attendees'    => 'nullable|integer|min:1',
             'require_approval' => 'nullable|boolean',
             'meta_json'        => 'nullable|array',
+            'terms_conditions' => 'nullable|string',
+
+            // Custom registration fields
+            'event_category'                      => 'nullable|string|in:sports,conference,workshop,dinner,entertainment,exhibition,general',
+            'registration_fields'                 => 'nullable|array',
+            'registration_fields.*.key'           => 'required_with:registration_fields|string|max:100',
+            'registration_fields.*.label_en'      => 'required_with:registration_fields|string|max:255',
+            'registration_fields.*.label_ms'      => 'required_with:registration_fields|string|max:255',
+            'registration_fields.*.type'          => 'required_with:registration_fields|string|in:text,select,radio,date,textarea,checkbox',
+            'registration_fields.*.required'      => 'required_with:registration_fields|boolean',
+            'registration_fields.*.sort_order'    => 'required_with:registration_fields|integer|min:1',
+            'registration_fields.*.options_en'    => 'nullable|array',
+            'registration_fields.*.options_ms'    => 'nullable|array',
+            'registration_fields.*.options_en.*'  => 'nullable|string|max:255',
+            'registration_fields.*.options_ms.*'  => 'nullable|string|max:255',
+            'registration_fields.*.placeholder_en'=> 'nullable|string|max:500',
+            'registration_fields.*.placeholder_ms'=> 'nullable|string|max:500',
+            'registration_fields.*.locked'        => 'nullable|boolean',
         ];
     }
 

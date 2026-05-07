@@ -164,6 +164,9 @@ class EventRegistration extends Model
                     'company' => $payload['company'],
                     'job_title' => $payload['job_title'],
                     'dietary_requirements' => $payload['dietary_requirements'],
+                    'meta_json' => ! empty($payload['custom_fields'])
+                        ? ['custom_fields' => $payload['custom_fields']]
+                        : null,
                 ]
             );
         }
@@ -179,6 +182,7 @@ class EventRegistration extends Model
             'company' => $this->company,
             'job_title' => $this->job_title,
             'dietary_requirements' => $this->dietary_requirements,
+            'custom_fields' => is_array($this->meta_json) ? ($this->meta_json['custom_fields'] ?? null) : null,
         ]];
 
         $additionalAttendees = [];
@@ -198,6 +202,7 @@ class EventRegistration extends Model
                 'company' => $attendee['company'] ?? null,
                 'job_title' => $attendee['job_title'] ?? null,
                 'dietary_requirements' => $attendee['dietary_requirements'] ?? null,
+                'custom_fields' => $attendee['custom_fields'] ?? null,
             ];
         }
 

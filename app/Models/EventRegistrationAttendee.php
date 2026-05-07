@@ -18,10 +18,12 @@ class EventRegistrationAttendee extends Model
         'job_title',
         'dietary_requirements',
         'checked_in_at',
+        'meta_json',
     ];
 
     protected $casts = [
         'checked_in_at' => 'datetime',
+        'meta_json'     => 'array',
     ];
 
     public function registration(): BelongsTo

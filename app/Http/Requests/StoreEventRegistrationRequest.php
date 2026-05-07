@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Event;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEventRegistrationRequest extends FormRequest
@@ -13,23 +14,48 @@ class StoreEventRegistrationRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'ticket_id'                          => 'required|exists:event_tickets,id',
-            'quantity'                            => 'required|integer|min:1|max:10',
-            'attendees'                           => 'required|array|min:1',
-            'attendees.*.name'                    => 'required|string|max:255',
-            'attendees.*.email'                   => 'required|email|max:255',
-            'attendees.*.phone'                   => 'required|string|max:30',
-            'attendees.*.company'                 => 'required|string|max:255',
-            'attendees.*.job_title'               => 'nullable|string|max:255',
-            'attendees.*.dietary_requirements'    => 'nullable|string|max:255',
-            'notes'                               => 'nullable|string|max:1000',
-            'products'                            => 'nullable|array',
-            'products.*.product_id'               => 'required|exists:event_products,id',
-            'products.*.variants'                 => 'nullable|array',
-            'products.*.variants.*'               => 'nullable|string|max:100',
-            'products.*.quantity'                  => 'required|integer|min:1|max:20',
+        $rules = [
+            'ticket_id'             => 'required|exists:event_tickets,id',
+            'quantity'              => 'required|integer|min:1|max:10',
+            'attendees'             => 'required|array|min:1',
+            'attendees.*.name'      => 'required|string|max:255',
+            'attendees.*.email'     => 'required|email|max:255',
+            'attendees.*.phone'     => 'required|string|max:30',
+            'notes'                 => 'nullable|string|max:1000',
+            'products'              => 'nullable|array',
+            'products.*.product_id' => 'required|exists:event_products,id',
+            'products.*.variants'   => 'nullable|array',
+            'products.*.variants.*' => 'nullable|string|max:100',
+            'products.*.quantity'   => 'required|integer|min:1|max:20',
         ];
+
+        $event = Event::where('slug', $this->route('slug'))->first();
+
+        if ($event && ! empty($event->registration_fields)) {
+            // Dynamic mode — validate against the event's configured custom fields
+            $rules['attendees.*.custom_fields'] = 'nullable|array';
+
+            foreach ($event->registration_fields as $field) {
+                // Locked base fields are validated at the top level above
+                if (in_array($field['key'], ['name', 'email', 'phone'])) {
+                    continue;
+                }
+                $required = ! empty($field['required']);
+                $rules['attendees.*.custom_fields.' . $field['key']] = match ($field['type']) {
+                    'date'     => $required ? 'required|date'                     : 'nullable|date',
+                    'checkbox' => $required ? 'required|in:true'                  : 'nullable|string|in:true,false',
+                    'textarea' => $required ? 'required|string|max:2000'          : 'nullable|string|max:2000',
+                    default    => $required ? 'required|string|max:500'           : 'nullable|string|max:500',
+                };
+            }
+        } else {
+            // Legacy mode — event has no custom fields, use the original hardcoded rules
+            $rules['attendees.*.company']              = 'required|string|max:255';
+            $rules['attendees.*.job_title']            = 'nullable|string|max:255';
+            $rules['attendees.*.dietary_requirements'] = 'nullable|string|max:255';
+        }
+
+        return $rules;
     }
 
     public function messages(): array

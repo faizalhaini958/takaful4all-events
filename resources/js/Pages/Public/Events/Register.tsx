@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, ChevronLeft, Ticket, ShoppingBag, Plus, Minus, AlertCircle, User, Palette, Clock, Check } from 'lucide-react';
-import { type Event, type EventTicket, type EventProduct, type EventZone } from '@/types';
+import { type Event, type EventTicket, type EventProduct, type EventZone, type RegistrationField } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
 
 const STATUS_CONFIG: Record<string, { labelKey: string; classes: string }> = {
@@ -37,6 +37,7 @@ interface Attendee {
     company: string;
     job_title: string;
     dietary_requirements: string;
+    custom_fields: Record<string, string>;
 }
 
 const emptyAttendee = (): Attendee => ({
@@ -46,13 +47,16 @@ const emptyAttendee = (): Attendee => ({
     company: '',
     job_title: '',
     dietary_requirements: '',
+    custom_fields: {},
 });
 
 export default function EventRegister({ event, tickets, products, zones }: Props) {
     const { flash } = usePage().props as { flash: { success?: string; error?: string } };
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const statusCfg = STATUS_CONFIG[event.status] ?? STATUS_CONFIG.draft;
     const [selectedProducts, setSelectedProducts] = useState<ProductSelection[]>([]);
+    const [termsAgreed, setTermsAgreed] = useState(false);
+    const hasTerms = Boolean(event.terms_conditions?.trim());
 
     const { data, setData, post, processing, errors } = useForm({
         ticket_id: '',
@@ -94,9 +98,20 @@ export default function EventRegister({ event, tickets, products, zones }: Props
     const formatTime = (d: Date) =>
         d.toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: true });
 
+    const hasCustomFields = (event.registration_fields?.length ?? 0) > 0;
+    const sortedFields: RegistrationField[] = hasCustomFields
+        ? [...(event.registration_fields ?? [])].sort((a, b) => a.sort_order - b.sort_order)
+        : [];
+
     function updateAttendee(index: number, field: keyof Attendee, value: string) {
         const updated = [...data.attendees];
         updated[index] = { ...updated[index], [field]: value };
+        setData('attendees', updated);
+    }
+
+    function updateCustomField(index: number, key: string, value: string) {
+        const updated = [...data.attendees];
+        updated[index] = { ...updated[index], custom_fields: { ...updated[index].custom_fields, [key]: value } };
         setData('attendees', updated);
     }
 
@@ -453,81 +468,146 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label htmlFor={`name_${index}`}>{t('register.full_name')}</Label>
-                                                <Input
-                                                    id={`name_${index}`}
-                                                    value={attendee.name}
-                                                    onChange={e => updateAttendee(index, 'name', e.target.value)}
-                                                    className="mt-1"
-                                                    placeholder={t('register.full_name_placeholder')}
-                                                />
-                                                {(errors as Record<string, string>)[`attendees.${index}.name`] && (
-                                                    <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.name`]}</p>
-                                                )}
+                                        {hasCustomFields ? (
+                                            /* ── Dynamic mode: base locked fields + custom fields from event.registration_fields ── */
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label htmlFor={`name_${index}`}>{t('register.full_name')} <span className="text-red-500">*</span></Label>
+                                                    <Input
+                                                        id={`name_${index}`}
+                                                        value={attendee.name}
+                                                        onChange={e => updateAttendee(index, 'name', e.target.value)}
+                                                        className="mt-1"
+                                                        placeholder={t('register.full_name_placeholder')}
+                                                        required
+                                                    />
+                                                    {(errors as Record<string, string>)[`attendees.${index}.name`] && (
+                                                        <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.name`]}</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor={`email_${index}`}>{t('register.email')} <span className="text-red-500">*</span></Label>
+                                                    <Input
+                                                        id={`email_${index}`}
+                                                        type="email"
+                                                        value={attendee.email}
+                                                        onChange={e => updateAttendee(index, 'email', e.target.value)}
+                                                        className="mt-1"
+                                                        placeholder={t('register.email_placeholder')}
+                                                        required
+                                                    />
+                                                    {(errors as Record<string, string>)[`attendees.${index}.email`] && (
+                                                        <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.email`]}</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor={`phone_${index}`}>{t('register.phone')} <span className="text-red-500">*</span></Label>
+                                                    <Input
+                                                        id={`phone_${index}`}
+                                                        value={attendee.phone}
+                                                        onChange={e => updateAttendee(index, 'phone', e.target.value)}
+                                                        className="mt-1"
+                                                        placeholder={t('register.phone_placeholder')}
+                                                        required
+                                                    />
+                                                    {(errors as Record<string, string>)[`attendees.${index}.phone`] && (
+                                                        <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.phone`]}</p>
+                                                    )}
+                                                </div>
+                                                {sortedFields.filter(f => !f.locked).map(field => (
+                                                    <div
+                                                        key={field.key}
+                                                        className={field.type === 'textarea' || field.type === 'checkbox' ? 'sm:col-span-2' : ''}
+                                                    >
+                                                        <CustomFieldInput
+                                                            field={field}
+                                                            value={attendee.custom_fields[field.key] ?? ''}
+                                                            onChange={val => updateCustomField(index, field.key, val)}
+                                                            locale={locale}
+                                                            error={(errors as Record<string, string>)[`attendees.${index}.custom_fields.${field.key}`]}
+                                                            inputId={`cf_${index}_${field.key}`}
+                                                        />
+                                                    </div>
+                                                ))}
                                             </div>
-                                            <div>
-                                                <Label htmlFor={`email_${index}`}>{t('register.email')}</Label>
-                                                <Input
-                                                    id={`email_${index}`}
-                                                    type="email"
-                                                    value={attendee.email}
-                                                    onChange={e => updateAttendee(index, 'email', e.target.value)}
-                                                    className="mt-1"
-                                                    placeholder={t('register.email_placeholder')}
-                                                />
-                                                {(errors as Record<string, string>)[`attendees.${index}.email`] && (
-                                                    <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.email`]}</p>
-                                                )}
+                                        ) : (
+                                            /* ── Legacy mode: hardcoded fixed fields for older events ── */
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label htmlFor={`name_${index}`}>{t('register.full_name')}</Label>
+                                                    <Input
+                                                        id={`name_${index}`}
+                                                        value={attendee.name}
+                                                        onChange={e => updateAttendee(index, 'name', e.target.value)}
+                                                        className="mt-1"
+                                                        placeholder={t('register.full_name_placeholder')}
+                                                    />
+                                                    {(errors as Record<string, string>)[`attendees.${index}.name`] && (
+                                                        <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.name`]}</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor={`email_${index}`}>{t('register.email')}</Label>
+                                                    <Input
+                                                        id={`email_${index}`}
+                                                        type="email"
+                                                        value={attendee.email}
+                                                        onChange={e => updateAttendee(index, 'email', e.target.value)}
+                                                        className="mt-1"
+                                                        placeholder={t('register.email_placeholder')}
+                                                    />
+                                                    {(errors as Record<string, string>)[`attendees.${index}.email`] && (
+                                                        <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.email`]}</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor={`phone_${index}`}>{t('register.phone')} <span className="text-red-500">*</span></Label>
+                                                    <Input
+                                                        id={`phone_${index}`}
+                                                        value={attendee.phone}
+                                                        onChange={e => updateAttendee(index, 'phone', e.target.value)}
+                                                        className="mt-1"
+                                                        placeholder={t('register.phone_placeholder')}
+                                                        required
+                                                    />
+                                                    {(errors as Record<string, string>)[`attendees.${index}.phone`] && (
+                                                        <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.phone`]}</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor={`company_${index}`}>{t('register.company')} <span className="text-red-500">*</span></Label>
+                                                    <Input
+                                                        id={`company_${index}`}
+                                                        value={attendee.company}
+                                                        onChange={e => updateAttendee(index, 'company', e.target.value)}
+                                                        className="mt-1"
+                                                        required
+                                                    />
+                                                    {(errors as Record<string, string>)[`attendees.${index}.company`] && (
+                                                        <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.company`]}</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor={`job_title_${index}`}>{t('register.job_title')}</Label>
+                                                    <Input
+                                                        id={`job_title_${index}`}
+                                                        value={attendee.job_title}
+                                                        onChange={e => updateAttendee(index, 'job_title', e.target.value)}
+                                                        className="mt-1"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor={`dietary_${index}`}>{t('register.dietary')}</Label>
+                                                    <Input
+                                                        id={`dietary_${index}`}
+                                                        value={attendee.dietary_requirements}
+                                                        onChange={e => updateAttendee(index, 'dietary_requirements', e.target.value)}
+                                                        className="mt-1"
+                                                        placeholder={t('register.dietary_placeholder')}
+                                                    />
+                                                </div>
                                             </div>
-                                            <div>
-                                                <Label htmlFor={`phone_${index}`}>{t('register.phone')} <span className="text-red-500">*</span></Label>
-                                                <Input
-                                                    id={`phone_${index}`}
-                                                    value={attendee.phone}
-                                                    onChange={e => updateAttendee(index, 'phone', e.target.value)}
-                                                    className="mt-1"
-                                                    placeholder={t('register.phone_placeholder')}
-                                                    required
-                                                />
-                                                {(errors as Record<string, string>)[`attendees.${index}.phone`] && (
-                                                    <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.phone`]}</p>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <Label htmlFor={`company_${index}`}>{t('register.company')} <span className="text-red-500">*</span></Label>
-                                                <Input
-                                                    id={`company_${index}`}
-                                                    value={attendee.company}
-                                                    onChange={e => updateAttendee(index, 'company', e.target.value)}
-                                                    className="mt-1"
-                                                    required
-                                                />
-                                                {(errors as Record<string, string>)[`attendees.${index}.company`] && (
-                                                    <p className="text-sm text-red-600 mt-1">{(errors as Record<string, string>)[`attendees.${index}.company`]}</p>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <Label htmlFor={`job_title_${index}`}>{t('register.job_title')}</Label>
-                                                <Input
-                                                    id={`job_title_${index}`}
-                                                    value={attendee.job_title}
-                                                    onChange={e => updateAttendee(index, 'job_title', e.target.value)}
-                                                    className="mt-1"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor={`dietary_${index}`}>{t('register.dietary')}</Label>
-                                                <Input
-                                                    id={`dietary_${index}`}
-                                                    value={attendee.dietary_requirements}
-                                                    onChange={e => updateAttendee(index, 'dietary_requirements', e.target.value)}
-                                                    className="mt-1"
-                                                    placeholder={t('register.dietary_placeholder')}
-                                                />
-                                            </div>
-                                        </div>
+                                        )}
                                         {/* Notes only on the last attendee card */}
                                         {index === data.attendees.length - 1 && (
                                             <div>
@@ -539,6 +619,36 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                                 </Card>
                             ))}
                         </div>
+
+                        {/* Terms & Conditions */}
+                        {hasTerms && (
+                            <Card className="border-amber-200 bg-amber-50/40">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="flex items-center gap-2 text-base">
+                                        <AlertCircle className="w-4 h-4 text-amber-600" />
+                                        Terms &amp; Conditions
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <div className="max-h-48 overflow-y-auto rounded-lg border border-amber-200 bg-white p-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                        {event.terms_conditions}
+                                    </div>
+                                    <label className="flex items-start gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={termsAgreed}
+                                            onChange={e => setTermsAgreed(e.target.checked)}
+                                            className="accent-brand w-4 h-4 mt-0.5 flex-shrink-0"
+                                            required
+                                        />
+                                        <span className="text-sm text-gray-700">
+                                            I have read and agree to the <strong>Terms &amp; Conditions</strong> above.
+                                            <span className="text-red-500 ml-1">*</span>
+                                        </span>
+                                    </label>
+                                </CardContent>
+                            </Card>
+                        )}
 
                         {/* Order Sidebar */}
                         <div className="lg:sticky lg:top-24">
@@ -581,7 +691,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
 
                                     <Button
                                         type="submit"
-                                        disabled={processing || !data.ticket_id}
+                                        disabled={processing || !data.ticket_id || (hasTerms && !termsAgreed)}
                                         className="w-full bg-brand hover:bg-brand-dark mt-4"
                                         size="lg"
                                     >
@@ -594,6 +704,85 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                 </form>
             </div>
         </PublicLayout>
+    );
+}
+
+/**
+ * Renders a single custom registration field based on its type.
+ */
+function CustomFieldInput({
+    field, value, onChange, locale, error, inputId,
+}: {
+    field: RegistrationField;
+    value: string;
+    onChange: (val: string) => void;
+    locale: string;
+    error?: string;
+    inputId: string;
+}) {
+    const label = locale === 'ms' ? field.label_ms : field.label_en;
+    const placeholder = locale === 'ms' ? (field.placeholder_ms ?? '') : (field.placeholder_en ?? '');
+    const options = locale === 'ms' ? (field.options_ms ?? []) : (field.options_en ?? []);
+
+    return (
+        <>
+            {field.type !== 'checkbox' && (
+                <Label htmlFor={inputId}>
+                    {label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                </Label>
+            )}
+            {field.type === 'text' && (
+                <Input id={inputId} value={value} onChange={e => onChange(e.target.value)}
+                    className="mt-1" placeholder={placeholder} required={field.required} />
+            )}
+            {field.type === 'textarea' && (
+                <Textarea id={inputId} value={value} onChange={e => onChange(e.target.value)}
+                    className="mt-1 resize-none" rows={3} placeholder={placeholder} />
+            )}
+            {field.type === 'select' && (
+                <Select value={value} onValueChange={onChange}>
+                    <SelectTrigger className="mt-1">
+                        <SelectValue placeholder={placeholder || `— ${label} —`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            )}
+            {field.type === 'radio' && (
+                <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
+                    {options.map(opt => (
+                        <label key={opt} className="flex items-center gap-2 text-sm cursor-pointer">
+                            <input type="radio" name={inputId} value={opt} checked={value === opt}
+                                onChange={() => onChange(opt)} className="accent-brand" />
+                            {opt}
+                        </label>
+                    ))}
+                </div>
+            )}
+            {field.type === 'date' && (
+                <Input id={inputId} type="date" value={value} onChange={e => onChange(e.target.value)}
+                    className="mt-1" required={field.required} />
+            )}
+            {field.type === 'checkbox' && (
+                <div className="flex items-start gap-2 pt-1">
+                    <input id={inputId} type="checkbox" checked={value === 'true'}
+                        onChange={e => onChange(e.target.checked ? 'true' : 'false')}
+                        className="accent-brand w-4 h-4 mt-0.5 flex-shrink-0" required={field.required} />
+                    <Label htmlFor={inputId} className="text-sm font-normal cursor-pointer leading-snug">
+                        {label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                    </Label>
+                </div>
+            )}
+            {error && (
+                <p className="text-sm text-red-600 mt-1">
+                    {/* Replace raw path like "The attendees.0.custom_fields.gender field is" with the field label */}
+                    {error.replace(/[Tt]he attendees\.\d+\.custom_fields\.\S+ (field )?/g, `${label} `)}
+                </p>
+            )}
+        </>
     );
 }
 

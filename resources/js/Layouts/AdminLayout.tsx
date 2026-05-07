@@ -22,6 +22,7 @@ import {
     ShoppingCart,
     ClipboardList,
     Settings,
+    BarChart2,
 } from 'lucide-react';
 import { type SharedProps } from '@/types';
 import { ModeToggle } from '@/Components/ModeToggle';
@@ -58,6 +59,7 @@ const NAV_FULL = [
     { href: '/admin',          label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/events',   label: 'Events',    icon: CalendarDays },
     { href: '/admin/orders',   label: 'Orders',    icon: ShoppingCart },
+    { href: '/admin/reports/registrations', label: 'Reports', icon: BarChart2 },
     { href: '/admin/users',    label: 'Users',     icon: Users },
     { href: '/admin/pages',    label: 'Pages',     icon: FileText },
     { href: '/admin/posts',    label: 'Posts',     icon: PenSquare },
@@ -222,10 +224,10 @@ function AdminSidebar({ currentPath, userRole }: { currentPath: string; userRole
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild tooltip="View Site">
-                            <Link href="/">
+                            <a href="/" target="_blank" rel="noopener noreferrer">
                                 <Globe />
                                 <span>View Site</span>
-                            </Link>
+                            </a>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>

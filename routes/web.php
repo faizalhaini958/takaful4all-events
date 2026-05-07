@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShippingZoneController as AdminShippingZoneController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\ChipInWebhookController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocaleController;
@@ -153,6 +154,11 @@ Route::prefix('admin')
         // Orders
         Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
 
+        // Reports
+        Route::get('reports/registrations', [AdminReportController::class, 'registrations'])->name('reports.registrations');
+        Route::get('reports/registrations/export', [AdminReportController::class, 'exportRegistrations'])->name('reports.registrations.export');
+        Route::get('reports/registrations/export-pdf', [AdminReportController::class, 'exportPdf'])->name('reports.registrations.export-pdf');
+
         // All Registrations (global view)
         Route::get('registrations', [AdminEventRegistrationController::class, 'all'])->name('registrations.index');
 
@@ -162,6 +168,7 @@ Route::prefix('admin')
         Route::patch('events/{event}/registrations/{registration}/status', [AdminEventRegistrationController::class, 'updateStatus'])->name('events.registrations.update-status');
         Route::post('events/{event}/registrations/{registration}/check-in', [AdminEventRegistrationController::class, 'checkIn'])->name('events.registrations.check-in');
         Route::post('events/{event}/registrations/bulk-status', [AdminEventRegistrationController::class, 'bulkUpdateStatus'])->name('events.registrations.bulk-status');
+        Route::delete('events/{event}/registrations/bulk', [AdminEventRegistrationController::class, 'bulkDestroy'])->name('events.registrations.bulk-destroy');
         Route::delete('events/{event}/registrations/{registration}', [AdminEventRegistrationController::class, 'destroy'])->name('events.registrations.destroy');
 
         // Check-in Scanner

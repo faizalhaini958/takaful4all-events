@@ -3,7 +3,7 @@ import EventForm from '@/Components/EventForm';
 import { Link, useForm } from '@inertiajs/react';
 import { type FormEventHandler } from 'react';
 import { ChevronLeft, Pencil } from 'lucide-react';
-import { type Event, type Media } from '@/types';
+import { type Event, type Media, type EventCategory, type RegistrationField } from '@/types';
 
 interface Props {
     event: Event;
@@ -37,6 +37,16 @@ export default function EventEdit({ event }: Props) {
         require_approval: event.require_approval ?? false,
         faqs:             (event.meta_json?.faqs as any[]) ?? [],
         sponsors:         (event.meta_json?.sponsors as any[]) ?? [],
+        tshirt_images:    ((event.meta_json?.tshirt_images as any[]) ?? []).map((img: any) => ({ id: String(img.id), url: img.url ?? '' })),
+        custom_tabs:      ((event.meta_json?.custom_tabs as any[]) ?? []).map((t: any) => ({
+            label: t.label ?? '',
+            type: (t.type === 'image' ? 'image' : 'text') as 'image' | 'text',
+            content_html: t.content_html ?? '',
+            images: ((t.images as any[]) ?? []).map((img: any) => ({ id: String(img.id), url: img.url ?? '' })),
+        })),
+        event_category:    (event.event_category ?? '') as EventCategory | '',
+        registration_fields: (event.registration_fields ?? []) as RegistrationField[],
+        terms_conditions: event.terms_conditions ?? '',
     });
 
     const submit: FormEventHandler = e => {
@@ -44,9 +54,19 @@ export default function EventEdit({ event }: Props) {
         
         transform((data) => ({
             ...data,
+            media_id: data.media_id && data.media_id !== 'none' ? data.media_id : null,
             meta_json: {
                 faqs: data.faqs,
                 sponsors: data.sponsors,
+                tshirt_images: data.tshirt_images.filter(img => img.id && img.id !== 'none'),
+                custom_tabs: data.custom_tabs
+                    .filter(t => t.label.trim())
+                    .map(t => ({
+                        label: t.label,
+                        type: t.type,
+                        content_html: t.type === 'text' ? t.content_html : '',
+                        images: t.type === 'image' ? t.images.filter(img => img.id && img.id !== 'none') : [],
+                    })),
             }
         }));
 

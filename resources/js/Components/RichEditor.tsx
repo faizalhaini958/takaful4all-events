@@ -5,6 +5,7 @@ import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
+import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
 import { useEffect, useCallback, useRef, useState } from 'react';
 import axios from 'axios';
 import {
@@ -13,7 +14,7 @@ import {
     List, ListOrdered, Quote, Minus,
     AlignLeft, AlignCenter, AlignRight,
     Link2, Link2Off, Undo2, Redo2,
-    ImageIcon, Loader2, Code2,
+    ImageIcon, Loader2, Code2, Table2,
 } from 'lucide-react';
 
 interface Props {
@@ -44,8 +45,8 @@ function ToolbarButton({
             title={title}
             className={`p-1.5 rounded transition-colors ${
                 active
-                    ? 'bg-brand text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             } disabled:opacity-40 disabled:cursor-not-allowed`}
         >
             {children}
@@ -54,13 +55,14 @@ function ToolbarButton({
 }
 
 function Divider() {
-    return <div className="w-px h-5 bg-gray-200 mx-0.5 self-center" />;
+    return <div className="w-px h-5 bg-border mx-0.5 self-center" />;
 }
 
 export default function RichEditor({ value, onChange, placeholder = 'Write something...', className = '' }: Props) {
     const fileInputRef   = useRef<HTMLInputElement>(null);
     const [imgUploading, setImgUploading] = useState(false);
     const [imgPopover,   setImgPopover]   = useState(false);
+    const [tablePopover, setTablePopover] = useState(false);
     const [htmlMode,     setHtmlMode]     = useState(false);
     const [htmlValue,    setHtmlValue]    = useState(value);
 
@@ -72,6 +74,10 @@ export default function RichEditor({ value, onChange, placeholder = 'Write somet
             Link.configure({ openOnClick: false, HTMLAttributes: { class: 'text-brand underline' } }),
             Placeholder.configure({ placeholder }),
             Image.configure({ HTMLAttributes: { class: 'rounded-lg max-w-full my-4' } }),
+            Table.configure({ resizable: true }),
+            TableRow,
+            TableHeader,
+            TableCell,
         ],
         content: value,
         onUpdate: ({ editor }) => {
@@ -79,7 +85,7 @@ export default function RichEditor({ value, onChange, placeholder = 'Write somet
         },
         editorProps: {
             attributes: {
-                class: 'prose prose-sm max-w-none focus:outline-none min-h-[220px] px-4 py-3 text-gray-900',
+                class: 'prose prose-sm max-w-none focus:outline-none min-h-[220px] px-4 py-3',
             },
         },
     });
@@ -143,9 +149,9 @@ export default function RichEditor({ value, onChange, placeholder = 'Write somet
     if (!editor) return null;
 
     return (
-        <div className={`border border-input rounded-lg overflow-hidden bg-white ${className}`}>
+        <div className={`border border-input rounded-lg overflow-hidden bg-background ${className}`}>
             {/* ── Toolbar ── */}
-            <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-input bg-gray-50">
+            <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-border bg-muted/50">
                 {/* History */}
                 <ToolbarButton title="Undo" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}>
                     <Undo2 className="w-4 h-4" />
@@ -223,6 +229,53 @@ export default function RichEditor({ value, onChange, placeholder = 'Write somet
                 </ToolbarButton>
 
                 <Divider />
+
+                <Divider />
+
+                {/* Table */}
+                <div className="relative">
+                    <ToolbarButton
+                        title="Table"
+                        active={tablePopover}
+                        onClick={() => setTablePopover(v => !v)}
+                    >
+                        <Table2 className="w-4 h-4" />
+                    </ToolbarButton>
+                    {tablePopover && (
+                        <>
+                            <div className="fixed inset-0 z-10" onMouseDown={() => setTablePopover(false)} />
+                            <div className="absolute left-0 top-full mt-1 z-20 w-52 rounded-lg border border-border bg-background shadow-lg overflow-hidden text-sm">
+                                <button type="button" onMouseDown={e => { e.preventDefault(); editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); setTablePopover(false); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors">
+                                    Insert table (3×3)
+                                </button>
+                                <div className="h-px bg-border" />
+                                <button type="button" onMouseDown={e => { e.preventDefault(); editor.chain().focus().addColumnBefore().run(); setTablePopover(false); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors">
+                                    Add column before
+                                </button>
+                                <button type="button" onMouseDown={e => { e.preventDefault(); editor.chain().focus().addColumnAfter().run(); setTablePopover(false); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors">
+                                    Add column after
+                                </button>
+                                <button type="button" onMouseDown={e => { e.preventDefault(); editor.chain().focus().deleteColumn().run(); setTablePopover(false); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors text-red-600">
+                                    Delete column
+                                </button>
+                                <div className="h-px bg-border" />
+                                <button type="button" onMouseDown={e => { e.preventDefault(); editor.chain().focus().addRowBefore().run(); setTablePopover(false); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors">
+                                    Add row before
+                                </button>
+                                <button type="button" onMouseDown={e => { e.preventDefault(); editor.chain().focus().addRowAfter().run(); setTablePopover(false); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors">
+                                    Add row after
+                                </button>
+                                <button type="button" onMouseDown={e => { e.preventDefault(); editor.chain().focus().deleteRow().run(); setTablePopover(false); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors text-red-600">
+                                    Delete row
+                                </button>
+                                <div className="h-px bg-border" />
+                                <button type="button" onMouseDown={e => { e.preventDefault(); editor.chain().focus().deleteTable().run(); setTablePopover(false); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors text-red-600 font-medium">
+                                    Delete table
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
 
                 {/* HTML source toggle — pushed to the far right */}
                 <div className="ml-auto">

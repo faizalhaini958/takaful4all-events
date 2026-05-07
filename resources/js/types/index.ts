@@ -1,5 +1,30 @@
 // ─── Domain Types ────────────────────────────────────────────────────────────
 
+export type EventCategory =
+    | 'sports'
+    | 'conference'
+    | 'workshop'
+    | 'dinner'
+    | 'entertainment'
+    | 'exhibition'
+    | 'general';
+
+export type RegistrationFieldType = 'text' | 'select' | 'radio' | 'date' | 'textarea' | 'checkbox';
+
+export interface RegistrationField {
+    key: string;
+    label_en: string;
+    label_ms: string;
+    type: RegistrationFieldType;
+    required: boolean;
+    options_en?: string[];
+    options_ms?: string[];
+    placeholder_en?: string;
+    placeholder_ms?: string;
+    sort_order: number;
+    locked?: boolean; // true for name/email/phone — cannot be removed
+}
+
 export interface Banner {
     id: number;
     title: string;
@@ -54,6 +79,9 @@ export interface Event {
     rsvp_deadline: string | null;
     max_attendees: number | null;
     require_approval: boolean;
+    event_category: EventCategory | null;
+    registration_fields: RegistrationField[] | null;
+    terms_conditions: string | null;
     status: 'draft' | 'upcoming' | 'past';
     registration_count?: number;
     is_registration_open?: boolean;
@@ -146,6 +174,7 @@ export interface EventRegistrationAttendee {
     job_title: string | null;
     dietary_requirements: string | null;
     checked_in_at: string | null;
+    meta_json: Record<string, unknown> | null;
     created_at: string;
     updated_at: string;
 }
