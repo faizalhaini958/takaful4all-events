@@ -166,6 +166,7 @@ Route::prefix('admin')
         Route::get('events/{event}/registrations', [AdminEventRegistrationController::class, 'index'])->name('events.registrations.index');
         Route::get('events/{event}/registrations/{registration}', [AdminEventRegistrationController::class, 'show'])->name('events.registrations.show');
         Route::patch('events/{event}/registrations/{registration}/status', [AdminEventRegistrationController::class, 'updateStatus'])->name('events.registrations.update-status');
+        Route::patch('events/{event}/registrations/{registration}/payment-status', [AdminEventRegistrationController::class, 'updatePaymentStatus'])->name('events.registrations.update-payment-status');
         Route::post('events/{event}/registrations/{registration}/check-in', [AdminEventRegistrationController::class, 'checkIn'])->name('events.registrations.check-in');
         Route::post('events/{event}/registrations/bulk-status', [AdminEventRegistrationController::class, 'bulkUpdateStatus'])->name('events.registrations.bulk-status');
         Route::delete('events/{event}/registrations/bulk', [AdminEventRegistrationController::class, 'bulkDestroy'])->name('events.registrations.bulk-destroy');

@@ -362,7 +362,7 @@
             <div class="totals-qr">
                 @if ($qrCode)
                     <div class="qr-section">
-                        <img src="data:image/png;base64,{{ $qrCode }}" alt="QR Code">
+                        <img src="data:image/svg+xml;base64,{{ base64_encode($qrCode) }}" alt="QR Code">
                         <div class="qr-label">Scan for booking confirmation</div>
                     </div>
                 @endif

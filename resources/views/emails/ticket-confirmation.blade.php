@@ -382,6 +382,7 @@
                                                                     $attendee->meta_json['custom_fields'] ?? [];
                                                                 $regFields =
                                                                     $registration->event->registration_fields ?? [];
+                                                                $ticketName = $registration->ticket->name ?? null;
                                                             @endphp
                                                             @if (!empty($customFields) && !empty($regFields))
                                                                 <table role="presentation" cellpadding="0"
@@ -391,8 +392,23 @@
                                                                         <td style="padding: 6px 12px;">
                                                                             @foreach ($regFields as $field)
                                                                                 @if (!in_array($field['key'], ['name', 'email', 'phone']))
-                                                                                    @php $cfVal = $customFields[$field['key']] ?? null; @endphp
-                                                                                    @if (!empty($cfVal) && $cfVal !== 'false')
+                                                                                    @php
+                                                                                        $scope =
+                                                                                            $field['ticket_scope'] ??
+                                                                                            null;
+                                                                                        $inScope =
+                                                                                            empty($scope) ||
+                                                                                            ($ticketName &&
+                                                                                                in_array(
+                                                                                                    $ticketName,
+                                                                                                    $scope,
+                                                                                                ));
+                                                                                        $cfVal =
+                                                                                            $customFields[
+                                                                                                $field['key']
+                                                                                            ] ?? null;
+                                                                                    @endphp
+                                                                                    @if ($inScope && !empty($cfVal) && $cfVal !== 'false')
                                                                                         <p
                                                                                             style="margin: 2px 0; font-size: 12px; color: #374151; font-family: Arial, Helvetica, sans-serif;">
                                                                                             <span

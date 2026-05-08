@@ -27,7 +27,6 @@ export default function EventCreate() {
         require_approval: false,
         faqs: [] as { question: string; answer: string }[],
         sponsors: [] as { name: string; role: string; logo_url: string }[],
-        tshirt_images: [] as { id: string; url: string }[],
         custom_tabs: [] as { label: string; type: 'text' | 'image'; content_html: string; images: { id: string; url: string }[] }[],
         event_category: '' as EventCategory | '',
         registration_fields: [] as RegistrationField[],
@@ -43,7 +42,6 @@ export default function EventCreate() {
             meta_json: {
                 faqs: data.faqs,
                 sponsors: data.sponsors,
-                tshirt_images: data.tshirt_images.filter(img => img.id && img.id !== 'none'),
                 custom_tabs: data.custom_tabs
                     .filter(t => t.label.trim())
                     .map(t => ({

@@ -14,7 +14,7 @@ class MediaUploadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => 'required|file|mimes:jpeg,jpg,png,webp|max:5120|dimensions:min_width=800', // 5MB, min 800px wide
+            'file' => 'required|file|mimes:jpeg,jpg,png,webp|max:5120', // 5MB max
         ];
     }
 
@@ -23,7 +23,6 @@ class MediaUploadRequest extends FormRequest
         return [
             'file.mimes'      => 'Only JPEG, PNG, and WebP images are allowed.',
             'file.max'        => 'The file must not be larger than 5MB.',
-            'file.dimensions' => 'The image must be at least 800px wide.',
         ];
     }
 }

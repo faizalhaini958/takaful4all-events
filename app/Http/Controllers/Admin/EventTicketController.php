@@ -92,7 +92,25 @@ class EventTicketController extends Controller
 
     public function update(StoreEventTicketRequest $request, Event $event, EventTicket $ticket): RedirectResponse
     {
+        $oldName = $ticket->name;
         $ticket->update($request->validated());
+        $newName = $ticket->fresh()->name;
+
+        // When a ticket is renamed, update any ticket_scope references in the event's registration fields
+        if ($oldName !== $newName) {
+            $fields  = $event->registration_fields ?? [];
+            $updated = false;
+            foreach ($fields as &$field) {
+                if (!empty($field['ticket_scope']) && in_array($oldName, $field['ticket_scope'])) {
+                    $field['ticket_scope'] = array_map(fn($n) => $n === $oldName ? $newName : $n, $field['ticket_scope']);
+                    $updated = true;
+                }
+            }
+            unset($field);
+            if ($updated) {
+                $event->update(['registration_fields' => $fields]);
+            }
+        }
 
         return redirect()->route('admin.events.tickets.index', $event)
             ->with('success', 'Ticket updated successfully.');

@@ -74,6 +74,7 @@ class EventController extends Controller
         return Inertia::render('Admin/Events/Edit', [
             'event'         => $event->load('media'),
             'mediaList'     => Media::latest()->get(['id', 'url', 'title']),
+            'tickets'       => $event->tickets()->orderBy('sort_order')->get(['id', 'name']),
         ]);
     }
 

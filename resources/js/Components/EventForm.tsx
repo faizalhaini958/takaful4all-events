@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Switch } from '@/Components/ui/switch';
 import { Link } from '@inertiajs/react';
-import { MapPin, Calendar, ExternalLink, Eye, Users, Ticket, Palette, FolderOpen, FileText, Image, Loader2, Link2, Save, Plus, Trash2, HelpCircle, Shirt, LayoutTemplate, ClipboardList, RefreshCw, AlertTriangle, ArrowUp, ChevronDown } from 'lucide-react';
+import { MapPin, Calendar, ExternalLink, Eye, Users, Ticket, Palette, FolderOpen, FileText, Image, Loader2, Link2, Save, Plus, Trash2, HelpCircle, LayoutTemplate, ClipboardList, RefreshCw, AlertTriangle, ArrowUp, ChevronDown } from 'lucide-react';
 import RichEditor from '@/Components/RichEditor';
 import ImageUpload from '@/Components/ImageUpload';
 import RegistrationFieldBuilder from '@/Components/RegistrationFieldBuilder';
@@ -36,7 +36,6 @@ export interface EventFormData {
     require_approval: boolean;
     faqs: { question: string; answer: string }[];
     sponsors: { name: string; role: string; logo_url: string }[];
-    tshirt_images: { id: string; url: string }[];
     custom_tabs: { label: string; type: 'text' | 'image'; content_html: string; images: { id: string; url: string }[] }[];
     event_category: EventCategory | '';
     registration_fields: RegistrationField[];
@@ -53,6 +52,8 @@ interface Props {
     currentMedia?: Media | null;
     /** For the "View on site" link in edit mode */
     eventSlug?: string;
+    /** Ticket names for ticket-scoped field configuration (edit mode only) */
+    ticketNames?: string[];
 }
 
 function generateSlug(value: string) {
@@ -111,6 +112,7 @@ export default function EventForm({
     submitLabel,
     currentMedia,
     eventSlug,
+    ticketNames,
 }: Props) {
     const mapQuery = useMemo(
         () => [data.venue, data.city, data.state, data.country].filter(Boolean).join(', '),
@@ -461,6 +463,7 @@ export default function EventForm({
                                         <RegistrationFieldBuilder
                                             fields={data.registration_fields}
                                             onChange={fields => setData('registration_fields', fields)}
+                                            ticketNames={ticketNames}
                                         />
                                     </div>
                                 </CardContent>
@@ -613,52 +616,6 @@ export default function EventForm({
                                         </div>
                                     ))}
                                 </div>
-                            </CardContent>
-                        )}
-                    </Card>
-
-                    {/* T-shirt Size Chart Section */}
-                    <Card className="rounded-xl border-border/60">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                            <CardTitle className="flex items-center gap-2">
-                                <Shirt className="w-4 h-4 text-primary" /> T-shirt Size Chart
-                            </CardTitle>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setData('tshirt_images', [...data.tshirt_images, { id: '', url: '' }])}
-                                className="h-8 gap-1"
-                            >
-                                <Plus className="w-3.5 h-3.5" /> Add Image
-                            </Button>
-                        </CardHeader>
-                        {data.tshirt_images.length > 0 && (
-                            <CardContent className="space-y-4">
-                                {data.tshirt_images.map((img, index) => (
-                                    <div key={index} className="relative group">
-                                        <ImageUpload
-                                            value={img.id}
-                                            currentMedia={img.id && img.id !== 'none' ? { id: Number(img.id), url: img.url, title: '' } as unknown as Media : null}
-                                            onChange={(id, media) => {
-                                                const next = [...data.tshirt_images];
-                                                next[index] = { id, url: media.url };
-                                                setData('tshirt_images', next);
-                                            }}
-                                            onClear={() => {
-                                                const next = [...data.tshirt_images];
-                                                next.splice(index, 1);
-                                                setData('tshirt_images', next);
-                                            }}
-                                        />
-                                        {data.tshirt_images.length > 1 && (
-                                            <span className="absolute -top-2 -left-2 bg-muted text-muted-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border border-border/60">
-                                                {index + 1}
-                                            </span>
-                                        )}
-                                    </div>
-                                ))}
-                                <p className="text-xs text-muted-foreground">Upload size chart image(s). This tab will be hidden if no images are uploaded.</p>
                             </CardContent>
                         )}
                     </Card>

@@ -21,6 +21,7 @@ class StoreEventTicketRequest extends FormRequest
             'price'              => 'required_if:type,paid|numeric|min:0',
             'early_bird_price'   => 'nullable|numeric|min:0',
             'early_bird_end_at'  => 'nullable|date|required_with:early_bird_price',
+            'early_bird_qty'     => 'nullable|integer|min:1',
             'currency'           => 'nullable|string|max:10',
             'quantity'           => 'nullable|integer|min:1',
             'max_per_order'      => 'nullable|integer|min:1|max:100',
@@ -40,12 +41,13 @@ class StoreEventTicketRequest extends FormRequest
                 'price'             => 0,
                 'early_bird_price'  => null,
                 'early_bird_end_at' => null,
+                'early_bird_qty'    => null,
             ]);
         }
 
         // If early bird price is empty string, set to null
         if ($this->early_bird_price === '' || $this->early_bird_price === null) {
-            $this->merge(['early_bird_price' => null, 'early_bird_end_at' => null]);
+            $this->merge(['early_bird_price' => null, 'early_bird_end_at' => null, 'early_bird_qty' => null]);
         }
     }
 }

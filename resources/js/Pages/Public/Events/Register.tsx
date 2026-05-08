@@ -4,13 +4,13 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { Link, useForm, usePage } from '@inertiajs/react';
+import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 import {
     Calendar, MapPin, ChevronLeft, Ticket, ShoppingBag, Plus, Minus,
     AlertCircle, User, Clock, Check, ChevronRight, FileText, CreditCard,
 } from 'lucide-react';
-import { type Event, type EventTicket, type EventProduct, type EventZone, type RegistrationField } from '@/types';
+import { type Event, type EventTicket, type EventProduct, type EventZone, type RegistrationField, fieldAppliesToTicket } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -82,7 +82,9 @@ export default function EventRegister({ event, tickets, products, zones }: Props
 
     const hasCustomFields = (event.registration_fields?.length ?? 0) > 0;
     const sortedFields: RegistrationField[] = hasCustomFields
-        ? [...(event.registration_fields ?? [])].sort((a, b) => a.sort_order - b.sort_order)
+        ? [...(event.registration_fields ?? [])]
+            .filter(f => fieldAppliesToTicket(f, selectedTicket?.name ?? null))
+            .sort((a, b) => a.sort_order - b.sort_order)
         : [];
 
     const startDate = new Date(event.start_at);
@@ -250,6 +252,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                         ticketSubtotal={ticketSubtotal} grandTotal={grandTotal}
                         errors={errors}
                         toggleProduct={toggleProduct} updateProductQty={updateProductQty} updateProductVariant={updateProductVariant}
+                        onBack={() => router.visit(`/events/${event.slug}`)}
                         onNext={() => goTo(2)} t={t}
                     />
                 )}
@@ -283,7 +286,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
 
 function Step1Tickets({ event, tickets, zones, products, data, setData, qty, selectedTicket,
     selectedProducts, ticketSubtotal, grandTotal, errors, toggleProduct, updateProductQty,
-    updateProductVariant, onNext, t }: any) {
+    updateProductVariant, onBack, onNext, t }: any) {
 
     return (
         <div className="space-y-6">
@@ -466,7 +469,7 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
                 ticketSubtotal={ticketSubtotal} selectedProducts={selectedProducts}
                 products={products} grandTotal={grandTotal} />
 
-            <StepNav onNext={onNext} nextDisabled={!data.ticket_id} nextLabel="Next: Your Info" showBack={false} />
+            <StepNav onBack={onBack} onNext={onNext} nextDisabled={!data.ticket_id} nextLabel="Next: Your Info" backLabel="Back to Event" />
         </div>
     );
 }
@@ -784,19 +787,20 @@ function StepHeader({ title, subtitle }: { title: string; subtitle?: string }) {
     );
 }
 
-function StepNav({ onBack, onNext, nextDisabled, nextLabel, showBack = true }: {
+function StepNav({ onBack, onNext, nextDisabled, nextLabel, backLabel, showBack = true }: {
     onBack?: () => void;
     onNext?: () => void;
     nextDisabled?: boolean;
     nextLabel?: string;
+    backLabel?: string;
     showBack?: boolean;
 }) {
     return (
         <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
-            {showBack && onBack ? (
+            {onBack ? (
                 <button type="button" onClick={onBack}
                     className="flex items-center justify-center gap-1.5 text-sm font-semibold text-gray-600 bg-gray-50 border border-gray-400 hover:border-brand hover:text-brand hover:bg-white rounded-xl py-3 px-6 transition-colors w-full sm:w-auto">
-                    <ChevronLeft className="w-4 h-4" /> Back
+                    <ChevronLeft className="w-4 h-4" /> {backLabel ?? 'Back'}
                 </button>
             ) : <div />}
             {onNext && (

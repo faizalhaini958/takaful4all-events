@@ -23,6 +23,14 @@ export interface RegistrationField {
     placeholder_ms?: string;
     sort_order: number;
     locked?: boolean; // true for name/email/phone — cannot be removed
+    ticket_scope?: string[] | null; // null = all tickets; string[] = only these ticket names
+}
+
+/** Returns true if a field should be shown/validated for the given ticket name. */
+export function fieldAppliesToTicket(field: RegistrationField, ticketName: string | null | undefined): boolean {
+    if (!field.ticket_scope || field.ticket_scope.length === 0) return true;
+    if (!ticketName) return true;
+    return field.ticket_scope.includes(ticketName);
 }
 
 export interface Banner {
@@ -105,6 +113,7 @@ export interface EventTicket {
     price: number;
     early_bird_price: number | null;
     early_bird_end_at: string | null;
+    early_bird_qty: number | null;
     current_price: number;
     is_early_bird: boolean;
     currency: string;

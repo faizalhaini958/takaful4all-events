@@ -51,13 +51,14 @@ interface FieldCardProps {
     total: number;
     prevIsLocked: boolean;
     allKeys: string[];
+    ticketNames?: string[];
     onUpdate: (f: RegistrationField) => void;
     onDelete: () => void;
     onMoveUp: () => void;
     onMoveDown: () => void;
 }
 
-function FieldCard({ field, index, total, prevIsLocked, allKeys, onUpdate, onDelete, onMoveUp, onMoveDown }: FieldCardProps) {
+function FieldCard({ field, index, total, prevIsLocked, allKeys, ticketNames, onUpdate, onDelete, onMoveUp, onMoveDown }: FieldCardProps) {
     const [open, setOpen] = useState(field.label_en === '');
 
     // Local raw text for options textareas — prevents cursor-reset on every keystroke
@@ -291,6 +292,52 @@ function FieldCard({ field, index, total, prevIsLocked, allKeys, onUpdate, onDel
                         </div>
                     )}
 
+                    {/* Applies to tickets — only shown for non-locked fields when ticket data is available */}
+                    {!field.locked && ticketNames && ticketNames.length > 0 && (
+                        <div className="border-t border-border/20 pt-3">
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-2 block">
+                                Applies to tickets
+                            </Label>
+                            <p className="text-xs text-muted-foreground mb-2">
+                                Leave all unchecked to show this field for every ticket type.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                {ticketNames.map(name => {
+                                    const checked = !!(field.ticket_scope && field.ticket_scope.includes(name));
+                                    return (
+                                        <label
+                                            key={name}
+                                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs cursor-pointer select-none transition-colors ${
+                                                checked
+                                                    ? 'border-primary bg-primary/10 text-primary font-semibold'
+                                                    : 'border-border text-muted-foreground hover:border-primary/40'
+                                            }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only"
+                                                checked={checked}
+                                                onChange={e => {
+                                                    const current = field.ticket_scope ?? [];
+                                                    const next = e.target.checked
+                                                        ? [...current, name]
+                                                        : current.filter(n => n !== name);
+                                                    onUpdate({ ...field, ticket_scope: next.length > 0 ? next : null });
+                                                }}
+                                            />
+                                            {name}
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                            {field.ticket_scope && field.ticket_scope.length > 0 && (
+                                <p className="text-[10px] text-amber-600 mt-1.5">
+                                    Only shown for: {field.ticket_scope.join(', ')}
+                                </p>
+                            )}
+                        </div>
+                    )}
+
                     {/* Field key — read-only reference for developers */}
                     <p className="text-[10px] text-muted-foreground font-mono pt-1">
                         key: <span className="text-foreground/70">{field.key}</span>
@@ -306,9 +353,10 @@ function FieldCard({ field, index, total, prevIsLocked, allKeys, onUpdate, onDel
 interface Props {
     fields: RegistrationField[];
     onChange: (fields: RegistrationField[]) => void;
+    ticketNames?: string[];
 }
 
-export default function RegistrationFieldBuilder({ fields, onChange }: Props) {
+export default function RegistrationFieldBuilder({ fields, onChange, ticketNames }: Props) {
 
     function update(index: number, updated: RegistrationField) {
         const next = [...fields];
@@ -369,6 +417,7 @@ export default function RegistrationFieldBuilder({ fields, onChange }: Props) {
                         total={fields.length}
                         prevIsLocked={index > 0 && !!fields[index - 1].locked}
                         allKeys={allKeys.filter((_, i) => i !== index)}
+                        ticketNames={ticketNames}
                         onUpdate={updated => update(index, updated)}
                         onDelete={() => remove(index)}
                         onMoveUp={() => moveUp(index)}

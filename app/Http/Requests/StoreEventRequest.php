@@ -50,9 +50,11 @@ class StoreEventRequest extends FormRequest
             'registration_fields.*.options_ms'    => 'nullable|array',
             'registration_fields.*.options_en.*'  => 'nullable|string|max:255',
             'registration_fields.*.options_ms.*'  => 'nullable|string|max:255',
-            'registration_fields.*.placeholder_en'=> 'nullable|string|max:500',
-            'registration_fields.*.placeholder_ms'=> 'nullable|string|max:500',
-            'registration_fields.*.locked'        => 'nullable|boolean',
+            'registration_fields.*.placeholder_en'  => 'nullable|string|max:500',
+            'registration_fields.*.placeholder_ms'  => 'nullable|string|max:500',
+            'registration_fields.*.locked'           => 'nullable|boolean',
+            'registration_fields.*.ticket_scope'     => 'nullable|array',
+            'registration_fields.*.ticket_scope.*'   => 'nullable|string|max:255',
         ];
     }
 

@@ -29,6 +29,7 @@ const emptyTicket = {
     price: '0',
     early_bird_price: '',
     early_bird_end_at: '',
+    early_bird_qty: '',
     currency: 'MYR',
     quantity: '',
     max_per_order: '5',
@@ -68,6 +69,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
             price: String(ticket.price),
             early_bird_price: ticket.early_bird_price !== null ? String(ticket.early_bird_price) : '',
             early_bird_end_at: ticket.early_bird_end_at ? ticket.early_bird_end_at.slice(0, 16) : '',
+            early_bird_qty: ticket.early_bird_qty !== null && ticket.early_bird_qty !== undefined ? String(ticket.early_bird_qty) : '',
             currency: ticket.currency,
             quantity: ticket.quantity !== null ? String(ticket.quantity) : '',
             max_per_order: String(ticket.max_per_order),
@@ -347,7 +349,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
 
             {/* Create / Edit Dialog */}
             <Dialog open={showForm} onOpenChange={open => !open && setShowForm(false)}>
-                <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+                <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle>{editingId ? 'Edit Ticket' : 'New Ticket'}</DialogTitle>
                         <DialogDescription>
@@ -467,7 +469,20 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                                         {errors.early_bird_end_at && <p className="text-sm text-red-600 mt-1">{errors.early_bird_end_at}</p>}
                                     </div>
                                 </div>
-                                <p className="text-xs text-muted-foreground">Set a discounted price that applies until the early bird end date. After that, the regular price is charged.</p>
+                                <div>
+                                    <Label htmlFor="early_bird_qty">Early Bird Slot Limit <span className="text-xs text-muted-foreground">(blank = time-based only)</span></Label>
+                                    <Input
+                                        id="early_bird_qty"
+                                        type="number"
+                                        min="1"
+                                        value={data.early_bird_qty}
+                                        onChange={e => setData('early_bird_qty', e.target.value)}
+                                        className="mt-1 bg-background"
+                                        placeholder="e.g. 100 (first 100 buyers get early bird price)"
+                                    />
+                                    {errors.early_bird_qty && <p className="text-sm text-red-600 mt-1">{errors.early_bird_qty}</p>}
+                                </div>
+                                <p className="text-xs text-muted-foreground">Early bird ends when the date expires OR the slot limit is reached — whichever comes first.</p>
                             </div>
                         )}
 

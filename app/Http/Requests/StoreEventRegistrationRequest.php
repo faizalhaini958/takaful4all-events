@@ -32,7 +32,16 @@ class StoreEventRegistrationRequest extends FormRequest
         $event = Event::where('slug', $this->route('slug'))->first();
 
         if ($event && ! empty($event->registration_fields)) {
-            // Dynamic mode — validate against the event's configured custom fields
+            // Dynamic mode: validate against the event's configured custom fields,
+            // filtered to only those that apply to the selected ticket.
+            $ticketName = null;
+            if ($this->input('ticket_id')) {
+                // Read the ticket name from the database - never trust user input for scope resolution
+                $ticketName = \App\Models\EventTicket::where('id', $this->input('ticket_id'))
+                    ->where('event_id', $event->id)
+                    ->value('name');
+            }
+
             $rules['attendees.*.custom_fields'] = 'nullable|array';
 
             foreach ($event->registration_fields as $field) {
@@ -40,12 +49,17 @@ class StoreEventRegistrationRequest extends FormRequest
                 if (in_array($field['key'], ['name', 'email', 'phone'])) {
                     continue;
                 }
-                $required = ! empty($field['required']);
+
+                // Determine if this field is in scope for the selected ticket
+                $scope    = $field['ticket_scope'] ?? null;
+                $inScope  = empty($scope) || ($ticketName && in_array($ticketName, $scope));
+                $required = $inScope && ! empty($field['required']);
+
                 $rules['attendees.*.custom_fields.' . $field['key']] = match ($field['type']) {
-                    'date'     => $required ? 'required|date'                     : 'nullable|date',
-                    'checkbox' => $required ? 'required|in:true'                  : 'nullable|string|in:true,false',
-                    'textarea' => $required ? 'required|string|max:2000'          : 'nullable|string|max:2000',
-                    default    => $required ? 'required|string|max:500'           : 'nullable|string|max:500',
+                    'date'     => $required ? 'required|date'            : 'nullable|date',
+                    'checkbox' => $required ? 'required|in:true'         : 'nullable|string|in:true,false',
+                    'textarea' => $required ? 'required|string|max:2000' : 'nullable|string|max:2000',
+                    default    => $required ? 'required|string|max:500'  : 'nullable|string|max:500',
                 };
             }
         } else {

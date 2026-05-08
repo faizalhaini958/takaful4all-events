@@ -19,6 +19,7 @@ class EventTicket extends Model
         'price',
         'early_bird_price',
         'early_bird_end_at',
+        'early_bird_qty',
         'currency',
         'quantity',
         'max_per_order',
@@ -32,6 +33,7 @@ class EventTicket extends Model
         'price'              => 'decimal:2',
         'early_bird_price'   => 'decimal:2',
         'early_bird_end_at'  => 'datetime',
+        'early_bird_qty'     => 'integer',
         'quantity'           => 'integer',
         'max_per_order'      => 'integer',
         'sale_start_at'      => 'datetime',
@@ -119,7 +121,16 @@ class EventTicket extends Model
             return false;
         }
 
-        return $this->early_bird_end_at->isFuture();
+        if ($this->early_bird_end_at->isPast()) {
+            return false;
+        }
+
+        // If a slot limit is set, deactivate early bird once enough tickets are sold
+        if ($this->early_bird_qty !== null && $this->sold_count >= $this->early_bird_qty) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

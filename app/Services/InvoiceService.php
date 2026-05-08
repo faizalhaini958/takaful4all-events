@@ -98,11 +98,13 @@ class InvoiceService
         $dompdfPublicPath = $this->resolveDompdfPublicPath();
         Config::set('dompdf.public_path', $dompdfPublicPath);
 
-        // Generate QR code as base64 for embedding
+        // Generate QR code as SVG (no imagick required)
         $confirmationUrl = url("/events/{$registration->event->slug}/register/confirmation/{$registration->reference_no}");
-        $qrCode = base64_encode(
-            QrCode::format('png')->size(150)->generate($confirmationUrl)
-        );
+        try {
+            $qrCode = QrCode::format('svg')->size(150)->generate($confirmationUrl);
+        } catch (\Throwable $e) {
+            $qrCode = null;
+        }
 
         // Get invoicing settings
         $invoiceSettings = Setting::getGroup('invoicing');

@@ -145,6 +145,17 @@ class EventRegistrationController extends Controller
         return redirect()->back()->with('success', 'Registration status updated.');
     }
 
+    public function updatePaymentStatus(Request $request, Event $event, EventRegistration $registration): RedirectResponse
+    {
+        $request->validate([
+            'payment_status' => 'required|in:pending,paid,na,refunded',
+        ]);
+
+        $registration->update(['payment_status' => $request->payment_status]);
+
+        return redirect()->back()->with('success', 'Payment status updated.');
+    }
+
     public function checkIn(Event $event, EventRegistration $registration): RedirectResponse
     {
         $registration->markAsCheckedIn();

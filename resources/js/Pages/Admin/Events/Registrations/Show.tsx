@@ -4,7 +4,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Link, router } from '@inertiajs/react';
 import { ChevronLeft, UserCheck, Clock, Mail, Phone, Building2, Utensils, FileText, Users } from 'lucide-react';
-import { type Event, type EventRegistration, type RegistrationStatus, type RegistrationField } from '@/types';
+import { type Event, type EventRegistration, type RegistrationStatus, type RegistrationField, fieldAppliesToTicket } from '@/types';
 import { getRegistrationStatusLabel } from '@/lib/status-colors';
 
 interface Attendee {
@@ -36,6 +36,10 @@ export default function RegistrationShow({ event, registration }: Props) {
 
     function updateStatus(status: RegistrationStatus) {
         router.patch(`/admin/events/${event.slug}/registrations/${registration.id}/status`, { status });
+    }
+
+    function updatePaymentStatus(payment_status: string) {
+        router.patch(`/admin/events/${event.slug}/registrations/${registration.id}/payment-status`, { payment_status });
     }
 
     function checkIn() {
@@ -109,8 +113,10 @@ export default function RegistrationShow({ event, registration }: Props) {
                                     {event.registration_fields && (() => {
                                         const cf = (registration.meta_json as { custom_fields?: Record<string, string> })?.custom_fields;
                                         if (!cf) return null;
+                                        const ticketName = (registration as any).ticket?.name ?? null;
                                         return event.registration_fields!
                                             .filter(f => !['name', 'email', 'phone'].includes(f.key))
+                                            .filter(f => fieldAppliesToTicket(f, ticketName))
                                             .sort((a, b) => a.sort_order - b.sort_order)
                                             .filter(f => cf[f.key] !== undefined && cf[f.key] !== '' && cf[f.key] !== 'false')
                                             .map(f => (
@@ -176,9 +182,11 @@ export default function RegistrationShow({ event, registration }: Props) {
                                             </div>
                                         )}
                                         {/* Custom field answers */}
-                                        {event.registration_fields && attendee.custom_fields && (
-                                            event.registration_fields
+                                        {event.registration_fields && attendee.custom_fields && (() => {
+                                            const ticketName = (registration as any).ticket?.name ?? null;
+                                            return event.registration_fields
                                                 .filter(f => !['name', 'email', 'phone'].includes(f.key))
+                                                .filter(f => fieldAppliesToTicket(f, ticketName))
                                                 .sort((a, b) => a.sort_order - b.sort_order)
                                                 .filter(f => attendee.custom_fields![f.key] !== undefined && attendee.custom_fields![f.key] !== '' && attendee.custom_fields![f.key] !== 'false')
                                                 .map(f => (
@@ -188,8 +196,8 @@ export default function RegistrationShow({ event, registration }: Props) {
                                                             {f.type === 'checkbox' ? '✓ Yes' : attendee.custom_fields![f.key]}
                                                         </p>
                                                     </div>
-                                                ))
-                                        )}
+                                                ));
+                                        })()}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -279,7 +287,31 @@ export default function RegistrationShow({ event, registration }: Props) {
                             <CardContent className="space-y-3 text-sm">
                                 <div>
                                     <p className="text-xs text-muted-foreground">Payment Status</p>
-                                    <Badge variant="outline" className="mt-0.5">{registration.payment_status.toUpperCase()}</Badge>
+                                    <Badge
+                                        variant="outline"
+                                        className={`mt-0.5 ${registration.payment_status === 'paid' ? 'border-emerald-500 text-emerald-600 bg-emerald-50' : registration.payment_status === 'pending' ? 'border-amber-500 text-amber-600 bg-amber-50' : ''}`}
+                                    >
+                                        {registration.payment_status.toUpperCase()}
+                                    </Badge>
+                                    {registration.payment_status === 'pending' && (
+                                        <Button
+                                            size="sm"
+                                            onClick={() => updatePaymentStatus('paid')}
+                                            className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 h-8 text-xs"
+                                        >
+                                            Mark as Paid
+                                        </Button>
+                                    )}
+                                    {registration.payment_status === 'paid' && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => updatePaymentStatus('pending')}
+                                            className="w-full mt-2 h-8 text-xs text-amber-600 border-amber-300 hover:bg-amber-50"
+                                        >
+                                            Revert to Pending
+                                        </Button>
+                                    )}
                                 </div>
                                 {registration.payment_method && (
                                     <div>

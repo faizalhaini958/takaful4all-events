@@ -2,7 +2,7 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import EventCard from '@/Components/EventCard';
 import ShareButtons from '@/Components/ShareButtons';
 import { Head, Link } from '@inertiajs/react';
-import { Calendar, Clock, MapPin, ExternalLink, ChevronRight, Ticket, FolderOpen, Info, HelpCircle, Map as MapIcon, ChevronDown, Shirt, LayoutTemplate } from 'lucide-react';
+import { Calendar, Clock, MapPin, ExternalLink, ChevronRight, Ticket, FolderOpen, Info, HelpCircle, Map as MapIcon, ChevronDown, LayoutTemplate } from 'lucide-react';
 import { type Event, type EventTicket, type EventZone } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
 import { useState, useEffect } from 'react';
@@ -14,10 +14,10 @@ interface Props {
     ogUrl: string;
 }
 
-const STATUS_CONFIG: Record<string, { labelKey: string; classes: string }> = {
-    upcoming: { labelKey: 'Upcoming', classes: 'bg-emerald-100 text-emerald-800 border border-emerald-200' },
-    past:     { labelKey: 'Past Event',     classes: 'bg-gray-100 text-gray-600 border border-gray-200' },
-    draft:    { labelKey: 'Draft',     classes: 'bg-yellow-100 text-yellow-800 border border-yellow-200' },
+const STATUS_CONFIG: Record<string, { labelKey: string; dotClass: string; textClass: string; bgClass: string }> = {
+    upcoming: { labelKey: 'Upcoming',   dotClass: 'bg-emerald-400', textClass: 'text-emerald-700', bgClass: 'bg-emerald-50' },
+    past:     { labelKey: 'Past Event', dotClass: 'bg-gray-400',    textClass: 'text-gray-500',    bgClass: 'bg-gray-50'    },
+    draft:    { labelKey: 'Draft',      dotClass: 'bg-amber-400',   textClass: 'text-amber-700',   bgClass: 'bg-amber-50'   },
 };
 
 function classNames(...classes: string[]) {
@@ -34,7 +34,6 @@ export default function EventShow({ event, related, ogUrl }: Props) {
 
     const faqs = (event.meta_json?.faqs as { question: string; answer: string }[]) ?? [];
     const sponsors = (event.meta_json?.sponsors as { name: string; role: string; logo_url: string }[]) ?? [];
-    const tshirtImages = (event.meta_json?.tshirt_images as { id: number; url: string }[] | null) ?? [];
     const customTabs = (event.meta_json?.custom_tabs as { label: string; type: 'text' | 'image'; content_html: string; images: { id: number; url: string }[] }[] | null) ?? [];
 
     const formatLongDate = (d: Date) =>
@@ -44,11 +43,10 @@ export default function EventShow({ event, related, ogUrl }: Props) {
         d.toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     // Build ordered list of visible tabs (content-driven)
-    // Fixed order: tickets → details → tshirt → seating → faq → custom… → organiser → location
+    // Fixed order: tickets → details → seating → faq → custom… → organiser → location
     const tabs = [
         { key: 'tickets',  label: 'Tickets',     icon: <Ticket className="w-4 h-4" />,      show: true },
         { key: 'details',  label: 'Details',      icon: <Info className="w-4 h-4" />,        show: !!event.content_html },
-        { key: 'tshirt',   label: 'T-shirt',      icon: <Shirt className="w-4 h-4" />,       show: tshirtImages.length > 0 },
         { key: 'seating',  label: 'Seating Map',  icon: <MapIcon className="w-4 h-4" />,     show: !!event.venue_map },
         { key: 'faq',      label: 'FAQ',          icon: <HelpCircle className="w-4 h-4" />,  show: faqs.length > 0 },
         ...customTabs.filter(t => t.label.trim()).map((t, i) => ({
@@ -60,6 +58,30 @@ export default function EventShow({ event, related, ogUrl }: Props) {
     ].filter(tab => tab.show);
 
     const [selectedTab, setSelectedTab] = useState(0);
+
+    // Countdown timer
+    const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: false });
+
+    useEffect(() => {
+        const calcCountdown = () => {
+            const now = Date.now();
+            const diff = startDate.getTime() - now;
+            if (diff <= 0) {
+                setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: true });
+                return;
+            }
+            setCountdown({
+                days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+                minutes: Math.floor((diff / (1000 * 60)) % 60),
+                seconds: Math.floor((diff / 1000) % 60),
+                expired: false,
+            });
+        };
+        calcCountdown();
+        const timer = setInterval(calcCountdown, 1000);
+        return () => clearInterval(timer);
+    }, [startDate]);
 
     // Scroll listener for mobile sticky bar
     useEffect(() => {
@@ -219,18 +241,6 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                                         ))}
                                     </div>
                                 )}
-                                {tab.key === 'tshirt' && (
-                                    <div className="space-y-6 max-w-2xl w-full">
-                                        {tshirtImages.map((img, i) => (
-                                            <img
-                                                key={i}
-                                                src={img.url}
-                                                alt={tshirtImages.length > 1 ? `T-shirt size chart ${i + 1}` : 'T-shirt size chart'}
-                                                className="w-full h-auto rounded-xl border border-gray-200"
-                                            />
-                                        ))}
-                                    </div>
-                                )}
                                 {tab.key.startsWith('custom_') && (() => {
                                     const idx = parseInt(tab.key.replace('custom_', ''), 10);
                                     const ct = customTabs[idx];
@@ -353,9 +363,13 @@ export default function EventShow({ event, related, ogUrl }: Props) {
             {isStickyVisible && event.status === 'upcoming' && (
                 <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 flex items-center justify-between z-50">
                     <div>
-                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Starting from</p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Price</p>
                         <p className="text-lg font-bold text-brand-navy">
-                            {minPrice !== null ? `RM ${minPrice.toFixed(2)}` : 'Free'}
+                            {minPrice === null ? 'Free'
+                                : minPrice === 0 ? 'Free'
+                                : (maxPrice !== null && maxPrice > minPrice)
+                                    ? `RM ${minPrice.toFixed(2)} – RM ${maxPrice.toFixed(2)}`
+                                    : `RM ${minPrice.toFixed(2)}`}
                         </p>
                     </div>
                     {event.is_registration_open ? (
@@ -390,20 +404,91 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
     const statusCfg = STATUS_CONFIG[event.status] ?? STATUS_CONFIG.draft;
     const dayOfWeek = startDate.toLocaleDateString('en-MY', { weekday: 'long' });
 
+    const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: false });
+
+    useEffect(() => {
+        const calc = () => {
+            const diff = startDate.getTime() - Date.now();
+            if (diff <= 0) {
+                setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: true });
+                return;
+            }
+            setCountdown({
+                days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+                minutes: Math.floor((diff / (1000 * 60)) % 60),
+                seconds: Math.floor((diff / 1000) % 60),
+                expired: false,
+            });
+        };
+        calc();
+        const timer = setInterval(calc, 1000);
+        return () => clearInterval(timer);
+    }, [startDate]);
+
     return (
         <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-            {/* Status bar */}
-            <div className="px-5 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${statusCfg.classes}`}>
+            {/* Card top header */}
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+                {/* Pulsing status badge */}
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${statusCfg.bgClass} ${statusCfg.textClass}`}>
+                    {event.status === 'upcoming' ? (
+                        <span className="relative flex h-2 w-2">
+                            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${statusCfg.dotClass}`} />
+                            <span className={`relative inline-flex rounded-full h-2 w-2 ${statusCfg.dotClass}`} />
+                        </span>
+                    ) : (
+                        <span className={`inline-flex rounded-full h-2 w-2 ${statusCfg.dotClass}`} />
+                    )}
                     {statusCfg.labelKey}
                 </span>
-                <span className="text-xs text-gray-400 font-medium">{dayOfWeek}</span>
+
+                {/* Calendar tear-off chip */}
+                <div className="flex-shrink-0 rounded-xl overflow-hidden border border-gray-200 shadow-sm text-center w-12">
+                    <div className="bg-brand px-1 py-0.5">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-white leading-none">
+                            {startDate.toLocaleDateString('en-MY', { month: 'short' })}
+                        </p>
+                    </div>
+                    <div className="bg-white px-1 py-1">
+                        <p className="text-lg font-extrabold leading-none text-gray-900">
+                            {startDate.getDate()}
+                        </p>
+                        <p className="text-[9px] text-gray-400 font-semibold leading-none mt-0.5">
+                            {startDate.toLocaleDateString('en-MY', { weekday: 'short' })}
+                        </p>
+                    </div>
+                </div>
             </div>
+
+            {/* Countdown */}
+            {event.status === 'upcoming' && !countdown.expired && (
+                <div className="px-5 py-5 bg-gray-50 border-b border-gray-100">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center mb-3">Event starts in</p>
+                    <div className="grid grid-cols-4 gap-2">
+                        {[
+                            { value: countdown.days, label: 'Days' },
+                            { value: countdown.hours, label: 'Hours' },
+                            { value: countdown.minutes, label: 'Mins' },
+                            { value: countdown.seconds, label: 'Secs' },
+                        ].map((unit) => (
+                            <div key={unit.label} className="flex flex-col items-center bg-white border border-gray-200 rounded-xl py-3 shadow-sm">
+                                <span className="text-2xl font-extrabold tabular-nums leading-none text-brand">
+                                    {String(unit.value).padStart(2, '0')}
+                                </span>
+                                <span className="text-[9px] font-semibold uppercase tracking-widest text-gray-400 mt-1">
+                                    {unit.label}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="divide-y divide-gray-100">
                 {/* Date */}
-                <div className="flex items-center gap-3 px-5 py-4">
-                    <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
+                <div className="group flex items-center gap-3 px-5 py-4 border-l-2 border-transparent hover:border-brand hover:bg-brand/[0.02] transition-all">
+                    <div className="w-9 h-9 rounded-xl bg-brand/10 group-hover:bg-brand/15 flex items-center justify-center flex-shrink-0 transition-colors">
                         <Calendar className="w-4 h-4 text-brand" />
                     </div>
                     <div>
@@ -413,8 +498,8 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
                 </div>
 
                 {/* Time */}
-                <div className="flex items-center gap-3 px-5 py-4">
-                    <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
+                <div className="group flex items-center gap-3 px-5 py-4 border-l-2 border-transparent hover:border-brand hover:bg-brand/[0.02] transition-all">
+                    <div className="w-9 h-9 rounded-xl bg-brand/10 group-hover:bg-brand/15 flex items-center justify-center flex-shrink-0 transition-colors">
                         <Clock className="w-4 h-4 text-brand" />
                     </div>
                     <div>
@@ -427,8 +512,8 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
 
                 {/* Venue */}
                 {event.venue && (
-                    <div className="flex items-center gap-3 px-5 py-4">
-                        <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
+                    <div className="group flex items-center gap-3 px-5 py-4 border-l-2 border-transparent hover:border-brand hover:bg-brand/[0.02] transition-all">
+                        <div className="w-9 h-9 rounded-xl bg-brand/10 group-hover:bg-brand/15 flex items-center justify-center flex-shrink-0 transition-colors">
                             <MapPin className="w-4 h-4 text-brand" />
                         </div>
                         <div>
@@ -443,8 +528,8 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
 
                 {/* Price */}
                 {onSaleTickets.length > 0 && (
-                    <div className="flex items-center gap-3 px-5 py-4">
-                        <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
+                    <div className="group flex items-center gap-3 px-5 py-4 border-l-2 border-transparent hover:border-brand hover:bg-brand/[0.02] transition-all">
+                        <div className="w-9 h-9 rounded-xl bg-brand/10 group-hover:bg-brand/15 flex items-center justify-center flex-shrink-0 transition-colors">
                             <Ticket className="w-4 h-4 text-brand" />
                         </div>
                         <div>

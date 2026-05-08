@@ -125,10 +125,6 @@ export default function ImageUpload({ value, currentMedia, onChange, onClear }: 
                                 </p>
                                 <p className="text-xs text-gray-400 mt-0.5">PNG, JPG, WebP — max 5 MB</p>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Upload className="w-4 h-4 text-gray-400" />
-                                <span className="text-xs text-gray-400">Recommended: 1920 × 1080 px</span>
-                            </div>
                         </>
                     )}
                 </div>

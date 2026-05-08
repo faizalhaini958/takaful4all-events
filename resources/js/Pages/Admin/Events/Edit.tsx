@@ -8,6 +8,7 @@ import { type Event, type Media, type EventCategory, type RegistrationField } fr
 interface Props {
     event: Event;
     mediaList: Pick<Media, 'id' | 'url' | 'title'>[];
+    tickets?: { id: number; name: string }[];
 }
 
 function toDatetimeLocal(val: string | null): string {
@@ -15,7 +16,7 @@ function toDatetimeLocal(val: string | null): string {
     return val.length > 16 ? val.slice(0, 16) : val;
 }
 
-export default function EventEdit({ event }: Props) {
+export default function EventEdit({ event, tickets }: Props) {
     const { data, setData, put, processing, errors, transform } = useForm({
         title:            event.title,
         slug:             event.slug,
@@ -37,7 +38,6 @@ export default function EventEdit({ event }: Props) {
         require_approval: event.require_approval ?? false,
         faqs:             (event.meta_json?.faqs as any[]) ?? [],
         sponsors:         (event.meta_json?.sponsors as any[]) ?? [],
-        tshirt_images:    ((event.meta_json?.tshirt_images as any[]) ?? []).map((img: any) => ({ id: String(img.id), url: img.url ?? '' })),
         custom_tabs:      ((event.meta_json?.custom_tabs as any[]) ?? []).map((t: any) => ({
             label: t.label ?? '',
             type: (t.type === 'image' ? 'image' : 'text') as 'image' | 'text',
@@ -58,7 +58,6 @@ export default function EventEdit({ event }: Props) {
             meta_json: {
                 faqs: data.faqs,
                 sponsors: data.sponsors,
-                tshirt_images: data.tshirt_images.filter(img => img.id && img.id !== 'none'),
                 custom_tabs: data.custom_tabs
                     .filter(t => t.label.trim())
                     .map(t => ({
@@ -98,6 +97,7 @@ export default function EventEdit({ event }: Props) {
                     submitLabel="Update Event"
                     currentMedia={event.media}
                     eventSlug={event.slug}
+                    ticketNames={tickets?.map(t => t.name) ?? []}
                 />
             </div>
         </AdminLayout>
