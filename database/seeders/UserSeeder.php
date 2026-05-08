@@ -34,7 +34,7 @@ class UserSeeder extends Seeder
             [
                 'name'     => 'Aiman Razak',
                 'password' => Hash::make('password'),
-                'role'     => 'user',
+                'role'     => 'public',
             ]
         );
     }
