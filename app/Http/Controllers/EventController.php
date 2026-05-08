@@ -43,8 +43,10 @@ class EventController extends Controller
 
         $related = Event::where('id', '!=', $event->id)
             ->where('is_published', true)
+            ->where('start_at', '>=', now())
+            ->orderBy('start_at', 'asc')
             ->with('media')
-            ->take(3)
+            ->take(9)
             ->get();
 
         return Inertia::render('Public/Events/Show', [

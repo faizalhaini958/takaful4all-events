@@ -211,6 +211,36 @@ function FieldCard({ field, index, total, prevIsLocked, allKeys, ticketNames, on
                         </div>
                     )}
 
+                    {/* Waiver / Description text — checkbox only */}
+                    {field.type === 'checkbox' && (
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">
+                                    Waiver / Description Text — English <span className="normal-case font-normal">(optional)</span>
+                                </Label>
+                                <Textarea
+                                    value={field.description_en ?? ''}
+                                    onChange={e => onUpdate({ ...field, description_en: e.target.value || undefined })}
+                                    placeholder="Enter the full waiver text or description shown above the checkbox…"
+                                    className="mt-1 text-sm resize-none"
+                                    rows={5}
+                                />
+                            </div>
+                            <div>
+                                <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">
+                                    Waiver / Description Text — BM <span className="normal-case font-normal">(optional)</span>
+                                </Label>
+                                <Textarea
+                                    value={field.description_ms ?? ''}
+                                    onChange={e => onUpdate({ ...field, description_ms: e.target.value || undefined })}
+                                    placeholder="Masukkan teks waiver atau penerangan yang dipaparkan di atas kotak semak…"
+                                    className="mt-1 text-sm resize-none"
+                                    rows={5}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Required toggle */}
                     <div className="flex items-center justify-between py-1 border-t border-border/20">
                         <div>

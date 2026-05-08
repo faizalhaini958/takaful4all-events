@@ -24,6 +24,8 @@ export interface RegistrationField {
     sort_order: number;
     locked?: boolean; // true for name/email/phone — cannot be removed
     ticket_scope?: string[] | null; // null = all tickets; string[] = only these ticket names
+    description_en?: string; // optional body text shown on checkbox fields (waiver text etc.)
+    description_ms?: string;
 }
 
 /** Returns true if a field should be shown/validated for the given ticket name. */

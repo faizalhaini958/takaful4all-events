@@ -263,6 +263,8 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                         errors={errors} hasCustomFields={hasCustomFields}
                         sortedFields={sortedFields} locale={locale}
                         updateAttendee={updateAttendee} updateCustomField={updateCustomField}
+                        hasTerms={hasTerms} termsAgreed={termsAgreed} setTermsAgreed={setTermsAgreed}
+                        event={event}
                         onBack={() => goTo(1)} onNext={() => goTo(3)} t={t}
                     />
                 )}
@@ -477,7 +479,9 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
 // ─── Step 2: Personal / Team Info ─────────────────────────────────────────────
 
 function Step2Info({ data, setData, qty, selectedTicket, grandTotal, errors, hasCustomFields,
-    sortedFields, locale, updateAttendee, updateCustomField, onBack, onNext, t }: any) {
+    sortedFields, locale, updateAttendee, updateCustomField,
+    hasTerms, termsAgreed, setTermsAgreed, event,
+    onBack, onNext, t }: any) {
 
     function isValid(): boolean {
         for (let i = 0; i < data.attendees.length; i++) {
@@ -490,6 +494,7 @@ function Step2Info({ data, setData, qty, selectedTicket, grandTotal, errors, has
                 }
             }
         }
+        if (hasTerms && !termsAgreed) return false;
         return true;
     }
 
@@ -542,13 +547,27 @@ function Step2Info({ data, setData, qty, selectedTicket, grandTotal, errors, has
                                         <p className="text-xs text-red-600 mt-1">{(errors as any)[`attendees.${index}.phone`]}</p>
                                     )}
                                 </div>
-                                {(sortedFields as RegistrationField[]).filter(f => !f.locked).map(field => (
+                                {(sortedFields as RegistrationField[]).filter(f => !f.locked && f.type !== 'checkbox').map(field => (
                                     <div key={field.key}
-                                        className={field.type === 'textarea' || field.type === 'checkbox' ? 'sm:col-span-2' : ''}>
+                                        className={field.type === 'textarea' ? 'sm:col-span-2' : ''}>
                                         <CustomFieldInput
                                             field={field}
                                             value={attendee.custom_fields[field.key] ?? ''}
                                             onChange={(val: string) => updateCustomField(index, field.key, val)}
+                                            onIcParsedDob={field.key === 'ic_number'
+                                                ? (icVal: string, dob: string) => {
+                                                    const updated = [...data.attendees];
+                                                    updated[index] = {
+                                                        ...updated[index],
+                                                        custom_fields: {
+                                                            ...updated[index].custom_fields,
+                                                            ic_number: icVal,
+                                                            date_of_birth: dob,
+                                                        },
+                                                    };
+                                                    setData('attendees', updated);
+                                                }
+                                                : undefined}
                                             locale={locale}
                                             error={(errors as any)[`attendees.${index}.custom_fields.${field.key}`]}
                                             inputId={`cf_${index}_${field.key}`} />
@@ -604,9 +623,44 @@ function Step2Info({ data, setData, qty, selectedTicket, grandTotal, errors, has
                                     placeholder={t('register.notes_placeholder')} />
                             </div>
                         )}
+                        {hasCustomFields && (sortedFields as RegistrationField[]).filter(f => !f.locked && f.type === 'checkbox').map(field => (
+                            <div key={field.key} className="mt-4">
+                                <CustomFieldInput
+                                    field={field}
+                                    value={attendee.custom_fields[field.key] ?? ''}
+                                    onChange={(val: string) => updateCustomField(index, field.key, val)}
+                                    locale={locale}
+                                    error={(errors as any)[`attendees.${index}.custom_fields.${field.key}`]}
+                                    inputId={`cf_${index}_${field.key}`} />
+                            </div>
+                        ))}
                     </div>
                 </div>
             ))}
+
+            {/* Terms & Conditions — shown in Step 2, below the attendee form */}
+            {hasTerms && (
+                <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                    <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-brand flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">Terms &amp; Conditions</span>
+                    </div>
+                    <div className="px-4 pt-3 pb-1 max-h-48 overflow-y-auto">
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{event.terms_conditions}</p>
+                    </div>
+                    <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                        <label className="flex items-start gap-3 cursor-pointer select-none">
+                            <input type="checkbox" checked={termsAgreed}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTermsAgreed(e.target.checked)}
+                                className="accent-brand w-4 h-4 mt-0.5 flex-shrink-0 cursor-pointer" />
+                            <span className="text-sm font-semibold text-gray-800 leading-snug">
+                                I have read and agree to the Terms &amp; Conditions above.
+                                <span className="text-red-500 ml-1">*</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            )}
 
             <OrderSummaryBar selectedTicket={selectedTicket} qty={qty}
                 ticketSubtotal={0} selectedProducts={[]} products={[]}
@@ -728,32 +782,6 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                 </div>
             ))}
 
-            {/* Terms & Conditions */}
-            {hasTerms && (
-                <div className="bg-amber-50 rounded-2xl border border-amber-200 overflow-hidden">
-                    <div className="px-5 py-4 border-b border-amber-200 flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-amber-600" />
-                        <h3 className="font-bold text-amber-900 text-sm">Terms &amp; Conditions</h3>
-                    </div>
-                    <div className="p-5 space-y-4">
-                        <div className="max-h-52 overflow-y-auto rounded-lg border border-amber-200 bg-white p-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                            {event.terms_conditions}
-                        </div>
-                        <label className="flex items-start gap-3 cursor-pointer select-none">
-                            <span className="flex-shrink-0 mt-0.5">
-                                <input type="checkbox" checked={termsAgreed}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTermsAgreed(e.target.checked)}
-                                    className="accent-brand w-5 h-5 cursor-pointer" />
-                            </span>
-                            <span className="text-sm text-gray-700 leading-snug">
-                                I have read and agree to the <strong>Terms &amp; Conditions</strong> above.
-                                <span className="text-red-500 ml-1">*</span>
-                            </span>
-                        </label>
-                    </div>
-                </div>
-            )}
-
             {/* Submit + Back */}
             <div className="space-y-2">
                 <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -764,7 +792,7 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                     <Button
                         type="button"
                         onClick={onSubmit}
-                        disabled={processing || !selectedTicket || (hasTerms && !termsAgreed)}
+                        disabled={processing || !selectedTicket}
                         className="w-full sm:w-auto sm:min-w-[220px] bg-brand hover:bg-brand-dark text-white font-bold py-4 rounded-xl text-base disabled:opacity-50"
                         size="lg">
                         {processing ? 'Submitting…' : grandTotal > 0 ? `Register — RM ${grandTotal.toFixed(2)}` : 'Register — Free'}
@@ -868,10 +896,11 @@ function ReviewField({ label, value }: { label: string; value: string }) {
 
 // ─── Custom Field Input ───────────────────────────────────────────────────────
 
-function CustomFieldInput({ field, value, onChange, locale, error, inputId }: {
+function CustomFieldInput({ field, value, onChange, onIcParsedDob, locale, error, inputId }: {
     field: RegistrationField;
     value: string;
     onChange: (val: string) => void;
+    onIcParsedDob?: (icVal: string, dob: string) => void;
     locale: string;
     error?: string;
     inputId: string;
@@ -880,12 +909,39 @@ function CustomFieldInput({ field, value, onChange, locale, error, inputId }: {
     const placeholder = locale === 'ms' ? (field.placeholder_ms ?? '') : (field.placeholder_en ?? '');
     const options = locale === 'ms' ? (field.options_ms ?? []) : (field.options_en ?? []);
 
+    // ── IC Number masking: xxxxxx-xx-xxxx ─────────────────────────────────
+    function handleIcChange(raw: string) {
+        // Strip everything except digits
+        const digits = raw.replace(/\D/g, '').slice(0, 12);
+        // Build masked value
+        let masked = digits;
+        if (digits.length > 6) masked = digits.slice(0, 6) + '-' + digits.slice(6);
+        if (digits.length > 8) masked = digits.slice(0, 6) + '-' + digits.slice(6, 8) + '-' + digits.slice(8);
+        // Auto-fill DOB when all 12 digits are present — one atomic update
+        if (digits.length === 12 && onIcParsedDob) {
+            const yy = parseInt(digits.slice(0, 2), 10);
+            const mm = digits.slice(2, 4);
+            const dd = digits.slice(4, 6);
+            const currentYY = new Date().getFullYear() % 100;
+            const yyyy = yy > currentYY ? 1900 + yy : 2000 + yy;
+            onIcParsedDob(masked, `${yyyy}-${mm}-${dd}`);
+        } else {
+            onChange(masked);
+        }
+    }
+
     return (
         <>
             {field.type !== 'checkbox' && (
                 <Label htmlFor={inputId}>{label}{field.required && <span className="text-red-500 ml-1">*</span>}</Label>
             )}
-            {field.type === 'text' && (
+            {field.type === 'text' && field.key === 'ic_number' && (
+                <Input id={inputId} value={value}
+                    onChange={e => handleIcChange(e.target.value)}
+                    className="mt-2 h-12 sm:h-9 font-mono tracking-wider" placeholder="xxxxxx-xx-xxxx"
+                    inputMode="numeric" required={field.required} />
+            )}
+            {field.type === 'text' && field.key !== 'ic_number' && (
                 <Input id={inputId} value={value} onChange={e => onChange(e.target.value)}
                     className="mt-2 h-12 sm:h-9" placeholder={placeholder} required={field.required} />
             )}
@@ -918,16 +974,39 @@ function CustomFieldInput({ field, value, onChange, locale, error, inputId }: {
                 <Input id={inputId} type="date" value={value} onChange={e => onChange(e.target.value)}
                     className="mt-2 h-12 sm:h-9" inputMode="numeric" required={field.required} />
             )}
-            {field.type === 'checkbox' && (
-                <div className="flex items-start gap-2 pt-1">
-                    <input id={inputId} type="checkbox" checked={value === 'true'}
-                        onChange={e => onChange(e.target.checked ? 'true' : 'false')}
-                        className="accent-brand w-4 h-4 mt-0.5 flex-shrink-0" required={field.required} />
-                    <Label htmlFor={inputId} className="text-sm font-normal cursor-pointer leading-snug">
-                        {label}{field.required && <span className="text-red-500 ml-1">*</span>}
-                    </Label>
-                </div>
-            )}
+            {field.type === 'checkbox' && (() => {
+                const description = locale === 'ms' ? (field.description_ms ?? field.description_en) : (field.description_en ?? field.description_ms);
+                return description ? (
+                    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                        <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-2">
+                            <svg className="w-3.5 h-3.5 text-brand flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                            <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">Event Waiver</span>
+                        </div>
+                        <div className="px-4 pt-3 pb-1 max-h-40 overflow-y-auto">
+                            <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
+                        </div>
+                        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                            <label htmlFor={inputId} className="flex items-start gap-3 cursor-pointer select-none">
+                                <input id={inputId} type="checkbox" checked={value === 'true'}
+                                    onChange={e => onChange(e.target.checked ? 'true' : 'false')}
+                                    className="accent-brand w-4 h-4 mt-0.5 flex-shrink-0" required={field.required} />
+                                <span className="text-sm font-semibold text-gray-800 leading-snug">
+                                    {label}{field.required && <span className="text-red-500 ml-1">*</span>}
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-start gap-2 pt-1">
+                        <input id={inputId} type="checkbox" checked={value === 'true'}
+                            onChange={e => onChange(e.target.checked ? 'true' : 'false')}
+                            className="accent-brand w-4 h-4 mt-0.5 flex-shrink-0" required={field.required} />
+                        <Label htmlFor={inputId} className="text-sm font-normal cursor-pointer leading-snug">
+                            {label}{field.required && <span className="text-red-500 ml-1">*</span>}
+                        </Label>
+                    </div>
+                );
+            })()}
             {error && (
                 <p className="text-xs text-red-600 mt-1">
                     {error.replace(/[Tt]he attendees\.\d+\.custom_fields\.\S+ (field )?/g, `${label} `)}

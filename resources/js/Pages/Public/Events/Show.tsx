@@ -2,10 +2,10 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import EventCard from '@/Components/EventCard';
 import ShareButtons from '@/Components/ShareButtons';
 import { Head, Link } from '@inertiajs/react';
-import { Calendar, Clock, MapPin, ExternalLink, ChevronRight, Ticket, FolderOpen, Info, HelpCircle, Map as MapIcon, ChevronDown, LayoutTemplate } from 'lucide-react';
+import { Calendar, Clock, MapPin, ExternalLink, ChevronRight, ChevronLeft, Ticket, FolderOpen, Info, HelpCircle, Map as MapIcon, ChevronDown, LayoutTemplate } from 'lucide-react';
 import { type Event, type EventTicket, type EventZone } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Tab } from '@headlessui/react';
 
 interface Props {
@@ -22,6 +22,91 @@ const STATUS_CONFIG: Record<string, { labelKey: string; dotClass: string; textCl
 
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ');
+}
+
+// ─── Related Events Carousel ──────────────────────────────────────────────────
+const PAGE_SIZE = 3;
+
+function RelatedEventsCarousel({ related, t }: { related: Event[]; t: (k: string) => string }) {
+    const [page, setPage] = useState(0);
+    const totalPages = Math.ceil(related.length / PAGE_SIZE);
+    const visible = related.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+    const hasPrev = page > 0;
+    const hasNext = page < totalPages - 1;
+
+    return (
+        <div className="mt-16 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 bg-gray-50 border-t border-gray-200">
+            {/* Header */}
+            <div className="flex items-end justify-between mb-8">
+                <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-brand mb-1">Upcoming</p>
+                    <h2 className="text-2xl font-extrabold text-gray-900">{t('event.more_events')}</h2>
+                    <p className="text-sm text-gray-500 mt-1">Discover more exciting events curated for you.</p>
+                </div>
+                <Link
+                    href="/events"
+                    className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-brand border border-brand/30 bg-white hover:bg-brand hover:text-white px-4 py-2 rounded-full transition-all"
+                >
+                    {t('event.view_all')} <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+            </div>
+
+            {/* Cards + side arrows */}
+            <div className="relative px-8">
+                {totalPages > 1 && (
+                    <button
+                        type="button"
+                        onClick={() => setPage(p => Math.max(0, p - 1))}
+                        disabled={!hasPrev}
+                        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:border-brand hover:text-brand transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {visible.map(e => <EventCard key={e.id} event={e} />)}
+                </div>
+
+                {totalPages > 1 && (
+                    <button
+                        type="button"
+                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                        disabled={!hasNext}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:border-brand hover:text-brand transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                    >
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
+                )}
+            </div>
+
+            {/* Dot indicators + mobile View All */}
+            <div className="flex items-center justify-between mt-8 px-8">
+                <Link
+                    href="/events"
+                    className="sm:hidden inline-flex items-center gap-1 text-sm font-semibold text-brand"
+                >
+                    {t('event.view_all')} <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+                {totalPages > 1 ? (
+                    <div className="flex items-center gap-2 mx-auto">
+                        {Array.from({ length: totalPages }).map((_, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                onClick={() => setPage(i)}
+                                className={`h-2.5 rounded-full transition-all duration-300 ${
+                                    i === page
+                                        ? 'w-7 bg-brand'
+                                        : 'w-2.5 bg-gray-300 hover:bg-gray-400'
+                                }`}
+                            />
+                        ))}
+                    </div>
+                ) : <span />}
+            </div>
+        </div>
+    );
 }
 
 export default function EventShow({ event, related, ogUrl }: Props) {
@@ -342,20 +427,7 @@ export default function EventShow({ event, related, ogUrl }: Props) {
 
                 {/* Related Events */}
                 {related.length > 0 && (
-                    <div className="mt-16 pt-12 border-t border-gray-200">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h2 className="text-xl font-bold text-gray-900">{t('event.more_events')}</h2>
-                                <p className="text-sm text-gray-500 mt-0.5">Discover more exciting events curated for you.</p>
-                            </div>
-                            <Link href="/events" className="text-sm font-semibold text-brand hover:text-brand-dark flex items-center gap-1 transition-all">
-                                {t('event.view_all')} <ChevronRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {related.map(e => <EventCard key={e.id} event={e} />)}
-                        </div>
-                    </div>
+                    <RelatedEventsCarousel related={related} t={t} />
                 )}
             </div>
 

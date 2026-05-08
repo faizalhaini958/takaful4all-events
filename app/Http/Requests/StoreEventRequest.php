@@ -55,6 +55,8 @@ class StoreEventRequest extends FormRequest
             'registration_fields.*.locked'           => 'nullable|boolean',
             'registration_fields.*.ticket_scope'     => 'nullable|array',
             'registration_fields.*.ticket_scope.*'   => 'nullable|string|max:255',
+            'registration_fields.*.description_en'   => 'nullable|string|max:5000',
+            'registration_fields.*.description_ms'   => 'nullable|string|max:5000',
         ];
     }
 

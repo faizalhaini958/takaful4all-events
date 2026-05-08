@@ -194,7 +194,15 @@ export default function EventForm({
             </DialogContent>
         </Dialog>
 
-        <form onSubmit={e => { setFieldsDirty(false); onSubmit(e); }} className="space-y-6">
+        <form
+            onSubmit={e => { setFieldsDirty(false); onSubmit(e); }}
+            onKeyDown={e => {
+                if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA' && (e.target as HTMLElement).tagName !== 'BUTTON') {
+                    e.preventDefault();
+                }
+            }}
+            className="space-y-6"
+        >
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_320px] gap-6 items-start">
 
                 {/* ── Left column ── */}
