@@ -20,11 +20,11 @@ class HomeController extends Controller
         );
 
         $upcomingEvents = Cache::remember('home.upcoming', 900, fn () =>
-            Event::upcoming()->with('media')->take(6)->get()
+            Event::upcoming()->with('media')->take(20)->get()
         );
 
         $pastEvents = Cache::remember('home.past', 900, fn () =>
-            Event::past()->with('media')->take(12)->get()
+            Event::past()->with('media')->take(20)->get()
         );
 
         $aboutPage = Cache::remember('home.about', 900, fn () =>
@@ -55,6 +55,7 @@ class HomeController extends Controller
             'podcasts'         => $podcasts,
             'webinars'         => $webinars,
             'agent360'         => $agent360,
+            'canonicalUrl'     => url()->current(),
         ]);
     }
 }

@@ -1,31 +1,56 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import { Card, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
-import { Link } from '@inertiajs/react';
-import { CheckCircle2, Calendar, MapPin, Ticket, Mail, Hash, ArrowRight, Home, Package } from 'lucide-react';
-import { type EventRegistration } from '@/types';
+import { Link, Head, usePage } from '@inertiajs/react';
+import { CheckCircle2, Calendar, MapPin, Ticket, Mail, Hash, ArrowRight, Home, Package, UserPlus } from 'lucide-react';
+import { type EventRegistration, type SharedProps } from '@/types';
+import { useState } from 'react';
+import RegisterModal from '@/Components/RegisterModal';
+
+const POPPINS = "'Poppins', sans-serif";
+const INTER   = "'Inter', 'DM Sans', sans-serif";
 
 interface Props {
     registration: EventRegistration | null;
 }
 
 export default function PaymentSuccess({ registration }: Props) {
+    const { auth } = usePage().props as SharedProps;
+    const isGuest = !auth?.user;
+    const [registerOpen, setRegisterOpen] = useState(false);
     const event = registration?.event;
     const startDate = event ? new Date(event.start_at) : null;
     const location = event ? [event.venue, event.city, event.state].filter(Boolean).join(', ') : '';
 
     return (
         <PublicLayout>
-            <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
+            <Head>
+                <title>Payment Successful | Takaful4All Events</title>
+                <meta name="robots" content="noindex, nofollow" />
+            </Head>
+
+            {/* ── Hero ── */}
+            <section className="relative -mt-16 overflow-hidden" style={{ background: '#071B2A' }}>
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #18C8FF 0%, transparent 70%)' }} />
+                <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
+                    <h1 style={{ fontFamily: POPPINS, color: 'white', fontSize: '2.25rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                        Payment Successful
+                    </h1>
+                    <p className="mt-3" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: INTER, fontSize: '1.125rem' }}>
+                        Your payment has been processed successfully. Thank you!
+                    </p>
+                </div>
+            </section>
+
+            <div className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+            <div className="relative max-w-2xl mx-auto px-4 sm:px-6 py-16">
                 {/* Success Icon */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 mb-4">
                         <CheckCircle2 className="w-10 h-10 text-emerald-600" />
                     </div>
-                    <h1 className="text-3xl font-extrabold text-brand-navy">Payment Successful!</h1>
-                    <p className="text-gray-600 mt-2">
-                        Your payment has been processed successfully. Thank you!
-                    </p>
                 </div>
 
                 {registration && event ? (
@@ -155,6 +180,27 @@ export default function PaymentSuccess({ registration }: Props) {
                                 Please keep your reference number for check-in at the event.
                             </div>
 
+                            {/* Post-payment account creation CTA (guests only) */}
+                            {isGuest && (
+                                <div className="rounded-xl border-2 border-dashed border-brand/30 bg-brand/5 p-5 flex flex-col sm:flex-row items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center flex-shrink-0">
+                                        <UserPlus className="w-5 h-5 text-brand" />
+                                    </div>
+                                    <div className="flex-1 text-center sm:text-left">
+                                        <p className="font-semibold text-brand-navy text-sm">Save your booking</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">Create a free account to manage this booking, download your QR ticket, and get faster checkout next time.</p>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        className="flex-shrink-0 whitespace-nowrap"
+                                        onClick={() => setRegisterOpen(true)}
+                                    >
+                                        <UserPlus className="w-4 h-4 mr-1.5" />
+                                        Create Account
+                                    </Button>
+                                </div>
+                            )}
+
                             {/* Actions */}
                             <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                 <Button asChild className="flex-1">
@@ -190,6 +236,15 @@ export default function PaymentSuccess({ registration }: Props) {
                     </Card>
                 )}
             </div>
+            </div>
+
+            {/* Register modal for guest post-payment account creation */}
+            <RegisterModal
+                open={registerOpen}
+                onOpenChange={setRegisterOpen}
+                onSwitchToLogin={() => setRegisterOpen(false)}
+                initialEmail={registration?.email}
+            />
         </PublicLayout>
     );
 }

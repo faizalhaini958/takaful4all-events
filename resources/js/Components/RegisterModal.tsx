@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
-import { type FormEventHandler } from 'react';
+import { type FormEventHandler, useRef, useEffect } from 'react';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import {
     Dialog,
     DialogContent,
@@ -16,18 +17,37 @@ interface RegisterModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSwitchToLogin: () => void;
+    returnTo?: string;
+    initialEmail?: string;
 }
 
-export default function RegisterModal({ open, onOpenChange, onSwitchToLogin }: RegisterModalProps) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+export default function RegisterModal({ open, onOpenChange, onSwitchToLogin, returnTo, initialEmail }: RegisterModalProps) {
+    const { executeRecaptcha } = useGoogleReCaptcha();
+    const tokenRef = useRef('');
+    const { data, setData, post, processing, errors, reset, transform } = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        recaptcha_token: '',
+        return_to: '',
     });
 
-    const submit: FormEventHandler = (e) => {
+    transform(d => ({ ...d, recaptcha_token: tokenRef.current, return_to: returnTo ?? '' }));
+
+    // Pre-fill email when initialEmail is provided (e.g. post-payment CTA)
+    useEffect(() => {
+        if (open && initialEmail && !data.email) {
+            setData('email', initialEmail);
+        }
+    }, [open, initialEmail]);
+
+    const submit: FormEventHandler = async (e) => {
         e.preventDefault();
+
+        if (executeRecaptcha) {
+            tokenRef.current = await executeRecaptcha('register');
+        }
 
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
@@ -124,6 +144,9 @@ export default function RegisterModal({ open, onOpenChange, onSwitchToLogin }: R
                             'Register'
                         )}
                     </Button>
+                    {errors.recaptcha_token && (
+                        <p className="text-sm text-red-600 text-center">{errors.recaptcha_token}</p>
+                    )}
 
                     <div className="flex items-center gap-3">
                         <span className="h-px flex-1 bg-gray-200" />

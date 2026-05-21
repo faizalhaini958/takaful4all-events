@@ -4,18 +4,29 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { useRef } from 'react';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { executeRecaptcha } = useGoogleReCaptcha();
+    const tokenRef = useRef('');
+
+    const { data, setData, post, processing, errors, reset, transform } = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        recaptcha_token: '' as string,
     });
 
-    const submit: FormEventHandler = (e) => {
+    transform(d => ({ ...d, recaptcha_token: tokenRef.current }));
+
+    const submit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (executeRecaptcha) {
+            tokenRef.current = await executeRecaptcha('register');
+        }
 
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
@@ -115,6 +126,8 @@ export default function Register() {
                         Register
                     </PrimaryButton>
                 </div>
+
+                <InputError message={errors.recaptcha_token as string | undefined} className="mt-2 text-center" />
             </form>
 
             <div className="my-6 flex items-center gap-3">

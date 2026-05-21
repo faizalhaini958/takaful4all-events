@@ -35,7 +35,7 @@ export interface EventFormData {
     max_attendees: string;
     require_approval: boolean;
     faqs: { question: string; answer: string }[];
-    sponsors: { name: string; role: string; logo_url: string }[];
+    sponsors: { name: string; role: string; logo_url: string; sort_order: number }[];
     custom_tabs: { label: string; type: 'text' | 'image'; content_html: string; images: { id: string; url: string }[] }[];
     event_category: EventCategory | '';
     registration_fields: RegistrationField[];
@@ -558,7 +558,7 @@ export default function EventForm({
                                 type="button" 
                                 variant="outline" 
                                 size="sm" 
-                                onClick={() => setData('sponsors', [...data.sponsors, { name: '', role: '', logo_url: '' }])}
+                                onClick={() => setData('sponsors', [...data.sponsors, { name: '', role: '', logo_url: '', sort_order: 1 }])}
                                 className="h-8 gap-1"
                             >
                                 <Plus className="w-3.5 h-3.5" /> Add Partner
@@ -619,6 +619,21 @@ export default function EventForm({
                                                         placeholder="https://…"
                                                         className="mt-1 h-8 text-sm font-mono"
                                                     />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Tier Order</Label>
+                                                    <Input
+                                                        type="number"
+                                                        min={1}
+                                                        value={sponsor.sort_order ?? 1}
+                                                        onChange={e => {
+                                                            const newSponsors = [...data.sponsors];
+                                                            newSponsors[index].sort_order = parseInt(e.target.value) || 1;
+                                                            setData('sponsors', newSponsors);
+                                                        }}
+                                                        className="mt-1 h-8 text-sm w-24"
+                                                    />
+                                                    <p className="text-[10px] text-muted-foreground mt-1">1 = Platinum row, 2 = Gold row, etc.</p>
                                                 </div>
                                             </div>
                                         </div>

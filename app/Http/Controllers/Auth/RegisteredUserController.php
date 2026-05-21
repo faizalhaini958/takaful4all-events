@@ -46,6 +46,12 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
+        // Honor a safe same-origin return_to param (e.g. from the registration auth gate)
+        $returnTo = $request->input('return_to');
+        if ($returnTo && is_string($returnTo) && preg_match('#^/[^/]#', $returnTo)) {
+            return redirect($returnTo);
+        }
+
         return redirect(route('user.dashboard', absolute: false));
     }
 }

@@ -96,13 +96,20 @@ class EventTicketController extends Controller
         $ticket->update($request->validated());
         $newName = $ticket->fresh()->name;
 
-        // When a ticket is renamed, update any ticket_scope references in the event's registration fields
+        // When a ticket is renamed, update ticket_scope and options_override keys in registration fields
         if ($oldName !== $newName) {
             $fields  = $event->registration_fields ?? [];
             $updated = false;
             foreach ($fields as &$field) {
+                // Sweep ticket_scope array
                 if (!empty($field['ticket_scope']) && in_array($oldName, $field['ticket_scope'])) {
                     $field['ticket_scope'] = array_map(fn($n) => $n === $oldName ? $newName : $n, $field['ticket_scope']);
+                    $updated = true;
+                }
+                // Sweep options_override keys
+                if (!empty($field['options_override']) && array_key_exists($oldName, $field['options_override'])) {
+                    $field['options_override'][$newName] = $field['options_override'][$oldName];
+                    unset($field['options_override'][$oldName]);
                     $updated = true;
                 }
             }

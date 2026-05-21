@@ -5,7 +5,8 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { useRef } from 'react';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 export default function Login({
     status,
@@ -14,14 +15,24 @@ export default function Login({
     status?: string;
     canResetPassword: boolean;
 }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { executeRecaptcha } = useGoogleReCaptcha();
+    const tokenRef = useRef('');
+
+    const { data, setData, post, processing, errors, reset, transform } = useForm({
         email: '',
         password: '',
         remember: false as boolean,
+        recaptcha_token: '' as string,
     });
 
-    const submit: FormEventHandler = (e) => {
+    transform(d => ({ ...d, recaptcha_token: tokenRef.current }));
+
+    const submit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (executeRecaptcha) {
+            tokenRef.current = await executeRecaptcha('login');
+        }
 
         post(route('login'), {
             onFinish: () => reset('password'),
@@ -104,6 +115,8 @@ export default function Login({
                         Log in
                     </PrimaryButton>
                 </div>
+
+                <InputError message={errors.recaptcha_token as string | undefined} className="mt-2 text-center" />
             </form>
 
             <div className="my-6 flex items-center gap-3">

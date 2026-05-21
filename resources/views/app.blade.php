@@ -9,12 +9,14 @@
     <title inertia>{{ config('app.name', 'Takaful4all Events') }}</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="shortcut icon" href="/favicon.ico">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.bunny.net/css?family=figtree:400,500,600|poppins:400,600,700,800,900|inter:400,500,600|dm-sans:400,500,600&display=swap"
+        rel="stylesheet" />
 
     <!-- Scripts -->
     @routes

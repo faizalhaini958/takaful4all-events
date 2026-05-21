@@ -25,11 +25,19 @@ use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShippingZoneController as AdminShippingZoneController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\ChipInWebhookController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
+
+// ─── Analytics Tracking (public, rate-limited) ────────────────────────────────
+Route::post('/track', [AnalyticsController::class, 'track'])
+    ->middleware('throttle:60,1')
+    ->name('analytics.track');
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 
@@ -48,14 +56,17 @@ Route::get('/storage/{path}', function (string $path) {
 
 Route::post('/locale/{lang}', [LocaleController::class, 'switch'])->name('locale.switch');
 
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{slug}', [EventController::class, 'show'])->name('events.show');
 Route::get('/events/{slug}/register', [EventRegistrationController::class, 'create'])->name('events.register');
-Route::post('/events/{slug}/register', [EventRegistrationController::class, 'store'])->name('events.register.store');
+Route::post('/events/{slug}/register', [EventRegistrationController::class, 'store'])->middleware(['recaptcha', 'throttle:event-registration'])->name('events.register.store');
 Route::get('/events/{slug}/register/confirmation/{reference}', [EventRegistrationController::class, 'confirmation'])->name('events.register.confirmation');
 Route::get('/webinars', [PostController::class, 'webinars'])->name('webinars.index');
 Route::get('/agent360', [PostController::class, 'agent360'])->name('agent360.index');
+Route::get('/content', [PostController::class, 'content'])->name('content.index');
 
 // Static-ish pages driven from DB
 Route::get('/about', [PageController::class, 'show'])->defaults('slug', 'about')->name('about');
@@ -87,6 +98,7 @@ Route::prefix('dashboard')
 
         // Profile
         Route::get('profile', [UserDashboardController::class, 'profile'])->name('profile');
+        Route::get('profile/edit', [UserDashboardController::class, 'profileEdit'])->name('profile.edit');
         Route::patch('profile', [UserDashboardController::class, 'updateProfile'])->name('profile.update');
         Route::delete('profile', [UserDashboardController::class, 'destroyProfile'])->name('profile.destroy');
 
@@ -112,6 +124,11 @@ Route::prefix('admin')
     ->group(function () {
 
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Analytics
+        Route::get('analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
+        Route::get('analytics/realtime', [AdminAnalyticsController::class, 'realtime'])->name('analytics.realtime');
+        Route::get('analytics/events/{slug}', [AdminAnalyticsController::class, 'event'])->name('analytics.event');
 
         // Users
         Route::resource('users', AdminUserController::class)

@@ -27,6 +27,9 @@ class EventTicket extends Model
         'sale_end_at',
         'is_active',
         'sort_order',
+        'min_age',
+        'max_age',
+        'allowed_gender',
     ];
 
     protected $casts = [
@@ -40,6 +43,8 @@ class EventTicket extends Model
         'sale_end_at'        => 'datetime',
         'is_active'          => 'boolean',
         'sort_order'         => 'integer',
+        'min_age'            => 'integer',
+        'max_age'            => 'integer',
     ];
 
     protected $appends = ['sold_count', 'available_count', 'is_on_sale', 'current_price', 'is_early_bird'];

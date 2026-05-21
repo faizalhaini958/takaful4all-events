@@ -33,6 +33,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Honor a safe same-origin return_to param (e.g. from the registration auth gate)
+        $returnTo = $request->input('return_to');
+        if ($returnTo && is_string($returnTo) && preg_match('#^/[^/]#', $returnTo)) {
+            return redirect($returnTo);
+        }
+
         // Redirect admins to admin dashboard, regular users to user dashboard
         $redirectRoute = in_array($request->user()->role, ['admin', 'editor', 'checkin_staff'])
             ? route('admin.dashboard', absolute: false)

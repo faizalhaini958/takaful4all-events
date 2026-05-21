@@ -1,10 +1,15 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import { Card, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 import { CheckCircle2, Clock, XCircle, UserCheck, AlertCircle, Calendar, MapPin, Ticket, Mail, Hash, Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useEffect } from 'react';
 import { type EventRegistration } from '@/types';
+import { useAnalytics } from '@/hooks/use-analytics';
+
+const POPPINS = "'Poppins', sans-serif";
+const INTER   = "'Inter', 'DM Sans', sans-serif";
 
 const PAGE_HEADER: Record<string, { iconBg: string; iconColor: string; Icon: React.ElementType; title: string; subtitle: string }> = {
     confirmed:       { iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', Icon: CheckCircle2, title: 'Registration Successful!',       subtitle: 'Your registration has been confirmed. We look forward to seeing you!' },
@@ -26,25 +31,47 @@ export default function RegistrationConfirmation({ registration }: Props) {
     const pendingKey = (registration.status === 'pending' && registration.payment_status === 'pending') ? 'pending_payment' : registration.status;
     const header = PAGE_HEADER[pendingKey] ?? PAGE_HEADER['pending'];
     const { Icon } = header;
+    const { track } = useAnalytics();
+
+    // Track funnel completion — only fire once on mount
+    useEffect(() => {
+        track('funnel_step', 'registration', 'confirmed', { event: event.slug, status: registration.status });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [registration.id]);
 
     return (
         <PublicLayout>
-            <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
-                {/* Status Icon + Heading */}
-                <div className="text-center mb-8">
-                    <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${header.iconBg} mb-4`}>
-                        <Icon className={`w-10 h-10 ${header.iconColor}`} />
+            <Head>
+                <title>Registration Status | Takaful4All Events</title>
+                <meta name="robots" content="noindex, nofollow" />
+            </Head>
+
+            {/* ── Hero ── */}
+            <section className="bg-white">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
+                    <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full ${header.iconBg} mb-4 sm:mb-5`}>
+                        <Icon className={`w-8 h-8 sm:w-10 sm:h-10 ${header.iconColor}`} />
                     </div>
-                    <h1 className="text-3xl font-extrabold text-brand-navy">{header.title}</h1>
-                    <p className="text-gray-600 mt-2">{header.subtitle}</p>
+                    <h1 style={{ fontFamily: POPPINS, fontSize: '2rem', fontWeight: 800, letterSpacing: '0.02em', color: '#111827' }}>
+                        {header.title}
+                    </h1>
+                    <p className="mt-2" style={{ color: '#6b7280', fontFamily: INTER, fontSize: '1rem' }}>
+                        {header.subtitle}
+                    </p>
                 </div>
+            </section>
+            {/* Gradient divider */}
+            <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, transparent 0%, #009FBB 30%, #18C8FF 50%, #009FBB 70%, transparent 100%)' }} />
+
+            <div className="bg-gray-50 min-h-screen">
+            <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
 
                 {/* Confirmation Card */}
                 <Card className="overflow-hidden">
                     {/* Event header */}
-                    <div className="bg-brand-navy text-white p-6">
-                        <h2 className="text-xl font-bold">{event.title}</h2>
-                        <div className="flex flex-wrap gap-4 mt-2 text-sm text-white/80">
+                    <div className="bg-brand-navy text-white p-5 sm:p-6">
+                        <h2 className="text-2xl font-bold leading-tight">{event.title}</h2>
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 mt-3 text-sm text-white/85">
                             <span className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
                                 {startDate.toLocaleDateString('en-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -57,18 +84,18 @@ export default function RegistrationConfirmation({ registration }: Props) {
                         </div>
                     </div>
 
-                    <CardContent className="p-6 space-y-5">
+                    <CardContent className="p-4 sm:p-6 space-y-5">
                         {/* Reference */}
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 rounded-lg bg-gray-50 border">
                             <div className="flex items-center gap-2">
                                 <Hash className="w-4 h-4 text-muted-foreground" />
                                 <span className="text-sm text-muted-foreground">Reference No.</span>
                             </div>
-                            <span className="font-mono font-bold text-lg">{registration.reference_no}</span>
+                            <span className="font-mono font-bold text-xl sm:text-lg break-all sm:break-normal text-brand-navy">{registration.reference_no}</span>
                         </div>
 
                         {/* Details */}
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                             <div>
                                 <p className="text-muted-foreground">Name</p>
                                 <p className="font-medium">{registration.name}</p>
@@ -79,7 +106,7 @@ export default function RegistrationConfirmation({ registration }: Props) {
                             </div>
                             <div>
                                 <p className="text-muted-foreground flex items-center gap-1"><Ticket className="w-3 h-3" /> Ticket</p>
-                                <p className="font-medium">{registration.ticket?.name}</p>
+                                <p className="font-medium break-words leading-snug">{registration.ticket?.name}</p>
                             </div>
                             <div>
                                 <p className="text-muted-foreground">Attendees</p>
@@ -91,18 +118,18 @@ export default function RegistrationConfirmation({ registration }: Props) {
                         {Number(registration.total_amount) > 0 && (
                             <div className="border-t pt-4">
                                 <div className="space-y-1 text-sm">
-                                    <div className="flex justify-between">
-                                        <span>Ticket ({registration.ticket?.name} x {registration.quantity})</span>
-                                        <span>RM {Number(registration.subtotal).toFixed(2)}</span>
+                                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                                        <span className="min-w-0 break-words">Ticket ({registration.ticket?.name} x {registration.quantity})</span>
+                                        <span className="font-semibold whitespace-nowrap text-right">RM {Number(registration.subtotal).toFixed(2)}</span>
                                     </div>
                                     {registration.products?.map(p => (
-                                        <div key={p.id} className="flex justify-between">
-                                            <span>
+                                        <div key={p.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                                            <span className="min-w-0 break-words">
                                                 {p.product?.name}
                                                 {p.variant && ` (${p.variant})`}
                                                 {' '} x {p.quantity}
                                             </span>
-                                            <span>RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</span>
+                                            <span className="font-semibold whitespace-nowrap text-right">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</span>
                                         </div>
                                     ))}
                                     <div className="flex justify-between font-bold text-base pt-2 border-t mt-2">
@@ -141,7 +168,7 @@ export default function RegistrationConfirmation({ registration }: Props) {
                                 <div className="p-3 bg-white rounded-lg border shadow-sm">
                                     <QRCodeSVG
                                         value={`${window.location.origin}/events/${event.slug}/register/confirmation/${registration.reference_no}`}
-                                        size={160}
+                                        size={148}
                                         level="M"
                                     />
                                 </div>
@@ -169,13 +196,14 @@ export default function RegistrationConfirmation({ registration }: Props) {
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-3 mt-8 justify-center">
-                    <Button asChild variant="outline">
+                    <Button asChild variant="outline" className="w-full sm:w-auto">
                         <Link href={`/events/${event.slug}`}>Back to Event</Link>
                     </Button>
-                    <Button asChild className="bg-brand hover:bg-brand-dark">
+                    <Button asChild className="w-full sm:w-auto bg-brand hover:bg-brand-dark">
                         <Link href="/events">Browse More Events</Link>
                     </Button>
                 </div>
+            </div>
             </div>
         </PublicLayout>
     );

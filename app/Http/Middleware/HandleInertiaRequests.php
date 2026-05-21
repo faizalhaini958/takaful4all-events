@@ -40,6 +40,7 @@ class HandleInertiaRequests extends Middleware
                 ['code' => 'ms', 'name' => 'Bahasa Melayu'],
             ],
             'translations' => fn () => $this->getTranslations($locale),
+            'currentUrl'   => url()->current(),
         ];
     }
 

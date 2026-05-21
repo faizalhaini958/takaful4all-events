@@ -26,6 +26,7 @@ function BannerFormDialog({
     onClose?: () => void;
 }) {
     const [open, setOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<'desktop' | 'mobile'>('desktop');
     const isEdit = !!banner;
 
     const { data, setData, post, processing, errors, reset } = useForm<{
@@ -57,6 +58,9 @@ function BannerFormDialog({
                 reset();
                 onClose?.();
             },
+            onError: (errs) => {
+                if (errs.image) setActiveTab('desktop');
+            },
         });
     };
 
@@ -81,7 +85,7 @@ function BannerFormDialog({
                     </div>
 
                     {/* Desktop & Mobile Image Tabs */}
-                    <Tabs defaultValue="desktop" className="w-full">
+                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'desktop' | 'mobile')} className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="desktop" className="flex items-center gap-1.5">
                                 <Monitor className="w-4 h-4" /> Desktop Image *
@@ -98,7 +102,7 @@ function BannerFormDialog({
                                         src={banner.image_url}
                                         alt={banner.title}
                                         className="w-full rounded-lg object-cover"
-                                        style={{ aspectRatio: '1250 / 430' }}
+                                        style={{ aspectRatio: '16 / 6' }}
                                     />
                                 </div>
                             )}
@@ -108,7 +112,7 @@ function BannerFormDialog({
                                         src={URL.createObjectURL(data.image)}
                                         alt="Desktop preview"
                                         className="w-full rounded-lg object-cover"
-                                        style={{ aspectRatio: '1250 / 430' }}
+                                        style={{ aspectRatio: '16 / 6' }}
                                     />
                                 </div>
                             )}
@@ -118,7 +122,8 @@ function BannerFormDialog({
                                 onChange={e => setData('image', e.target.files?.[0] ?? null)}
                             />
                             <p className="text-xs text-muted-foreground">
-                                Recommended: 1250 × 430px. Min 800px wide. JPEG, PNG, or WebP. Max 5MB.
+                                Required ratio: <strong>16:6</strong> (e.g. 1920 × 720px). Min 800px wide. JPEG, PNG, or WebP. Max 5MB.<br />
+                                Images that don't match this ratio will be centre-cropped to fit.
                             </p>
                             {errors.image && <p className="text-sm text-red-600 mt-1">{errors.image}</p>}
                         </TabsContent>
@@ -172,7 +177,8 @@ function BannerFormDialog({
                                 }}
                             />
                             <p className="text-xs text-muted-foreground">
-                                Recommended: 3:4 portrait aspect ratio (e.g. 600 × 800px). Optional — if not provided, the desktop image will be shown on mobile. JPEG, PNG, or WebP. Max 5MB.
+                                Required ratio: <strong>3:4</strong> (e.g. 900 × 1200px) — portrait orientation for mobile. Optional — if not provided, the desktop image will be shown on mobile. JPEG, PNG, or WebP. Max 5MB.<br />
+                                Images that don't match this ratio will be centre-cropped to fit.
                             </p>
                             {errors.mobile_image && <p className="text-sm text-red-600 mt-1">{errors.mobile_image}</p>}
                         </TabsContent>

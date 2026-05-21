@@ -1,9 +1,12 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import { Card, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 import { XCircle, Calendar, MapPin, Hash, RotateCcw, Home, HelpCircle } from 'lucide-react';
 import { type EventRegistration } from '@/types';
+
+const POPPINS = "'Poppins', sans-serif";
+const INTER   = "'Inter', 'DM Sans', sans-serif";
 
 interface Props {
     registration: EventRegistration | null;
@@ -16,16 +19,33 @@ export default function PaymentFailure({ registration }: Props) {
 
     return (
         <PublicLayout>
-            <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
+            <Head>
+                <title>Payment Failed | Takaful4All Events</title>
+                <meta name="robots" content="noindex, nofollow" />
+            </Head>
+
+            {/* ── Hero ── */}
+            <section className="relative -mt-16 overflow-hidden" style={{ background: '#071B2A' }}>
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #18C8FF 0%, transparent 70%)' }} />
+                <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
+                    <h1 style={{ fontFamily: POPPINS, color: 'white', fontSize: '2.25rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                        Payment Failed
+                    </h1>
+                    <p className="mt-3" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: INTER, fontSize: '1.125rem' }}>
+                        Unfortunately, your payment could not be processed. Please try again.
+                    </p>
+                </div>
+            </section>
+
+            <div className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+            <div className="relative max-w-2xl mx-auto px-4 sm:px-6 py-16">
                 {/* Failure Icon */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-4">
                         <XCircle className="w-10 h-10 text-red-600" />
                     </div>
-                    <h1 className="text-3xl font-extrabold text-brand-navy">Payment Failed</h1>
-                    <p className="text-gray-600 mt-2">
-                        Unfortunately, your payment could not be processed. Please try again.
-                    </p>
                 </div>
 
                 {registration && event ? (
@@ -137,6 +157,7 @@ export default function PaymentFailure({ registration }: Props) {
                         </CardContent>
                     </Card>
                 )}
+            </div>
             </div>
         </PublicLayout>
     );

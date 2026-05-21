@@ -5,8 +5,10 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { ThemeProvider } from '@/Components/ThemeProvider';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? '';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -20,7 +22,9 @@ createInertiaApp({
 
         root.render(
             <ThemeProvider>
-                <App {...props} />
+                <GoogleReCaptchaProvider reCaptchaKey={recaptchaSiteKey}>
+                    <App {...props} />
+                </GoogleReCaptchaProvider>
             </ThemeProvider>
         );
     },

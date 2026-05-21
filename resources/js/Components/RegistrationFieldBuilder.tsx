@@ -135,7 +135,7 @@ function FieldCard({ field, index, total, prevIsLocked, allKeys, ticketNames, on
                     {field.required ? 'Required' : 'Optional'}
                 </span>
 
-                {field.locked && <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" title="Locked — cannot be removed" />}
+                {field.locked && <span title="Locked — cannot be removed"><Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" /></span>}
 
                 {/* Expand toggle */}
                 <button
@@ -365,6 +365,58 @@ function FieldCard({ field, index, total, prevIsLocked, allKeys, ticketNames, on
                                     Only shown for: {field.ticket_scope.join(', ')}
                                 </p>
                             )}
+                        </div>
+                    )}
+
+                    {/* Options by ticket — only for select/radio when tickets exist */}
+                    {!field.locked && (field.type === 'select' || field.type === 'radio') && ticketNames && ticketNames.length > 0 && (
+                        <div className="border-t border-border/20 pt-3">
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide mb-1 block">
+                                Options by ticket <span className="normal-case font-normal text-muted-foreground">(override)</span>
+                            </Label>
+                            <p className="text-xs text-muted-foreground mb-2">
+                                Leave a ticket blank to use the default option list above.
+                            </p>
+                            <div className="space-y-3">
+                                {ticketNames.map(ticketName => {
+                                    const current = field.options_override?.[ticketName]?.options_en ?? [];
+                                    const rawValue = current.join('\n');
+                                    return (
+                                        <div key={ticketName}>
+                                            <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">
+                                                {ticketName}
+                                            </Label>
+                                            <textarea
+                                                rows={3}
+                                                value={rawValue}
+                                                onChange={e => {
+                                                    const lines = e.target.value
+                                                        .split('\n')
+                                                        .map(l => l.trim())
+                                                        .filter(Boolean);
+                                                    const next = { ...(field.options_override ?? {}) };
+                                                    if (lines.length === 0) {
+                                                        delete next[ticketName];
+                                                    } else {
+                                                        next[ticketName] = { options_en: lines };
+                                                    }
+                                                    onUpdate({
+                                                        ...field,
+                                                        options_override: Object.keys(next).length > 0 ? next : null,
+                                                    });
+                                                }}
+                                                placeholder={`One option per line…\n(leave blank to use defaults)`}
+                                                className="w-full text-xs rounded-md border border-input bg-background px-2.5 py-1.5 resize-none font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+                                            />
+                                            {current.length > 0 && (
+                                                <p className="text-[10px] text-primary mt-0.5">
+                                                    {current.length} override option{current.length !== 1 ? 's' : ''}
+                                                </p>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
 

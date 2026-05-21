@@ -1,9 +1,14 @@
 import PublicLayout from '@/Layouts/PublicLayout';
+import { Head } from '@inertiajs/react';
 import { type Page } from '@/types';
 import { BookOpen, Users, Lightbulb, Phone, Mail, MapPin, type LucideIcon } from 'lucide-react';
 
+const POPPINS = "'Poppins', sans-serif";
+const INTER   = "'Inter', 'DM Sans', sans-serif";
+
 interface Props {
     page: Page;
+    canonicalUrl: string;
 }
 
 /* ─── About page data ─── */
@@ -43,81 +48,97 @@ const CONTACTS = [
     },
 ];
 
-/* ─── Shared wave divider ─── */
-function WaveDivider() {
-    return (
-        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
-            <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-24 md:h-32">
-                <path d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z" fill="#dff5f9" />
-                <path d="M0,75 C200,40 500,100 800,65 C1100,30 1300,90 1440,70 L1440,120 L0,120 Z" fill="#edfafc" />
-                <path d="M0,90 C300,70 600,110 900,85 C1150,65 1300,100 1440,88 L1440,120 L0,120 Z" fill="#f6fdfe" />
-                <path d="M0,105 C400,90 800,118 1200,100 C1320,94 1400,108 1440,105 L1440,120 L0,120 Z" fill="white" />
-            </svg>
-        </div>
-    );
-}
 
-export default function PageShow({ page }: Props) {
+
+export default function PageShow({ page, canonicalUrl }: Props) {
     const isAbout   = page.slug === 'about';
     const isContact = page.slug === 'contact';
 
     return (
         <PublicLayout>
+            <Head>
+                <title>{`${page.title} | Takaful4All Events`}</title>
+                <meta name="description" content={`Learn more about ${page.title} — Takaful4All Events platform by the Malaysian Takaful Association.`} />
+                <link rel="canonical" href={canonicalUrl} />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={canonicalUrl} />
+                <meta property="og:title" content={`${page.title} | Takaful4All Events`} />
+                <meta property="og:description" content={`Learn more about ${page.title} — Takaful4All Events platform by the Malaysian Takaful Association.`} />
+                <meta property="og:site_name" content="Takaful4All Events" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={`${page.title} | Takaful4All Events`} />
+                <meta name="twitter:description" content={`Learn more about ${page.title} — Takaful4All Events platform by the Malaysian Takaful Association.`} />
+            </Head>
             {/* ── Hero ── */}
-            <section className="relative bg-brand-light overflow-hidden">
-                <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-36 md:py-20 md:pb-44 text-center">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-navy uppercase tracking-wide">
+            <section className="relative -mt-16 overflow-hidden" style={{ background: '#071B2A' }}>
+                {/* Dot grid */}
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                {/* Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #18C8FF 0%, transparent 70%)' }} />
+                <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
+                    <h1 style={{ fontFamily: POPPINS, color: 'white', fontSize: '2.25rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                         {page.title}
                     </h1>
                     {isContact && (
-                        <p className="mt-3 text-brand-navy/60 text-lg">
+                        <p className="mt-3" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: INTER, fontSize: '1.125rem' }}>
                             Get in touch with the Malaysian Takaful Association events team.
                         </p>
                     )}
+                    {isAbout && (
+                        <p className="mt-3" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: INTER, fontSize: '1.125rem' }}>
+                            Learn about the Malaysian Takaful Association and what we do.
+                        </p>
+                    )}
                 </div>
-                <WaveDivider />
             </section>
 
             {/* ── About content ── */}
             {isAbout && (
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                    <div className="prose prose-lg max-w-none text-gray-600 text-center mb-12">
-                        <p>
-                            Conferences and events play a vital role in promoting the growth and development of the takaful industry.
-                            By showcasing innovative products, services, and technologies, these events inspire industry players to
-                            embrace advancements and adapt to changing market dynamics.
-                        </p>
-                        <p>MTA take a lead in organizing several conferences and events for the takaful industry with the aims:</p>
-                    </div>
+                <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+                    <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                    <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20">
+                        <div className="prose prose-lg max-w-none text-gray-600 text-center mb-12">
+                            <p>
+                                Conferences and events play a vital role in promoting the growth and development of the takaful industry.
+                                By showcasing innovative products, services, and technologies, these events inspire industry players to
+                                embrace advancements and adapt to changing market dynamics.
+                            </p>
+                            <p>MTA take a lead in organizing several conferences and events for the takaful industry with the aims:</p>
+                        </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                        {AIMS.map(({ Icon, title, desc }) => (
-                            <div key={title} className="bg-brand-light/40 rounded-2xl p-6 text-center hover:shadow-md transition-shadow">
-                                <div className="flex justify-center mb-4">
-                                    <Icon className="w-10 h-10 text-brand" strokeWidth={1.5} />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                            {AIMS.map(({ Icon, title, desc }) => (
+                                <div key={title} className="bg-white/60 rounded-2xl p-6 text-center hover:shadow-md transition-shadow" style={{ border: '1px solid #c8dfe8' }}>
+                                    <div className="flex justify-center mb-4">
+                                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #e6f6fb 0%, #d0eef8 100%)', border: '1px solid #b8d5e2' }}>
+                                            <Icon className="w-7 h-7" style={{ color: '#009FBB' }} strokeWidth={1.5} />
+                                        </div>
+                                    </div>
+                                    <h3 style={{ fontFamily: POPPINS, color: '#071B2A', fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.5rem' }}>{title}</h3>
+                                    <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
                                 </div>
-                                <h3 className="font-bold text-brand-navy text-lg mb-2">{title}</h3>
-                                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
 
-                    <p className="text-center text-gray-500 italic border-t border-gray-100 pt-8">
-                        These gatherings play a crucial role in fostering collaboration, innovation, and progress within the takaful sector.
-                    </p>
-                </div>
+                        <p className="text-center text-gray-500 italic pt-8" style={{ borderTop: '1px solid #c8dfe8' }}>
+                            These gatherings play a crucial role in fostering collaboration, innovation, and progress within the takaful sector.
+                        </p>
+                    </div>
+                </section>
             )}
 
             {/* ── Contact content ── */}
             {isContact && (
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-14">
+                <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20 space-y-14">
 
                     {/* Contact cards */}
                     <div>
                         <h2 className="text-xl font-bold text-brand-navy uppercase tracking-widest mb-6 text-center">Contact Us</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {CONTACTS.map(c => (
-                                <div key={c.category} className="bg-brand-light/40 rounded-2xl p-6 hover:shadow-md transition-shadow">
+                                <div key={c.category} className="bg-white/60 rounded-2xl p-6 hover:shadow-md transition-shadow" style={{ border: '1px solid #c8dfe8' }}>
                                     <span className="inline-block text-xs font-semibold uppercase tracking-wider text-brand bg-brand/10 rounded-full px-3 py-1 mb-4">
                                         {c.category}
                                     </span>
@@ -173,36 +194,36 @@ export default function PageShow({ page }: Props) {
                             >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">Full Name</label>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-muted-foreground mb-1">Full Name</label>
                                         <input
                                             type="text"
                                             placeholder="Your name"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition"
+                                            className="w-full rounded-xl border border-gray-200 dark:border-border bg-white dark:bg-card px-4 py-2.5 text-sm text-gray-900 dark:text-foreground placeholder:text-gray-400 dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">Email Address</label>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-muted-foreground mb-1">Email Address</label>
                                         <input
                                             type="email"
                                             placeholder="you@example.com"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition"
+                                            className="w-full rounded-xl border border-gray-200 dark:border-border bg-white dark:bg-card px-4 py-2.5 text-sm text-gray-900 dark:text-foreground placeholder:text-gray-400 dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition"
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-500 mb-1">Subject</label>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-muted-foreground mb-1">Subject</label>
                                     <input
                                         type="text"
                                         placeholder="How can we help?"
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition"
+                                        className="w-full rounded-xl border border-gray-200 dark:border-border bg-white dark:bg-card px-4 py-2.5 text-sm text-gray-900 dark:text-foreground placeholder:text-gray-400 dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-500 mb-1">Message</label>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-muted-foreground mb-1">Message</label>
                                     <textarea
                                         rows={5}
                                         placeholder="Write your message here..."
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition resize-none"
+                                        className="w-full rounded-xl border border-gray-200 dark:border-border bg-white dark:bg-card px-4 py-2.5 text-sm text-gray-900 dark:text-foreground placeholder:text-gray-400 dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition resize-none"
                                     />
                                 </div>
                                 <button
@@ -215,20 +236,24 @@ export default function PageShow({ page }: Props) {
                         </div>
                     </div>
                 </div>
+                </section>
             )}
 
             {/* ── Generic page content ── */}
             {!isAbout && !isContact && (
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                    {page.content_html ? (
-                        <article
-                            className="prose prose-lg max-w-none text-gray-700"
-                            dangerouslySetInnerHTML={{ __html: page.content_html }}
-                        />
-                    ) : (
-                        <p className="text-gray-500">No content available.</p>
-                    )}
-                </div>
+                <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+                    <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                    <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20">
+                        {page.content_html ? (
+                            <article
+                                className="prose prose-lg max-w-none text-gray-700"
+                                dangerouslySetInnerHTML={{ __html: page.content_html }}
+                            />
+                        ) : (
+                            <p className="text-gray-500">No content available.</p>
+                        )}
+                    </div>
+                </section>
             )}
         </PublicLayout>
     );

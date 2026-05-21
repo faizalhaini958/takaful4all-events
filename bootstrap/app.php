@@ -15,12 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\TrackPageView::class,
         ]);
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminOnly::class,
             'restrict.checkin_staff' => \App\Http\Middleware\RestrictCheckinStaff::class,
             'restrict.admin_from_dashboard' => \App\Http\Middleware\RestrictAdminFromUserDashboard::class,
+            'recaptcha' => \App\Http\Middleware\VerifyRecaptcha::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

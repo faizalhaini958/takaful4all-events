@@ -21,6 +21,7 @@ import {
     ShoppingBag,
     ShoppingCart,
     ClipboardList,
+    ClipboardCheck,
     Settings,
     BarChart2,
 } from 'lucide-react';
@@ -59,7 +60,8 @@ const NAV_FULL = [
     { href: '/admin',          label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/events',   label: 'Events',    icon: CalendarDays },
     { href: '/admin/orders',   label: 'Orders',    icon: ShoppingCart },
-    { href: '/admin/reports/registrations', label: 'Reports', icon: BarChart2 },
+    { href: '/admin/analytics',label: 'Analytics', icon: BarChart2 },
+    { href: '/admin/reports/registrations', label: 'Reports', icon: ClipboardCheck },
     { href: '/admin/users',    label: 'Users',     icon: Users },
     { href: '/admin/pages',    label: 'Pages',     icon: FileText },
     { href: '/admin/posts',    label: 'Posts',     icon: PenSquare },

@@ -97,7 +97,7 @@ export default function ForgotPasswordModal({ open, onOpenChange, onSwitchToLogi
                         )}
                     </Button>
 
-                    <p className="text-center text-sm text-gray-500">
+                    <p className="text-center text-sm text-gray-500 dark:text-muted-foreground">
                         Remember your password?{' '}
                         <button
                             type="button"

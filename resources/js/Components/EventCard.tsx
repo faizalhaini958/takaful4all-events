@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { type Event } from '@/types';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 interface Props {
     event: Event;
@@ -56,10 +57,12 @@ function Countdown({ target }: { target: Date }) {
 
 export default function EventCard({ event }: Props) {
     const startDate = new Date(event.start_at);
+    const { track } = useAnalytics();
 
     return (
         <Link
             href={`/events/${event.slug}`}
+            onClick={() => track('click', 'event_card', event.slug)}
             className="group block relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 aspect-[3/4] bg-gray-900"
         >
             {/* Background image — blurred fill */}
@@ -81,10 +84,18 @@ export default function EventCard({ event }: Props) {
                     className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                 />
             ) : (
-                <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-brand-light">
-                    <svg className="w-16 h-16 text-brand/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-3"
+                    style={{ background: 'linear-gradient(145deg, #0d3352 0%, #071B2A 100%)' }}>
+                    {/* Subtle grid texture */}
+                    <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(24,200,255,0.06) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                    {/* Icon container */}
+                    <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center"
+                        style={{ background: 'rgba(0,159,187,0.15)', border: '1px solid rgba(0,159,187,0.25)' }}>
+                        <svg className="w-8 h-8" style={{ color: '#18C8FF', opacity: 0.8 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.25} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <span className="relative text-xs font-medium" style={{ color: 'rgba(255,255,255,0.35)', letterSpacing: '0.05em' }}>No Image</span>
                 </div>
             )}
 
@@ -115,6 +126,21 @@ export default function EventCard({ event }: Props) {
                         </svg>
                         <span className="line-clamp-1">{event.venue ?? event.city}</span>
                     </p>
+                )}
+
+                {/* Price badge */}
+                {event.tickets && event.tickets.length > 0 && (
+                    <div className="mt-2">
+                        {event.tickets.every(t => t.type === 'free') ? (
+                            <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(74,222,128,0.2)', color: '#4ade80' }}>
+                                Free
+                            </span>
+                        ) : (
+                            <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(24,200,255,0.2)', color: '#18C8FF' }}>
+                                From RM {Math.min(...event.tickets.map(t => t.current_price)).toLocaleString('en-MY', { minimumFractionDigits: 0 })}
+                            </span>
+                        )}
+                    </div>
                 )}
 
                 {event.status === 'upcoming' && <Countdown target={startDate} />}

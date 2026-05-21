@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
-import { type FormEventHandler } from 'react';
+import { type FormEventHandler, useRef } from 'react';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import {
     Dialog,
     DialogContent,
@@ -17,17 +18,28 @@ interface LoginModalProps {
     onOpenChange: (open: boolean) => void;
     onSwitchToRegister: () => void;
     onSwitchToForgotPassword: () => void;
+    returnTo?: string;
 }
 
-export default function LoginModal({ open, onOpenChange, onSwitchToRegister, onSwitchToForgotPassword }: LoginModalProps) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+export default function LoginModal({ open, onOpenChange, onSwitchToRegister, onSwitchToForgotPassword, returnTo }: LoginModalProps) {
+    const { executeRecaptcha } = useGoogleReCaptcha();
+    const tokenRef = useRef('');
+    const { data, setData, post, processing, errors, reset, transform } = useForm({
         email: '',
         password: '',
         remember: false as boolean,
+        recaptcha_token: '',
+        return_to: '',
     });
 
-    const submit: FormEventHandler = (e) => {
+    transform(d => ({ ...d, recaptcha_token: tokenRef.current, return_to: returnTo ?? '' }));
+
+    const submit: FormEventHandler = async (e) => {
         e.preventDefault();
+
+        if (executeRecaptcha) {
+            tokenRef.current = await executeRecaptcha('login');
+        }
 
         post(route('login'), {
             onFinish: () => reset('password'),
@@ -97,9 +109,9 @@ export default function LoginModal({ open, onOpenChange, onSwitchToRegister, onS
                             type="checkbox"
                             checked={data.remember}
                             onChange={(e) => setData('remember', e.target.checked)}
-                            className="rounded border-gray-300 text-brand shadow-sm focus:ring-brand"
+                            className="rounded border-gray-300 dark:border-border text-brand shadow-sm focus:ring-brand dark:bg-card"
                         />
-                        <Label htmlFor="login-remember" className="text-sm font-normal text-gray-500 cursor-pointer">
+                        <Label htmlFor="login-remember" className="text-sm font-normal text-gray-500 dark:text-muted-foreground cursor-pointer">
                             Remember me
                         </Label>
                     </div>
@@ -114,18 +126,21 @@ export default function LoginModal({ open, onOpenChange, onSwitchToRegister, onS
                             'Sign In'
                         )}
                     </Button>
+                    {errors.recaptcha_token && (
+                        <p className="text-sm text-red-600 text-center">{errors.recaptcha_token}</p>
+                    )}
 
                     <div className="flex items-center gap-3">
-                        <span className="h-px flex-1 bg-gray-200" />
-                        <span className="text-xs uppercase tracking-wider text-gray-400">
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-border" />
+                        <span className="text-xs uppercase tracking-wider text-gray-400 dark:text-muted-foreground">
                             or
                         </span>
-                        <span className="h-px flex-1 bg-gray-200" />
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-border" />
                     </div>
 
                     <a
                         href={route('auth.google.redirect')}
-                        className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
+                        className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 dark:border-border bg-white dark:bg-card px-4 py-2 text-sm font-medium text-gray-700 dark:text-foreground shadow-sm transition hover:bg-gray-50 dark:hover:bg-muted focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
                     >
                         <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
                             <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
@@ -136,7 +151,7 @@ export default function LoginModal({ open, onOpenChange, onSwitchToRegister, onS
                         Continue with Google
                     </a>
 
-                    <p className="text-center text-sm text-gray-500">
+                    <p className="text-center text-sm text-gray-500 dark:text-muted-foreground">
                         Don&apos;t have an account?{' '}
                         <button
                             type="button"

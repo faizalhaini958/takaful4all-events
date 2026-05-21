@@ -2,9 +2,10 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import EventCard from '@/Components/EventCard';
 import ShareButtons from '@/Components/ShareButtons';
 import { Head, Link } from '@inertiajs/react';
-import { Calendar, Clock, MapPin, ExternalLink, ChevronRight, ChevronLeft, Ticket, FolderOpen, Info, HelpCircle, Map as MapIcon, ChevronDown, LayoutTemplate } from 'lucide-react';
+import { Calendar, Clock, MapPin, ExternalLink, ChevronRight, ChevronLeft, Ticket, FolderOpen, Info, HelpCircle, Map as MapIcon, ChevronDown, LayoutTemplate, ChevronUp } from 'lucide-react';
 import { type Event, type EventTicket, type EventZone } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
+import { useAnalytics } from '@/hooks/use-analytics';
 import { useState, useEffect, useRef } from 'react';
 import { Tab } from '@headlessui/react';
 
@@ -25,67 +26,115 @@ function classNames(...classes: string[]) {
 }
 
 // ─── Related Events Carousel ──────────────────────────────────────────────────
-const PAGE_SIZE = 3;
+const DESKTOP_PAGE_SIZE = 3;
 
 function RelatedEventsCarousel({ related, t }: { related: Event[]; t: (k: string) => string }) {
     const [page, setPage] = useState(0);
-    const totalPages = Math.ceil(related.length / PAGE_SIZE);
-    const visible = related.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
+    const mobileTrackRef = useRef<HTMLDivElement | null>(null);
+    const pageSize = isMobile ? 1 : DESKTOP_PAGE_SIZE;
+    const totalPages = Math.ceil(related.length / pageSize);
+    const visible = related.slice(page * pageSize, page * pageSize + pageSize);
     const hasPrev = page > 0;
     const hasNext = page < totalPages - 1;
 
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 640);
+        };
+
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        if (page > totalPages - 1) {
+            setPage(Math.max(0, totalPages - 1));
+        }
+    }, [page, totalPages]);
+
+    useEffect(() => {
+        if (!isMobile || !mobileTrackRef.current) return;
+        const track = mobileTrackRef.current;
+        track.scrollTo({ left: page * track.clientWidth, behavior: 'smooth' });
+    }, [page, isMobile]);
+
+    const handleMobileScroll = () => {
+        if (!mobileTrackRef.current) return;
+        const track = mobileTrackRef.current;
+        const nextPage = Math.round(track.scrollLeft / track.clientWidth);
+        if (nextPage !== page) setPage(nextPage);
+    };
+
     return (
-        <div className="mt-16 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 bg-gray-50 border-t border-gray-200">
+        <div className="mt-10 rounded-3xl px-6 sm:px-8 py-10" style={{ background: 'linear-gradient(145deg, #071B2A 0%, #0a3352 50%, #071B2A 100%)' }}>
+            {/* Dot grid */}
+            <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
             {/* Header */}
             <div className="flex items-end justify-between mb-8">
                 <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-brand mb-1">Upcoming</p>
-                    <h2 className="text-2xl font-extrabold text-gray-900">{t('event.more_events')}</h2>
-                    <p className="text-sm text-gray-500 mt-1">Discover more exciting events curated for you.</p>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#18C8FF' }}>Upcoming</p>
+                    <h2 className="text-2xl font-extrabold text-white">{t('event.more_events')}</h2>
+                    <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.55)' }}>Discover more exciting events curated for you.</p>
                 </div>
                 <Link
                     href="/events"
-                    className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-brand border border-brand/30 bg-white hover:bg-brand hover:text-white px-4 py-2 rounded-full transition-all"
-                >
+                    className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full transition-all"
+                    style={{ color: '#18C8FF', border: '1px solid rgba(24,200,255,0.3)', background: 'rgba(24,200,255,0.08)' }}>
                     {t('event.view_all')} <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
             </div>
 
             {/* Cards + side arrows */}
-            <div className="relative px-8">
-                {totalPages > 1 && (
-                    <button
-                        type="button"
-                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                        disabled={!hasPrev}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:border-brand hover:text-brand transition-all disabled:opacity-20 disabled:cursor-not-allowed"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {visible.map(e => <EventCard key={e.id} event={e} />)}
+            {isMobile ? (
+                <div
+                    ref={mobileTrackRef}
+                    onScroll={handleMobileScroll}
+                    className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                    {related.map(e => (
+                        <div key={e.id} className="min-w-full snap-start">
+                            <EventCard event={e} />
+                        </div>
+                    ))}
                 </div>
+            ) : (
+                <div className="relative px-0 sm:px-8">
+                    {totalPages > 1 && (
+                        <button
+                            type="button"
+                            onClick={() => setPage(p => Math.max(0, p - 1))}
+                            disabled={!hasPrev}
+                            className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border shadow-md items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                            style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}>
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                    )}
 
-                {totalPages > 1 && (
-                    <button
-                        type="button"
-                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                        disabled={!hasNext}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:border-brand hover:text-brand transition-all disabled:opacity-20 disabled:cursor-not-allowed"
-                    >
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
-                )}
-            </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {visible.map(e => <EventCard key={e.id} event={e} />)}
+                    </div>
+
+                    {totalPages > 1 && (
+                        <button
+                            type="button"
+                            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                            disabled={!hasNext}
+                            className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border shadow-md items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                            style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}>
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Dot indicators + mobile View All */}
-            <div className="flex items-center justify-between mt-8 px-8">
+            <div className="flex items-center justify-between mt-6 sm:mt-8 px-0 sm:px-8">
                 <Link
                     href="/events"
-                    className="sm:hidden inline-flex items-center gap-1 text-sm font-semibold text-brand"
-                >
+                    className="sm:hidden inline-flex items-center gap-1 text-sm font-semibold"
+                    style={{ color: '#18C8FF' }}>
                     {t('event.view_all')} <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
                 {totalPages > 1 ? (
@@ -97,9 +146,10 @@ function RelatedEventsCarousel({ related, t }: { related: Event[]; t: (k: string
                                 onClick={() => setPage(i)}
                                 className={`h-2.5 rounded-full transition-all duration-300 ${
                                     i === page
-                                        ? 'w-7 bg-brand'
-                                        : 'w-2.5 bg-gray-300 hover:bg-gray-400'
+                                        ? 'w-7'
+                                        : 'w-2.5 hover:bg-white/40'
                                 }`}
+                                style={{ background: i === page ? '#18C8FF' : 'rgba(255,255,255,0.2)' }}
                             />
                         ))}
                     </div>
@@ -111,14 +161,36 @@ function RelatedEventsCarousel({ related, t }: { related: Event[]; t: (k: string
 
 export default function EventShow({ event, related, ogUrl }: Props) {
     const { t } = useTranslation();
+    const { track } = useAnalytics();
     const [isStickyVisible, setIsStickyVisible] = useState(false);
+    const POPPINS = "'Poppins', sans-serif";
+    const INTER   = "'Inter', 'DM Sans', sans-serif";
+
+    // Track genuine event detail view once on mount
+    useEffect(() => {
+        track('view', 'event_detail', event.slug);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [event.slug]);
+    const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
+    const hasMobileStickyCta = isStickyVisible && event.status === 'upcoming';
 
     const startDate = new Date(event.start_at);
     const endDate = event.end_at ? new Date(event.end_at) : null;
     const location = [event.venue, event.city, event.state].filter(Boolean).join(', ');
 
     const faqs = (event.meta_json?.faqs as { question: string; answer: string }[]) ?? [];
-    const sponsors = (event.meta_json?.sponsors as { name: string; role: string; logo_url: string }[]) ?? [];
+    const sponsors = (event.meta_json?.sponsors as { name: string; role: string; logo_url: string; sort_order?: number }[]) ?? [];
+
+    // Group sponsors by role, sorted by sort_order then insertion order
+    const sponsorGroups = sponsors.reduce<{ role: string; sort_order: number; items: typeof sponsors }[]>((groups, sponsor) => {
+        const existing = groups.find(g => g.role === sponsor.role);
+        if (existing) {
+            existing.items.push(sponsor);
+        } else {
+            groups.push({ role: sponsor.role, sort_order: sponsor.sort_order ?? 999, items: [sponsor] });
+        }
+        return groups;
+    }, []).sort((a, b) => a.sort_order - b.sort_order);
     const customTabs = (event.meta_json?.custom_tabs as { label: string; type: 'text' | 'image'; content_html: string; images: { id: number; url: string }[] }[] | null) ?? [];
 
     const formatLongDate = (d: Date) =>
@@ -172,10 +244,15 @@ export default function EventShow({ event, related, ogUrl }: Props) {
     useEffect(() => {
         const handleScroll = () => {
             setIsStickyVisible(window.scrollY > 400);
+            setIsBackToTopVisible(window.scrollY > 500);
         };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const onSaleTickets = event.tickets?.filter(t => t.is_on_sale) ?? [];
     const minPrice = onSaleTickets.length > 0 
@@ -188,11 +265,60 @@ export default function EventShow({ event, related, ogUrl }: Props) {
     return (
         <PublicLayout>
             <Head>
-                <title>{event.title}</title>
-                <meta name="description" content={event.excerpt ?? `${event.title} — Takaful Events`} />
+                <title>{`${event.title} | Takaful4All Events`}</title>
+                <meta name="description" content={event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
+                <link rel="canonical" href={ogUrl} />
+                {/* Open Graph */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={ogUrl} />
+                <meta property="og:title" content={`${event.title} | Takaful4All Events`} />
+                <meta property="og:description" content={event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
+                {event.media?.url ? <meta property="og:image" content={event.media.url} /> : null}
+                <meta property="og:site_name" content="Takaful4All Events" />
+                {/* Twitter Card */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={`${event.title} | Takaful4All Events`} />
+                <meta name="twitter:description" content={event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
+                {event.media?.url ? <meta name="twitter:image" content={event.media.url} /> : null}
+                {/* Structured Data */}
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+                    '@context': 'https://schema.org',
+                    '@type': 'Event',
+                    name: event.title,
+                    description: event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`,
+                    startDate: event.start_at,
+                    ...(event.end_at ? { endDate: event.end_at } : {}),
+                    url: ogUrl,
+                    ...(event.media?.url ? { image: event.media.url } : {}),
+                    location: event.venue ? {
+                        '@type': 'Place',
+                        name: event.venue,
+                        address: {
+                            '@type': 'PostalAddress',
+                            streetAddress: event.venue,
+                            ...(event.city ? { addressLocality: event.city } : {}),
+                            ...(event.state ? { addressRegion: event.state } : {}),
+                            addressCountry: event.country ?? 'MY',
+                        },
+                    } : {
+                        '@type': 'VirtualLocation',
+                        url: ogUrl,
+                    },
+                    organizer: {
+                        '@type': 'Organization',
+                        name: 'Malaysian Takaful Association',
+                        url: 'https://www.malaysiantakaful.com.my',
+                    },
+                    eventStatus: 'https://schema.org/EventScheduled',
+                    eventAttendanceMode: event.venue
+                        ? 'https://schema.org/OfflineEventAttendanceMode'
+                        : 'https://schema.org/OnlineEventAttendanceMode',
+                }) }} />
             </Head>
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+            <div className="relative z-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+            <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-2 text-xs text-gray-400 mb-4" aria-label="Breadcrumb">
@@ -244,14 +370,14 @@ export default function EventShow({ event, related, ogUrl }: Props) {
 
                 {/* Tabs */}
                 <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
-                    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 border-b border-gray-200 mb-6">
-                        <Tab.List className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-none py-3 sm:py-4">
+                    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm rounded-2xl mb-6 px-3 py-2 shadow-md" style={{ border: '1px solid rgba(0,159,187,0.15)' }}>
+                        <Tab.List className="flex gap-1 sm:gap-2 overflow-x-auto scrollbar-none py-1">
                             {tabs.map(tab => (
                                 <Tab key={tab.key} className={({ selected }) => classNames(
                                     'flex flex-shrink-0 items-center gap-1.5 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-sm sm:text-base font-semibold whitespace-nowrap outline-none transition-all',
                                     selected
-                                        ? 'bg-brand text-white shadow-sm shadow-brand/30'
-                                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
+                                        ? 'bg-brand text-white shadow-sm'
+                                        : 'text-gray-500 hover:text-brand hover:bg-brand/5'
                                 )}>
                                     {tab.icon} {tab.label}
                                 </Tab>
@@ -358,22 +484,28 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                 </Tab.Group>
 
                 {/* Event Organizer */}
-                <div className="mt-12 pt-10 border-t border-gray-200">
-                    <h2 className="text-center text-base font-bold text-gray-700 uppercase tracking-wider mb-6">Event Organizer</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 justify-items-center">
-                        {sponsors.length > 0 ? (
-                            sponsors.map((sponsor, i) => (
-                                <div key={i} className="flex flex-col items-center gap-3 text-center">
-                                    <div className="w-28 h-28 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center p-3 overflow-hidden">
-                                        {sponsor.logo_url ? (
-                                            <img src={sponsor.logo_url} alt={sponsor.name} className="max-w-full max-h-full object-contain" />
-                                        ) : (
-                                            <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400 text-xs font-semibold tracking-widest">LOGO</div>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-gray-900 text-sm">{sponsor.name}</p>
-                                        <p className="text-xs text-gray-500">{sponsor.role}</p>
+                <div className="mt-8 rounded-xl overflow-hidden bg-white shadow-md" style={{ border: '1px solid rgba(0,159,187,0.12)' }}>
+                    <div className="px-5 py-4 bg-gray-50" style={{ borderBottom: '1px solid rgba(0,159,187,0.1)' }}>
+                        <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Event Organizer</h2>
+                    </div>
+                    <div className="p-6 space-y-6">
+                        {sponsorGroups.length > 0 ? (
+                            sponsorGroups.map((group) => (
+                                <div key={group.role}>
+                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 text-center">{group.role}</p>
+                                    <div className="flex flex-wrap justify-center gap-6">
+                                        {group.items.map((sponsor, i) => (
+                                            <div key={i} className="flex flex-col items-center gap-3 text-center">
+                                                <div className="w-28 h-28 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center p-3 overflow-hidden">
+                                                    {sponsor.logo_url ? (
+                                                        <img src={sponsor.logo_url} alt={sponsor.name} className="max-w-full max-h-full object-contain" />
+                                                    ) : (
+                                                        <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400 text-xs font-semibold tracking-widest">LOGO</div>
+                                                    )}
+                                                </div>
+                                                <p className="font-bold text-gray-900 text-sm">{sponsor.name}</p>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             ))
@@ -393,8 +525,12 @@ export default function EventShow({ event, related, ogUrl }: Props) {
 
                 {/* Location */}
                 {location && (
-                    <div className="mt-10 pt-8 border-t border-gray-200">
-                        <div className="rounded-xl overflow-hidden border border-gray-200 mb-4 h-[250px] sm:h-[400px]">
+                    <div className="mt-8 rounded-xl overflow-hidden bg-white shadow-md" style={{ border: '1px solid rgba(0,159,187,0.12)' }}>
+                        <div className="px-5 py-4 bg-gray-50" style={{ borderBottom: '1px solid rgba(0,159,187,0.1)' }}>
+                            <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Location</h2>
+                        </div>
+                        <div className="p-4 space-y-4">
+                        <div className="rounded-xl overflow-hidden border border-gray-200 h-[250px] sm:h-[380px]">
                             <iframe
                                 title="Event venue map"
                                 width="100%"
@@ -417,10 +553,11 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                                 href={`https://maps.google.com/?q=${encodeURIComponent(location)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 font-semibold px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-all text-sm w-full sm:w-auto sm:flex-shrink-0"
+                                className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 font-semibold px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-all text-sm w-full sm:w-auto sm:flex-shrink-0"
                             >
                                 Get Directions <ExternalLink className="w-4 h-4" />
                             </a>
+                        </div>
                         </div>
                     </div>
                 )}
@@ -430,6 +567,20 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                     <RelatedEventsCarousel related={related} t={t} />
                 )}
             </div>
+            </div>
+
+            {/* Back To Top */}
+            {isBackToTopVisible && (
+                <button
+                    type="button"
+                    onClick={scrollToTop}
+                    aria-label="Back to top"
+                    className={`fixed right-4 sm:right-6 lg:right-8 ${hasMobileStickyCta ? 'bottom-24' : 'bottom-4'} sm:bottom-6 z-40 inline-flex items-center justify-center rounded-full bg-brand text-white shadow-lg shadow-brand/30 w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 text-sm font-semibold hover:bg-brand-dark transition-all`}
+                >
+                    <ChevronUp className="w-4 h-4" />
+                    <span className="hidden sm:inline">Back to Top</span>
+                </button>
+            )}
 
             {/* Mobile Sticky Bottom CTA */}
             {isStickyVisible && event.status === 'upcoming' && (
@@ -448,6 +599,7 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                         <Link
                             href={`/events/${event.slug}/register`}
                             className="bg-brand text-white px-6 py-3 rounded-lg font-bold text-sm active:scale-95 transition-all"
+                            onClick={() => track('click', 'register_button', event.slug)}
                         >
                             {t('event.register_now')}
                         </Link>
@@ -475,6 +627,7 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
 }) {
     const statusCfg = STATUS_CONFIG[event.status] ?? STATUS_CONFIG.draft;
     const dayOfWeek = startDate.toLocaleDateString('en-MY', { weekday: 'long' });
+    const { track } = useAnalytics();
 
     const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: false });
 
@@ -499,9 +652,9 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
     }, [startDate]);
 
     return (
-        <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+        <div className="rounded-2xl overflow-hidden bg-white shadow-lg" style={{ border: '1px solid rgba(0,159,187,0.15)' }}>
             {/* Card top header */}
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+            <div className="px-5 py-4 flex items-center justify-between gap-3 bg-gray-50" style={{ borderBottom: '1px solid rgba(0,159,187,0.1)' }}>
                 {/* Pulsing status badge */}
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${statusCfg.bgClass} ${statusCfg.textClass}`}>
                     {event.status === 'upcoming' ? (
@@ -516,7 +669,7 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
                 </span>
 
                 {/* Calendar tear-off chip */}
-                <div className="flex-shrink-0 rounded-xl overflow-hidden border border-gray-200 shadow-sm text-center w-12">
+                <div className="flex-shrink-0 rounded-xl overflow-hidden shadow-sm text-center w-12" style={{ border: '1px solid rgba(0,159,187,0.2)' }}>
                     <div className="bg-brand px-1 py-0.5">
                         <p className="text-[9px] font-bold uppercase tracking-widest text-white leading-none">
                             {startDate.toLocaleDateString('en-MY', { month: 'short' })}
@@ -535,8 +688,8 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
 
             {/* Countdown */}
             {event.status === 'upcoming' && !countdown.expired && (
-                <div className="px-5 py-5 bg-gray-50 border-b border-gray-100">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center mb-3">Event starts in</p>
+                <div className="px-5 py-5" style={{ background: 'rgba(0,159,187,0.04)', borderBottom: '1px solid rgba(0,159,187,0.1)' }}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-center mb-3" style={{ color: 'rgba(0,100,140,0.55)' }}>Event starts in</p>
                     <div className="grid grid-cols-4 gap-2">
                         {[
                             { value: countdown.days, label: 'Days' },
@@ -544,7 +697,7 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
                             { value: countdown.minutes, label: 'Mins' },
                             { value: countdown.seconds, label: 'Secs' },
                         ].map((unit) => (
-                            <div key={unit.label} className="flex flex-col items-center bg-white border border-gray-200 rounded-xl py-3 shadow-sm">
+                            <div key={unit.label} className="flex flex-col items-center bg-white rounded-xl py-3 shadow-sm" style={{ border: '1px solid rgba(0,159,187,0.15)' }}>
                                 <span className="text-2xl font-extrabold tabular-nums leading-none text-brand">
                                     {String(unit.value).padStart(2, '0')}
                                 </span>
@@ -623,6 +776,7 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
                         <Link
                             href={`/events/${event.slug}/register`}
                             className="flex items-center justify-center gap-2 w-full bg-brand text-white font-bold px-5 py-3 rounded-xl hover:bg-brand-dark transition-all text-sm"
+                            onClick={() => track('click', 'register_button', event.slug)}
                         >
                             <Ticket className="w-4 h-4" /> {t('event.register_now')}
                         </Link>
@@ -632,6 +786,7 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center gap-2 w-full bg-brand text-white font-bold px-5 py-3 rounded-xl hover:bg-brand-dark transition-all text-sm"
+                            onClick={() => track('click', 'register_button', event.slug)}
                         >
                             {t('event.register_now')} <ExternalLink className="w-4 h-4" />
                         </a>
@@ -651,7 +806,7 @@ function TicketPurchaseCard({ event, onSaleTickets }: { event: Event; onSaleTick
     const zones = event.zones ?? [];
 
     return (
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-md">
             <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
                 <h3 className="text-sm font-bold text-gray-900">🎟 Ticket Information</h3>
             </div>
@@ -720,7 +875,7 @@ function TicketCardItem({ ticket }: { ticket: EventTicket }) {
     return (
         <div className={classNames(
             "rounded-2xl border-2 transition-all group overflow-hidden",
-            isSoldOut ? "border-gray-100 bg-gray-50 opacity-60" : "border-gray-100 hover:border-brand/40"
+            isSoldOut ? "border-gray-100 bg-gray-50 opacity-60" : "border-gray-100 hover:border-brand/40 bg-white"
         )}>
             {/* Main content */}
             <div className="p-4">

@@ -30,6 +30,9 @@ class StoreEventTicketRequest extends FormRequest
             'is_active'          => 'boolean',
             'sort_order'         => 'nullable|integer|min:0',
             'event_zone_id'      => 'nullable|integer|exists:event_zones,id',
+            'min_age'            => 'nullable|integer|min:1|max:120',
+            'max_age'            => 'nullable|integer|min:1|max:120',
+            'allowed_gender'     => 'nullable|string|in:male,female',
         ];
     }
 

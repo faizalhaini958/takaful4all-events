@@ -60,9 +60,11 @@ class BannerController extends Controller
         $path     = $directory . '/' . $filename;
         $image    = $manager->read($file->getRealPath());
 
+        // Scale down if wider than 1920, then centre-crop to 16:6 (1920×720)
         if ($image->width() > 1920) {
             $image->scale(width: 1920);
         }
+        $image->cover(width: $image->width(), height: (int) round($image->width() * 6 / 16));
 
         Storage::disk('public')->put($path, $image->toJpeg(85));
 
@@ -119,9 +121,11 @@ class BannerController extends Controller
             $path     = $directory . '/' . $filename;
             $image    = $manager->read($file->getRealPath());
 
+            // Scale down if wider than 1920, then centre-crop to 16:6 (1920×720)
             if ($image->width() > 1920) {
                 $image->scale(width: 1920);
             }
+            $image->cover(width: $image->width(), height: (int) round($image->width() * 6 / 16));
 
             Storage::disk('public')->put($path, $image->toJpeg(85));
             $banner->image_path = $path;

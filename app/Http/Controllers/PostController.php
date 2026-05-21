@@ -18,7 +18,8 @@ class PostController extends Controller
             ->withQueryString();
 
         return Inertia::render('Public/Posts/Webinars', [
-            'webinars' => $webinars,
+            'webinars'     => $webinars,
+            'canonicalUrl' => url()->current(),
         ]);
     }
 
@@ -46,7 +47,32 @@ class PostController extends Controller
             ->withQueryString();
 
         return Inertia::render('Public/Posts/Agent360', [
-            'posts' => $posts,
+            'posts'        => $posts,
+            'canonicalUrl' => url()->current(),
+        ]);
+    }
+
+    public function content(): Response
+    {
+        $type = request('type');
+        $allowedTypes = ['webinar', 'agent360', 'podcast'];
+
+        $query = Post::published()
+            ->with('media')
+            ->latest('published_at');
+
+        if ($type && in_array($type, $allowedTypes)) {
+            $query->ofType($type);
+        } else {
+            $query->whereIn('type', $allowedTypes);
+        }
+
+        $posts = $query->paginate(12)->withQueryString();
+
+        return Inertia::render('Public/Posts/Content', [
+            'posts'        => $posts,
+            'activeType'   => $type ?? 'all',
+            'canonicalUrl' => url()->current(),
         ]);
     }
 }

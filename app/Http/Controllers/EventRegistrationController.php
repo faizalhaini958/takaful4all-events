@@ -54,6 +54,9 @@ class EventRegistrationController extends Controller
                     'available_count'  => $ticket->available_count,
                     'event_zone_id'    => $ticket->event_zone_id,
                     'zone'             => $ticket->zone,
+                    'min_age'          => $ticket->min_age,
+                    'max_age'          => $ticket->max_age,
+                    'allowed_gender'   => $ticket->allowed_gender,
                 ];
             });
 

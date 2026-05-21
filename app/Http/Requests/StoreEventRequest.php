@@ -53,10 +53,14 @@ class StoreEventRequest extends FormRequest
             'registration_fields.*.placeholder_en'  => 'nullable|string|max:500',
             'registration_fields.*.placeholder_ms'  => 'nullable|string|max:500',
             'registration_fields.*.locked'           => 'nullable|boolean',
-            'registration_fields.*.ticket_scope'     => 'nullable|array',
-            'registration_fields.*.ticket_scope.*'   => 'nullable|string|max:255',
-            'registration_fields.*.description_en'   => 'nullable|string|max:5000',
-            'registration_fields.*.description_ms'   => 'nullable|string|max:5000',
+            'registration_fields.*.ticket_scope'                    => 'nullable|array',
+            'registration_fields.*.ticket_scope.*'                  => 'nullable|string|max:255',
+            'registration_fields.*.description_en'                  => 'nullable|string|max:5000',
+            'registration_fields.*.description_ms'                  => 'nullable|string|max:5000',
+            // Per-ticket option overrides — options_ms is auto-mirrored from options_en on the backend
+            'registration_fields.*.options_override'                => 'nullable|array',
+            'registration_fields.*.options_override.*.options_en'   => 'required_with:registration_fields.*.options_override.*|array',
+            'registration_fields.*.options_override.*.options_en.*' => 'string|max:100',
         ];
     }
 

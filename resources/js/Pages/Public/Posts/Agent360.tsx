@@ -1,76 +1,97 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import PostCard from '@/Components/PostCard';
 import VideoModal from '@/Components/VideoModal';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { Video } from 'lucide-react';
 import { type Post, type PaginatedData } from '@/types';
 
+const POPPINS = "'Poppins', sans-serif";
+const INTER   = "'Inter', 'DM Sans', sans-serif";
+
 interface Props {
     posts: PaginatedData<Post>;
+    canonicalUrl: string;
 }
 
-export default function Agent360Index({ posts }: Props) {
+export default function Agent360Index({ posts, canonicalUrl }: Props) {
     const [activePost, setActivePost] = useState<Post | null>(null);
 
     return (
         <PublicLayout>
+            <Head>
+                <title>Agent360 Webinars | Takaful4All Events</title>
+                <meta name="description" content="Exclusive webinars tailored for takaful agents. Watch on-demand sessions from Takaful4All's Agent360 series." />
+                <link rel="canonical" href={canonicalUrl} />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={canonicalUrl} />
+                <meta property="og:title" content="Agent360 Webinars | Takaful4All Events" />
+                <meta property="og:description" content="Exclusive webinars tailored for takaful agents. Watch on-demand sessions from Takaful4All's Agent360 series." />
+                <meta property="og:site_name" content="Takaful4All Events" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Agent360 Webinars | Takaful4All Events" />
+                <meta name="twitter:description" content="Exclusive webinars tailored for takaful agents. Watch on-demand sessions from Takaful4All's Agent360 series." />
+            </Head>
             <VideoModal post={activePost} onClose={() => setActivePost(null)} />
+
             {/* ── Hero ── */}
-            <section className="relative bg-brand-light overflow-hidden">
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-36 md:py-20 md:pb-44">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-navy uppercase tracking-wide mb-3">
+            <section className="relative -mt-16 overflow-hidden" style={{ background: '#071B2A' }}>
+                {/* Dot grid */}
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                {/* Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #18C8FF 0%, transparent 70%)' }} />
+                <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
+                    <h1 style={{ fontFamily: POPPINS, color: 'white', fontSize: '2.25rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
                         Agent360 Webinars
                     </h1>
-                    <p className="text-brand-navy/60 text-lg">
+                    <p style={{ color: 'rgba(255,255,255,0.6)', fontFamily: INTER, fontSize: '1.125rem' }}>
                         Exclusive webinars tailored for takaful agents.
                     </p>
                 </div>
-                <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
-                    <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-24 md:h-32">
-                        <path d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z" fill="#dff5f9" />
-                        <path d="M0,75 C200,40 500,100 800,65 C1100,30 1300,90 1440,70 L1440,120 L0,120 Z" fill="#edfafc" />
-                        <path d="M0,90 C300,70 600,110 900,85 C1150,65 1300,100 1440,88 L1440,120 L0,120 Z" fill="#f6fdfe" />
-                        <path d="M0,105 C400,90 800,118 1200,100 C1320,94 1400,108 1440,105 L1440,120 L0,120 Z" fill="white" />
-                    </svg>
-                </div>
             </section>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                {posts.data.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {posts.data.map(post => (
-                            <PostCard key={post.id} post={post} onClick={() => setActivePost(post)} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-24 text-gray-400 flex flex-col items-center gap-4">
-                        <Video className="w-12 h-12 text-brand/30" strokeWidth={1.5} />
-                        <p className="text-lg font-medium text-gray-500">No Agent360 webinars found.</p>
-                    </div>
-                )}
+            {/* ── Content ── */}
+            <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+                {/* Dot grid */}
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20">
+                    {posts.data.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {posts.data.map(post => (
+                                <PostCard key={post.id} post={post} onClick={() => setActivePost(post)} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-24 flex flex-col items-center gap-4">
+                            <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(0,159,187,0.12)', border: '1px solid rgba(0,159,187,0.2)' }}>
+                                <Video className="w-9 h-9" style={{ color: '#009FBB' }} strokeWidth={1.5} />
+                            </div>
+                            <p style={{ fontFamily: POPPINS, color: '#071B2A', fontWeight: 700, fontSize: '1.125rem' }}>No Agent360 webinars found.</p>
+                            <p style={{ color: '#64748b', fontFamily: INTER, fontSize: '0.875rem' }}>Check back soon for new sessions.</p>
+                        </div>
+                    )}
 
-                {/* Pagination */}
-                {posts.last_page > 1 && (
-                    <div className="mt-10 flex justify-center gap-1 flex-wrap">
-                        {posts.links.map((link, i) => (
-                            <Link
-                                key={i}
-                                href={link.url ?? '#'}
-                                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
-                                    link.active
-                                        ? 'bg-brand text-white border-brand'
+                    {/* Pagination */}
+                    {posts.last_page > 1 && (
+                        <div className="mt-10 flex justify-center gap-1.5 flex-wrap">
+                            {posts.links.map((link, i) => (
+                                <Link
+                                    key={i}
+                                    href={link.url ?? '#'}
+                                    className="px-3 py-1.5 rounded-full text-sm font-medium transition-all border"
+                                    style={link.active
+                                        ? { background: 'linear-gradient(135deg, #18C8FF 0%, #009FBB 100%)', color: 'white', border: '1px solid transparent' }
                                         : link.url
-                                            ? 'bg-white border-gray-200 text-gray-600 hover:border-brand hover:text-brand'
-                                            : 'bg-white border-gray-100 text-gray-300 cursor-not-allowed'
-                                }`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                preserveScroll
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+                                            ? { background: 'white', border: '1px solid #b8d5e2', color: '#0f3a55' }
+                                            : { background: 'white', border: '1px solid #d5e8f0', color: '#94a3b8', cursor: 'not-allowed' }}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    preserveScroll
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </section>
         </PublicLayout>
     );
 }

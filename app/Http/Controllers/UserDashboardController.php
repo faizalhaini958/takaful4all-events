@@ -23,16 +23,16 @@ class UserDashboardController extends Controller
                 $q->where('user_id', $user->id)
                   ->orWhere('email', $user->email);
             })
-            ->with(['event', 'ticket'])
+            ->with(['event.media', 'ticket'])
             ->latest()
             ->get();
 
         $upcomingRegistrations = $registrations
             ->filter(fn ($r) => $r->event && $r->event->start_at?->isFuture() && $r->status !== 'cancelled')
-            ->take(5)
+            ->take(7)
             ->values();
 
-        $recentOrders = $registrations->take(5)->values();
+        $recentOrders = $registrations->take(8)->values();
 
         return Inertia::render('User/Dashboard', [
             'stats' => [
@@ -41,8 +41,17 @@ class UserDashboardController extends Controller
                 'totalOrders'    => $registrations->count(),
                 'totalSpent'     => (float) $registrations->whereNotIn('status', ['cancelled'])->sum('total_amount'),
             ],
-            'upcomingRegistrations' => $upcomingRegistrations,
-            'recentOrders'         => $recentOrders,
+            'upcomingRegistrations' => $upcomingRegistrations->map(fn ($r) => array_merge($r->toArray(), [
+                'event' => $r->event ? array_merge($r->event->toArray(), [
+                    'media' => $r->event->media?->toArray(),
+                ]) : null,
+                'ticket' => $r->ticket?->toArray(),
+            ])),
+            'recentOrders' => $recentOrders->map(fn ($r) => array_merge($r->toArray(), [
+                'event' => $r->event ? array_merge($r->event->toArray(), [
+                    'media' => $r->event->media?->toArray(),
+                ]) : null,
+            ])),
         ]);
     }
 
@@ -50,7 +59,12 @@ class UserDashboardController extends Controller
 
     public function profile(Request $request): Response
     {
-        return Inertia::render('User/Profile', [
+        return Inertia::render('User/Profile');
+    }
+
+    public function profileEdit(Request $request): Response
+    {
+        return Inertia::render('User/ProfileEdit', [
             'mustVerifyEmail' => $request->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail,
             'status'          => session('status'),
         ]);

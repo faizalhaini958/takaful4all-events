@@ -1,5 +1,6 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import EventForm from '@/Components/EventForm';
+import { EventAnalyticsPanel } from '@/Components/EventAnalyticsPanel';
 import { Link, useForm } from '@inertiajs/react';
 import { type FormEventHandler } from 'react';
 import { ChevronLeft, Pencil } from 'lucide-react';
@@ -99,6 +100,8 @@ export default function EventEdit({ event, tickets }: Props) {
                     eventSlug={event.slug}
                     ticketNames={tickets?.map(t => t.name) ?? []}
                 />
+
+                <EventAnalyticsPanel slug={event.slug} />
             </div>
         </AdminLayout>
     );

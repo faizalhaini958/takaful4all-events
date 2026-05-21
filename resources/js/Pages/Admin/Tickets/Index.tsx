@@ -34,6 +34,9 @@ const emptyTicket = {
     sale_end_at: '',
     is_active: true,
     sort_order: '0',
+    min_age: '',
+    max_age: '',
+    allowed_gender: '' as '' | 'male' | 'female',
 };
 
 export default function TicketsIndex({ events, currentEvent, event, tickets }: Props) {
@@ -72,6 +75,9 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
             sale_end_at: ticket.sale_end_at ? ticket.sale_end_at.slice(0, 16) : '',
             is_active: ticket.is_active,
             sort_order: String(ticket.sort_order),
+            min_age: ticket.min_age !== null && ticket.min_age !== undefined ? String(ticket.min_age) : '',
+            max_age: ticket.max_age !== null && ticket.max_age !== undefined ? String(ticket.max_age) : '',
+            allowed_gender: (ticket.allowed_gender as '' | 'male' | 'female') ?? '',
         });
         setShowForm(true);
     }
@@ -228,7 +234,7 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
                             {editingId ? 'Update ticket details.' : 'Add a new ticket type for this event.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-1">
+                    <form id="alltickets-form" onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-1 pb-2">
                         <div>
                             <Label htmlFor="name">Ticket Name *</Label>
                             <Input id="name" value={data.name} onChange={e => setData('name', e.target.value)} placeholder="e.g. Early Bird, VIP, Standard" className="mt-1" />
@@ -313,13 +319,51 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
                             <Switch id="is_active" checked={data.is_active} onCheckedChange={checked => setData('is_active', checked)} />
                         </div>
 
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-                            <Button type="submit" disabled={processing} className="bg-brand hover:bg-brand-dark">
-                                {processing ? 'Saving…' : editingId ? 'Update Ticket' : 'Create Ticket'}
-                            </Button>
-                        </DialogFooter>
+                        {/* Eligibility Rules */}
+                        <div className="rounded-lg border border-border/60 p-4 space-y-3 bg-muted/20">
+                            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Eligibility Rules <span className="normal-case font-normal">(optional)</span></p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="min_age">Min Age</Label>
+                                    <Input id="min_age" type="number" min={1} max={120}
+                                        value={data.min_age}
+                                        onChange={e => setData('min_age', e.target.value)}
+                                        placeholder="e.g. 13" className="mt-1" />
+                                    {errors.min_age && <p className="text-xs text-red-600 mt-1">{errors.min_age}</p>}
+                                </div>
+                                <div>
+                                    <Label htmlFor="max_age">Max Age</Label>
+                                    <Input id="max_age" type="number" min={1} max={120}
+                                        value={data.max_age}
+                                        onChange={e => setData('max_age', e.target.value)}
+                                        placeholder="e.g. 17" className="mt-1" />
+                                    {errors.max_age && <p className="text-xs text-red-600 mt-1">{errors.max_age}</p>}
+                                </div>
+                            </div>
+                            <div>
+                                <Label className="block mb-1.5">Allowed Gender</Label>
+                                <div className="flex gap-4">
+                                    {(['', 'male', 'female'] as const).map(g => (
+                                        <label key={g} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                                            <input type="radio" name="allowed_gender_all" value={g}
+                                                checked={data.allowed_gender === g}
+                                                onChange={() => setData('allowed_gender', g)}
+                                                className="accent-primary" />
+                                            {g === '' ? 'Any' : g === 'male' ? 'Male only' : 'Female only'}
+                                        </label>
+                                    ))}
+                                </div>
+                                {errors.allowed_gender && <p className="text-xs text-red-600 mt-1">{errors.allowed_gender}</p>}
+                            </div>
+                        </div>
+
                     </form>
+                    <DialogFooter className="shrink-0 border-t pt-4">
+                        <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+                        <Button type="submit" form="alltickets-form" disabled={processing} className="bg-brand hover:bg-brand-dark">
+                            {processing ? 'Saving…' : editingId ? 'Update Ticket' : 'Create Ticket'}
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 

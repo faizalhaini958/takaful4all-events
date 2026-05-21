@@ -26,6 +26,10 @@ export interface RegistrationField {
     ticket_scope?: string[] | null; // null = all tickets; string[] = only these ticket names
     description_en?: string; // optional body text shown on checkbox fields (waiver text etc.)
     description_ms?: string;
+    /** Per-ticket option overrides for dropdown/radio fields.
+     *  Key = ticket name, value = { options_en: string[] }.
+     *  options_ms is auto-mirrored from options_en. */
+    options_override?: Record<string, { options_en: string[] }> | null;
 }
 
 /** Returns true if a field should be shown/validated for the given ticket name. */
@@ -33,6 +37,27 @@ export function fieldAppliesToTicket(field: RegistrationField, ticketName: strin
     if (!field.ticket_scope || field.ticket_scope.length === 0) return true;
     if (!ticketName) return true;
     return field.ticket_scope.includes(ticketName);
+}
+
+/**
+ * Resolve the effective options for a dropdown/radio field.
+ * If the ticket has an override, use those options; otherwise fall back to default options_en/ms.
+ * ticket_scope is evaluated first — if the field is hidden for this ticket, returns [].
+ */
+export function resolveFieldOptions(
+    field: RegistrationField,
+    ticketName: string | null | undefined,
+    locale: string
+): string[] {
+    // ticket_scope wins — if field is hidden, options are irrelevant
+    if (!fieldAppliesToTicket(field, ticketName)) return [];
+
+    if (ticketName && field.options_override && field.options_override[ticketName]) {
+        // BM mirrors EN for overrides
+        return field.options_override[ticketName].options_en;
+    }
+
+    return locale === 'ms' ? (field.options_ms ?? []) : (field.options_en ?? []);
 }
 
 export interface Banner {
@@ -128,6 +153,9 @@ export interface EventTicket {
     sold_count: number;
     available_count: number | null;
     is_on_sale: boolean;
+    min_age: number | null;
+    max_age: number | null;
+    allowed_gender: 'male' | 'female' | null;
     discount_tiers?: TicketDiscountTier[];
     zone?: EventZone | null;
     created_at: string;
@@ -411,6 +439,7 @@ export interface SharedProps extends Record<string, unknown> {
     translations: Record<string, string>;
     locale: string;
     availableLocales: Array<{ code: string; name: string }>;
+    currentUrl: string;
 }
 
 // ─── PageProps (used by Breeze-generated pages) ───────────────────────────────

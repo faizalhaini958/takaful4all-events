@@ -13,7 +13,8 @@ class PageController extends Controller
         $page = Page::published()->where('slug', $slug)->firstOrFail();
 
         return Inertia::render('Public/Page', [
-            'page' => $page,
+            'page'         => $page,
+            'canonicalUrl' => url()->current(),
         ]);
     }
 }

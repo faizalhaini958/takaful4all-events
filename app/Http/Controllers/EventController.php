@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use App\Models\Event;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,9 +27,13 @@ class EventController extends Controller
 
         $events = $query->paginate(12)->withQueryString();
 
+        $banners = Banner::active()->get();
+
         return Inertia::render('Public/Events/Index', [
             'events'        => $events,
             'currentStatus' => $status,
+            'banners'       => $banners,
+            'canonicalUrl'  => route('events.index'),
         ]);
     }
 

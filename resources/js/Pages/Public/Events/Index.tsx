@@ -1,104 +1,200 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import EventCard from '@/Components/EventCard';
-import { Link, router } from '@inertiajs/react';
-import { CalendarDays } from 'lucide-react';
-import { type Event, type PaginatedData } from '@/types';
+import HeroCarousel from '@/Components/HeroCarousel';
+import { Link, router, Head } from '@inertiajs/react';
+import { CalendarDays, Mic, Wrench, Trophy, UtensilsCrossed, Music, Globe2, Sparkles } from 'lucide-react';
+import { type Banner, type Event, type PaginatedData } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
+
+const POPPINS = "'Poppins', sans-serif";
+const INTER   = "'Inter', 'DM Sans', sans-serif";
 
 interface Props {
     events: PaginatedData<Event>;
     currentStatus: string;
+    banners: Banner[];
+    canonicalUrl: string;
 }
 
-const FILTERS = [
+const STATUS_FILTERS = [
     { value: 'all',      label: 'events.all' },
     { value: 'upcoming', label: 'events.upcoming' },
     { value: 'past',     label: 'events.past' },
 ];
 
-export default function EventsIndex({ events, currentStatus }: Props) {
+const CATEGORY_LINKS = [
+    { key: 'conference',    label: 'Conference',    Icon: Mic },
+    { key: 'workshop',      label: 'Workshop',      Icon: Wrench },
+    { key: 'sports',        label: 'Sports',        Icon: Trophy },
+    { key: 'dinner',        label: 'Dinner',        Icon: UtensilsCrossed },
+    { key: 'entertainment', label: 'Entertainment', Icon: Music },
+    { key: 'exhibition',    label: 'Exhibition',    Icon: Globe2 },
+];
+
+export default function EventsIndex({ events, currentStatus, banners, canonicalUrl }: Props) {
     const { t } = useTranslation();
+    const ogImage = banners[0]?.image_url ?? null;
+
     const handleFilter = (status: string) => {
-        router.get('/events', status !== 'all' ? { status } : {}, { preserveScroll: true });
+        router.get('/events', status !== 'all' ? { status } : {}, { preserveScroll: false });
     };
 
     return (
         <PublicLayout>
-            {/* ── Hero ── */}
-            <section className="relative bg-brand-light overflow-hidden">
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-36 md:py-20 md:pb-44">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-navy uppercase tracking-wide mb-3">
-                        {t('events.title')}
+            <Head>
+                <title>Events | Takaful4All Events</title>
+                <meta name="description" content="Browse all upcoming and past events by Takaful4All — conferences, webinars, workshops and more." />
+                <link rel="canonical" href={canonicalUrl} />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={canonicalUrl} />
+                <meta property="og:title" content="Events | Takaful4All Events" />
+                <meta property="og:description" content="Browse all upcoming and past events by Takaful4All — conferences, webinars, workshops and more." />
+                <meta property="og:site_name" content="Takaful4All Events" />
+                {ogImage ? <meta property="og:image" content={ogImage} /> : null}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Events | Takaful4All Events" />
+                <meta name="twitter:description" content="Browse all upcoming and past events by Takaful4All — conferences, webinars, workshops and more." />
+                {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
+            </Head>
+
+            {/* ── HERO ── */}
+            <section className="relative overflow-hidden -mt-16" style={{ background: '#071B2A' }}>
+                {/* Dot grid */}
+                <div className="absolute inset-0 pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                {/* Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full opacity-20 pointer-events-none"
+                    style={{ background: 'radial-gradient(ellipse at center, #18C8FF 0%, transparent 70%)' }} />
+                <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
+                    <h1 style={{ color: '#fff', fontFamily: POPPINS, fontSize: '2.25rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
+                        Browse Events
                     </h1>
-                    <p className="text-brand-navy/60 text-lg">
-                        {t('events.description')}
+                    <p className="mt-3" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: INTER, fontSize: '1.125rem' }}>
+                        Explore takaful conferences, workshops, sports events and more — all in one place.
                     </p>
-                </div>
-                {/* Layered wave divider */}
-                <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
-                    <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-24 md:h-32">
-                        <path d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z" fill="#dff5f9" />
-                        <path d="M0,75 C200,40 500,100 800,65 C1100,30 1300,90 1440,70 L1440,120 L0,120 Z" fill="#edfafc" />
-                        <path d="M0,90 C300,70 600,110 900,85 C1150,65 1300,100 1440,88 L1440,120 L0,120 Z" fill="#f6fdfe" />
-                        <path d="M0,105 C400,90 800,118 1200,100 C1320,94 1400,108 1440,105 L1440,120 L0,120 Z" fill="white" />
-                    </svg>
                 </div>
             </section>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                {/* Filter pills */}
-                <div className="flex gap-2 mb-8 flex-wrap">
-                    {FILTERS.map(f => (
-                        <button
-                            key={f.value}
-                            onClick={() => handleFilter(f.value)}
-                            className={`px-5 py-2 rounded-full text-sm font-medium transition-all border ${
-                                currentStatus === f.value
-                                    ? 'bg-brand text-white border-brand shadow-sm'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-brand hover:text-brand'
-                            }`}
-                        >
-                            {t(f.label)}
-                        </button>
-                    ))}
-                </div>
+            {/* ── CONTENT ── */}
+            <section
+                className="relative z-10 -mt-10 py-14 rounded-t-3xl rounded-b-3xl overflow-hidden"
+                style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}
+            >
+                {/* Subtle dot-grid depth */}
+                <div className="absolute inset-0 pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle, rgba(0,159,187,0.05) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
-                {/* Grid */}
-                {events.data.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {events.data.map(event => (
-                            <EventCard key={event.id} event={event} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-24 text-gray-400 flex flex-col items-center gap-4">
-                        <CalendarDays className="w-12 h-12 text-brand/30" strokeWidth={1.5} />
-                        <p className="text-lg font-medium text-gray-500">{t('events.no_events')}</p>
-                        <p className="text-sm text-gray-400">{t('events.try_filter')}</p>
-                    </div>
-                )}
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                {/* Pagination */}
-                {events.last_page > 1 && (
-                    <div className="mt-10 flex justify-center gap-1 flex-wrap">
-                        {events.links.map((link, i) => (
-                            <Link
-                                key={i}
-                                href={link.url ?? '#'}
-                                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
-                                    link.active
-                                        ? 'bg-brand text-white border-brand'
+                    {/* ── Featured banners carousel ── */}
+                    {banners.length > 0 && (
+                        <div className="mb-10">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" style={{ color: '#18C8FF' }} strokeWidth={2} />
+                                    <span style={{ fontFamily: POPPINS, fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'linear-gradient(90deg, #009FBB, #18C8FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                        Featured Highlights
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="rounded-2xl overflow-hidden" style={{ boxShadow: '0 4px 32px rgba(0,159,187,0.12), 0 0 0 1.5px rgba(0,159,187,0.15)' }}>
+                                <HeroCarousel banners={banners} contained />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Browse toolbar ── */}
+                    <div className="mb-8">
+                        {/* ── Events section label ── */}
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-[3px] h-7 rounded-full" style={{ background: 'linear-gradient(180deg, #18C8FF, #009FBB)' }} />
+                            <span style={{ fontFamily: POPPINS, fontSize: '1.15rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#071B2A' }}>
+                                {currentStatus === 'upcoming' ? 'Upcoming Events' : currentStatus === 'past' ? 'Past Events' : 'All Events'}
+                            </span>
+                        </div>
+                        {/* Status filters */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                            <div className="flex flex-wrap gap-2">
+                                {STATUS_FILTERS.map(f => {
+                                    const isActive = currentStatus === f.value;
+                                    return (
+                                        <button key={f.value}
+                                            onClick={() => handleFilter(f.value)}
+                                            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
+                                            style={isActive
+                                                ? { background: 'linear-gradient(90deg, #009FBB, #18C8FF)', color: '#fff', border: '1.5px solid transparent', boxShadow: '0 2px 10px rgba(0,159,187,0.28)', fontFamily: INTER }
+                                                : { backgroundColor: 'rgba(255,255,255,0.7)', color: 'rgba(7,27,42,0.6)', border: '1.5px solid rgba(255,255,255,0.9)', fontFamily: INTER }
+                                            }>
+                                            {t(f.label)}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <p className="text-sm font-medium" style={{ color: 'rgba(7,27,42,0.45)', fontFamily: INTER, whiteSpace: 'nowrap' }}>
+                                <span className="font-bold" style={{ color: '#071B2A' }}>{events.total}</span>
+                                {' '}event{events.total !== 1 ? 's' : ''} found
+                            </p>
+                        </div>
+                        {/* Category chips */}
+                        <div className="flex flex-wrap gap-2">
+                            {CATEGORY_LINKS.map(({ key, label, Icon }) => (
+                                <Link key={key}
+                                    href={`/events?category=${key}`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                                    style={{ backgroundColor: 'rgba(255,255,255,0.6)', color: 'rgba(7,27,42,0.65)', border: '1.5px solid rgba(255,255,255,0.9)', fontFamily: INTER }}>
+                                    <Icon className="w-3.5 h-3.5" style={{ color: '#009FBB' }} strokeWidth={2} />
+                                    {label}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Event grid */}
+                    {events.data.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                            {events.data.map(event => (
+                                <EventCard key={event.id} event={event} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-24 flex flex-col items-center gap-4">
+                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                                style={{ background: 'rgba(0,159,187,0.10)', border: '1px solid rgba(0,159,187,0.2)' }}>
+                                <CalendarDays className="w-8 h-8" style={{ color: '#009FBB' }} strokeWidth={1.5} />
+                            </div>
+                            <p className="text-base font-semibold" style={{ color: '#071B2A', fontFamily: POPPINS }}>
+                                {t('events.no_events')}
+                            </p>
+                            <p className="text-sm" style={{ color: 'rgba(7,27,42,0.45)', fontFamily: INTER }}>
+                                {t('events.try_filter')}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Pagination */}
+                    {events.last_page > 1 && (
+                        <div className="mt-12 flex items-center justify-center gap-1.5 flex-wrap">
+                            {events.links.map((link, i) => (
+                                <Link
+                                    key={i}
+                                    href={link.url ?? '#'}
+                                    className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                                    style={link.active
+                                        ? { background: 'linear-gradient(90deg, #009FBB, #18C8FF)', color: '#fff', border: '1.5px solid transparent', boxShadow: '0 2px 10px rgba(0,159,187,0.28)', fontFamily: INTER }
                                         : link.url
-                                            ? 'bg-white border-gray-200 text-gray-600 hover:border-brand hover:text-brand'
-                                            : 'bg-white border-gray-100 text-gray-300 cursor-not-allowed'
-                                }`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                preserveScroll
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+                                            ? { backgroundColor: '#fff', color: 'rgba(7,27,42,0.65)', border: '1.5px solid #ddeef6', fontFamily: INTER }
+                                            : { backgroundColor: 'transparent', color: '#b8d5e2', border: '1.5px solid #ddeef6', cursor: 'not-allowed', fontFamily: INTER }
+                                    }
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    preserveScroll
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </section>
         </PublicLayout>
     );
 }
+
+
