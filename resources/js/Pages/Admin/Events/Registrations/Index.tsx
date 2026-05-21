@@ -6,7 +6,7 @@ import { Separator } from '@/Components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Users, Eye, Trash2, CheckCircle, CheckCircle2, XCircle, Clock, UserCheck, AlertCircle, DollarSign, Mail, Phone, Building2, Utensils, FileText, CalendarDays, CreditCard, Hash, ExternalLink } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, Users2, Eye, Trash2, CheckCircle, CheckCircle2, XCircle, Clock, UserCheck, AlertCircle, DollarSign, Mail, Phone, Building2, Utensils, FileText, CalendarDays, CreditCard, Hash, ExternalLink } from 'lucide-react';
 import { type Event, type EventRegistration, type RegistrationStats, type PaginatedData, type RegistrationStatus } from '@/types';
 import { getRegistrationStatusLabel } from '@/lib/status-colors';
 
@@ -125,10 +125,16 @@ export default function RegistrationIndex({ event, registrations, stats, current
                     <Link href="/admin/events" className="text-muted-foreground hover:text-foreground transition-colors">
                         <ChevronLeft className="w-5 h-5" />
                     </Link>
-                    <div>
+                    <div className="flex-1">
                         <h1 className="text-2xl font-bold text-foreground">Registrations</h1>
                         <p className="text-sm text-muted-foreground">{event.title}</p>
                     </div>
+                    <Link href={`/admin/events/${event.slug}/participants`}>
+                        <Button variant="outline" size="sm" className="gap-1.5">
+                            <Users2 className="w-4 h-4" />
+                            Participants
+                        </Button>
+                    </Link>
                 </div>
 
                 {/* Stats cards */}

@@ -6,9 +6,9 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useRef } from 'react';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { GoogleReCaptchaProvider, useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
-export default function Login({
+function LoginPage({
     status,
     canResetPassword,
 }: {
@@ -31,7 +31,11 @@ export default function Login({
         e.preventDefault();
 
         if (executeRecaptcha) {
-            tokenRef.current = await executeRecaptcha('login');
+            try {
+                tokenRef.current = await executeRecaptcha('login');
+            } catch {
+                // reCAPTCHA not available (no key configured), continue without token
+            }
         }
 
         post(route('login'), {
@@ -119,6 +123,12 @@ export default function Login({
                 <InputError message={errors.recaptcha_token as string | undefined} className="mt-2 text-center" />
             </form>
 
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+                This site is protected by reCAPTCHA and the Google{' '}
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Privacy Policy</a>{' '}and{' '}
+                <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Terms of Service</a>{' '}apply.
+            </p>
+
             <div className="my-6 flex items-center gap-3">
                 <span className="h-px flex-1 bg-border" />
                 <span className="text-xs uppercase tracking-wider text-muted-foreground">
@@ -140,5 +150,14 @@ export default function Login({
                 Continue with Google
             </a>
         </GuestLayout>
+    );
+}
+
+export default function Login(props: { status?: string; canResetPassword: boolean }) {
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? '';
+    return (
+        <GoogleReCaptchaProvider reCaptchaKey={siteKey} scriptProps={{ defer: true }}>
+            <LoginPage {...props} />
+        </GoogleReCaptchaProvider>
     );
 }

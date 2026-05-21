@@ -70,10 +70,12 @@ class TicketService
             'attendee_no' => $attendee->attendee_no,
         ]);
 
-        $qrCode = QrCode::format('svg')
-            ->size(110)
-            ->margin(0)
-            ->generate($qrData);
+        $qrCode = base64_encode(
+            QrCode::format('png')
+                ->size(160)
+                ->margin(1)
+                ->generate($qrData)
+        );
 
         // Generate PDF with explicit public path scope
         $pdf = Pdf::setOption('chroot', $dompdfPublicPath)

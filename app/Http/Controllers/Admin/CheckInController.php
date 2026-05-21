@@ -36,8 +36,14 @@ class CheckInController extends Controller
      */
     public function scanner(Event $event): Response
     {
+        $checkedInCount = \App\Models\EventRegistrationAttendee::whereHas(
+            'registration',
+            fn ($q) => $q->where('event_id', $event->id)
+        )->whereNotNull('checked_in_at')->count();
+
         return Inertia::render('Admin/Events/CheckIn', [
-            'event' => $event->load('media'),
+            'event'            => $event->load('media'),
+            'checked_in_count' => $checkedInCount,
         ]);
     }
 
@@ -115,6 +121,7 @@ class CheckInController extends Controller
                 'status'         => $registration->status,
                 'payment_status' => $registration->payment_status,
                 'checked_in_at'  => $checkedInAt?->toIso8601String(),
+                'meta_json'      => $attendee->meta_json ?? [],
             ],
         ]);
     }

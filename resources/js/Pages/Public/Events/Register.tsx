@@ -205,7 +205,11 @@ export default function EventRegister({ event, tickets, products, zones }: Props
 
     async function handleSubmit() {
         if (executeRecaptcha) {
-            tokenRef.current = await executeRecaptcha('event_register');
+            try {
+                tokenRef.current = await executeRecaptcha('event_register');
+            } catch {
+                // reCAPTCHA not available (no key configured), continue without token
+            }
         }
         track('funnel_step', 'registration', 'payment', { event: event.slug });
         post(`/events/${event.slug}/register`, {
@@ -977,6 +981,11 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                     </Button>
                 </div>
                 <p className="text-center text-xs text-gray-500 dark:text-muted-foreground uppercase tracking-wider">🔒 Secure &amp; Instant Checkout</p>
+                <p className="text-center text-xs text-gray-400 dark:text-muted-foreground/60">
+                    Protected by reCAPTCHA —{' '}
+                    <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600 dark:hover:text-muted-foreground">Privacy</a>{' '}&amp;{' '}
+                    <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600 dark:hover:text-muted-foreground">Terms</a>
+                </p>
             </div>
         </div>
     );

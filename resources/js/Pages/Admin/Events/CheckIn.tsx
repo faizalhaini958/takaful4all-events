@@ -10,8 +10,18 @@ import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import { type Event } from '@/types';
 import { registrationStatusBadge, paymentStatusBadge } from '@/lib/status-colors';
 
+interface ScanLogEntry {
+    id: string;
+    name: string;
+    reference: string;
+    ticket: string | null;
+    status: 'checked_in' | 'already_in' | 'not_found';
+    time: Date;
+}
+
 interface Props {
     event: Event;
+    checked_in_count: number;
 }
 
 interface LookupResult {
@@ -27,26 +37,83 @@ interface LookupResult {
     status: string;
     payment_status: string;
     checked_in_at: string | null;
+    meta_json: Record<string, string | number | boolean | null> | null;
 }
 
 type MessageType = 'success' | 'error' | 'warning';
 type ScanMode = 'manual' | 'camera';
 
-export default function EventCheckIn({ event }: Props) {
+function playBeep(type: 'success' | 'warning' | 'error') {
+    try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'success') {
+            // Two short ascending tones
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.12);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'warning') {
+            // Single mid-tone blip
+            osc.frequency.setValueAtTime(660, ctx.currentTime);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.25);
+        } else {
+            // Low buzz for error
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(220, ctx.currentTime);
+            gain.gain.setValueAtTime(0.25, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.35);
+        }
+
+        osc.onended = () => ctx.close();
+    } catch {
+        // AudioContext not supported — silently ignore
+    }
+}
+
+export default function EventCheckIn({ event, checked_in_count }: Props) {
     const [reference, setReference] = useState('');
     const [attendeeNo, setAttendeeNo] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<LookupResult | null>(null);
     const [message, setMessage] = useState<{ type: MessageType; text: string } | null>(null);
-    const [checkedInCount, setCheckedInCount] = useState(0);
+    const [checkedInCount, setCheckedInCount] = useState(checked_in_count);
     const [scanMode, setScanMode] = useState<ScanMode>('manual');
     const [cameraActive, setCameraActive] = useState(false);
     const [cameraError, setCameraError] = useState<string | null>(null);
+    const [cardFlash, setCardFlash] = useState<'success' | 'error' | null>(null);
+    const [scanLog, setScanLog] = useState<ScanLogEntry[]>([]);
     const inputRef = useRef<HTMLInputElement>(null);
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const scannerContainerId = 'qr-reader';
     // Guard to prevent double-lookup from rapid scans
     const lookupInProgress = useRef(false);
+
+    function flash(type: 'success' | 'error') {
+        setCardFlash(type);
+        setTimeout(() => setCardFlash(null), 700);
+    }
+
+    function handleScanNext() {
+        setReference('');
+        setResult(null);
+        setMessage(null);
+        setAttendeeNo(null);
+        if (scanMode === 'manual') {
+            setTimeout(() => inputRef.current?.focus(), 50);
+        }
+    }
 
     // Extract reference/attendee from QR value (JSON payload, confirmation URL, or attendee code suffix).
     const parseInput = useCallback((value: string): { reference: string; attendeeNo: number | null } => {
@@ -112,10 +179,19 @@ export default function EventCheckIn({ event }: Props) {
             if (data.found) {
                 setResult(data.registration);
                 if (data.registration.checked_in_at) {
+                    playBeep('warning');
+                    flash('error');
                     setMessage({ type: 'warning', text: `Already checked in at ${new Date(data.registration.checked_in_at).toLocaleTimeString()}` });
+                    setScanLog(prev => [{ id: crypto.randomUUID(), name: data.registration.name, reference: data.registration.reference_no, ticket: data.registration.ticket, status: 'already_in', time: new Date() }, ...prev].slice(0, 10));
+                } else {
+                    playBeep('success');
+                    flash('success');
                 }
             } else {
+                playBeep('error');
+                flash('error');
                 setMessage({ type: 'error', text: data.message || 'Registration not found.' });
+                setScanLog(prev => [{ id: crypto.randomUUID(), name: '—', reference: ref, ticket: null, status: 'not_found', time: new Date() }, ...prev].slice(0, 10));
             }
         } catch {
             setMessage({ type: 'error', text: 'Failed to look up registration. Please try again.' });
@@ -149,23 +225,31 @@ export default function EventCheckIn({ event }: Props) {
             const data = await res.json();
 
             if (data.success) {
+                playBeep('success');
+                flash('success');
                 setMessage({ type: 'success', text: data.message });
-                setResult(prev => prev ? { ...prev, checked_in_at: new Date().toISOString(), status: 'attended' } : null);
+                const checkedInResult = result ? { ...result, checked_in_at: new Date().toISOString(), status: 'attended' } : null;
+                setResult(checkedInResult);
                 setCheckedInCount(c => c + 1);
-
-                // Auto-clear after 3 seconds for next scan
-                setTimeout(() => {
-                    setReference('');
-                    setResult(null);
-                    setMessage(null);
-                    if (scanMode === 'manual') {
-                        inputRef.current?.focus();
-                    }
-                }, 3000);
+                if (result) {
+                    setScanLog(prev => [{ id: crypto.randomUUID(), name: result.name, reference: result.reference_no, ticket: result.ticket, status: 'checked_in', time: new Date() }, ...prev].slice(0, 10));
+                }
+                // Auto-clear fallback for camera mode
+                if (scanMode === 'camera') {
+                    setTimeout(() => {
+                        setReference('');
+                        setResult(null);
+                        setMessage(null);
+                    }, 2500);
+                }
             } else {
+                playBeep('error');
+                flash('error');
                 setMessage({ type: 'error', text: data.message });
             }
         } catch {
+            playBeep('error');
+            flash('error');
             setMessage({ type: 'error', text: 'Check-in failed. Please try again.' });
         } finally {
             setLoading(false);
@@ -275,6 +359,20 @@ export default function EventCheckIn({ event }: Props) {
         }
     }
 
+    // Enter key to confirm check-in
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Enter' && result && !result.checked_in_at && result.status !== 'cancelled' && !loading) {
+                // Don't fire if focus is inside a form input
+                if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
+                e.preventDefault();
+                handleCheckIn();
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [result, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const msgIcon = {
         success: <CheckCircle2 className="w-5 h-5" />,
         error: <XCircle className="w-5 h-5" />,
@@ -299,12 +397,31 @@ export default function EventCheckIn({ event }: Props) {
                         <h1 className="text-2xl font-bold text-foreground">Event Check-In</h1>
                         <p className="text-sm text-muted-foreground">{event.title}</p>
                     </div>
-                    {checkedInCount > 0 && (
+                    <div className="text-right">
                         <Badge variant="secondary" className="text-sm">
                             <UserCheck className="w-4 h-4 mr-1" /> {checkedInCount} checked in
                         </Badge>
-                    )}
+                        {event.max_attendees && (
+                            <p className="text-xs text-muted-foreground mt-1">{event.max_attendees} capacity</p>
+                        )}
+                    </div>
                 </div>
+
+                {/* Progress bar */}
+                {event.max_attendees && (
+                    <div className="space-y-1">
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Check-in progress</span>
+                            <span>{checkedInCount} / {event.max_attendees} ({Math.round((checkedInCount / event.max_attendees) * 100)}%)</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                            <div
+                                className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
+                                style={{ width: `${Math.min(100, (checkedInCount / event.max_attendees) * 100)}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Mode Switcher */}
                 <div className="flex gap-2">
@@ -419,7 +536,7 @@ export default function EventCheckIn({ event }: Props) {
 
                 {/* Result */}
                 {result && (
-                    <Card>
+                    <Card className={`transition-all duration-300 ${cardFlash === 'success' ? 'ring-2 ring-emerald-400' : cardFlash === 'error' ? 'ring-2 ring-red-400' : ''}`}>
                         <CardContent className="p-6 space-y-4">
                             <div className="flex items-start justify-between">
                                 <div>
@@ -458,6 +575,55 @@ export default function EventCheckIn({ event }: Props) {
                                 )}
                             </div>
 
+                            {result.meta_json && (() => {
+                                const fields: Record<string, unknown> =
+                                    (result.meta_json.custom_fields && typeof result.meta_json.custom_fields === 'object')
+                                        ? (result.meta_json.custom_fields as Record<string, unknown>)
+                                        : result.meta_json;
+                                const entries = Object.entries(fields).filter(([, v]) => v !== null && v !== undefined && v !== '');
+                                if (entries.length === 0) return null;
+
+                                const formatLabel = (key: string) =>
+                                    key.replace(/_/g, ' ')
+                                       .replace(/\btshirt\b/gi, 'T-Shirt')
+                                       .replace(/\bic\b/gi, 'IC')
+                                       .replace(/\b\w/g, c => c.toUpperCase());
+
+                                const formatValue = (value: unknown) => {
+                                    if (typeof value === 'boolean') return value ? '✓ Yes' : '✗ No';
+                                    const str = String(value);
+                                    if (str.toLowerCase() === 'true') return '✓ Yes';
+                                    if (str.toLowerCase() === 'false') return '✗ No';
+                                    return str;
+                                };
+
+                                // Separate waiver/agree fields from regular fields
+                                const regular = entries.filter(([k]) => !k.toLowerCase().includes('waiver') && !k.toLowerCase().includes('agree'));
+                                const waiver = entries.filter(([k]) => k.toLowerCase().includes('waiver') || k.toLowerCase().includes('agree'));
+
+                                return (
+                                    <div className="border-t pt-4 space-y-3 text-sm">
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Registration Details</p>
+                                        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                                            {regular.map(([key, value]) => (
+                                                <div key={key}>
+                                                    <p className="text-xs text-muted-foreground">{formatLabel(key)}</p>
+                                                    <p className="font-medium">{formatValue(value)}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {waiver.map(([key, value]) => (
+                                            <div key={key} className="flex items-center gap-2 pt-1 border-t text-xs text-muted-foreground">
+                                                <span>{formatLabel(key)}:</span>
+                                                <span className={`font-semibold ${formatValue(value).startsWith('✓') ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                    {formatValue(value)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
+
                             {!result.checked_in_at && result.status !== 'cancelled' && (
                                 <Button
                                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-lg py-6"
@@ -470,12 +636,17 @@ export default function EventCheckIn({ event }: Props) {
                             )}
 
                             {result.checked_in_at && (
-                                <div className="w-full text-center p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-                                    <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-600 mb-2" />
-                                    <p className="font-semibold text-emerald-800">Checked In</p>
-                                    <p className="text-sm text-emerald-600">
-                                        {new Date(result.checked_in_at).toLocaleString()}
-                                    </p>
+                                <div className="space-y-3">
+                                    <div className="w-full text-center p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                                        <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-600 mb-2" />
+                                        <p className="font-semibold text-emerald-800">Checked In</p>
+                                        <p className="text-sm text-emerald-600">
+                                            {new Date(result.checked_in_at).toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <Button variant="outline" className="w-full" onClick={handleScanNext}>
+                                        <QrCode className="w-4 h-4 mr-2" /> Scan Next Attendee
+                                    </Button>
                                 </div>
                             )}
 
@@ -486,6 +657,48 @@ export default function EventCheckIn({ event }: Props) {
                                     <p className="text-sm text-red-600">This registration has been cancelled and cannot be checked in.</p>
                                 </div>
                             )}
+                        </CardContent>
+                    </Card>
+                )}
+                {/* Recent scan log */}
+                {scanLog.length > 0 && (
+                    <Card>
+                        <CardHeader className="pb-2 pt-4 px-4">
+                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                <UserCheck className="w-4 h-4" /> Recent Scans
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0 pb-2">
+                            <div className="divide-y max-h-56 overflow-y-auto">
+                                {scanLog.map(entry => (
+                                    <div key={entry.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                            entry.status === 'checked_in' ? 'bg-emerald-500' :
+                                            entry.status === 'already_in' ? 'bg-amber-400' :
+                                            'bg-red-400'
+                                        }`} />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium truncate">{entry.name}</p>
+                                            <p className="text-xs text-muted-foreground font-mono">{entry.reference}</p>
+                                        </div>
+                                        {entry.ticket && (
+                                            <span className="text-xs bg-muted px-2 py-0.5 rounded flex-shrink-0">{entry.ticket}</span>
+                                        )}
+                                        <div className="text-right flex-shrink-0">
+                                            <p className={`text-xs font-medium ${
+                                                entry.status === 'checked_in' ? 'text-emerald-600' :
+                                                entry.status === 'already_in' ? 'text-amber-600' :
+                                                'text-red-500'
+                                            }`}>
+                                                {entry.status === 'checked_in' ? '✓ In' : entry.status === 'already_in' ? '⚠ Dup' : '✗ Not found'}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {entry.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </CardContent>
                     </Card>
                 )}

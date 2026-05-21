@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShippingZoneController as AdminShippingZoneController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Admin\ParticipantsController as AdminParticipantsController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\ChipInWebhookController;
@@ -188,6 +189,11 @@ Route::prefix('admin')
         Route::post('events/{event}/registrations/bulk-status', [AdminEventRegistrationController::class, 'bulkUpdateStatus'])->name('events.registrations.bulk-status');
         Route::delete('events/{event}/registrations/bulk', [AdminEventRegistrationController::class, 'bulkDestroy'])->name('events.registrations.bulk-destroy');
         Route::delete('events/{event}/registrations/{registration}', [AdminEventRegistrationController::class, 'destroy'])->name('events.registrations.destroy');
+
+        // Event Participants (custom field data)
+        Route::get('events/{event}/participants', [AdminParticipantsController::class, 'index'])->name('events.participants.index');
+        Route::get('events/{event}/participants/export/csv', [AdminParticipantsController::class, 'exportCsv'])->name('events.participants.export.csv');
+        Route::get('events/{event}/participants/export/pdf', [AdminParticipantsController::class, 'exportPdf'])->name('events.participants.export.pdf');
 
         // Check-in Scanner
         Route::get('events/{event}/check-in', [AdminCheckInController::class, 'scanner'])->name('events.check-in');

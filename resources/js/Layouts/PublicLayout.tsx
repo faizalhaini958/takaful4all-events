@@ -1,5 +1,6 @@
 import { Link, usePage, Head } from '@inertiajs/react';
 import { useState, useCallback, type PropsWithChildren } from 'react';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 import { Facebook, Linkedin, Instagram, Youtube, Menu, X, UserCircle } from 'lucide-react';
 import { type MenuItem, type SharedProps } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
@@ -7,6 +8,8 @@ import LoginModal from '@/Components/LoginModal';
 import RegisterModal from '@/Components/RegisterModal';
 import ForgotPasswordModal from '@/Components/ForgotPasswordModal';
 import LanguageSwitcher from '@/Components/LanguageSwitcher';
+
+const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? '';
 
 export default function PublicLayout({ children }: PropsWithChildren) {
     const props = usePage().props as unknown as SharedProps & { menus?: Record<string, MenuItem[]> };
@@ -49,7 +52,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
             { id: 4, url: '/contact',    label: t('nav.contact') },
           ];
 
-    return (
+    const layout = (
         <>
         <Head>
             <link rel="alternate" hreflang="en" href={currentUrl} />
@@ -280,5 +283,12 @@ export default function PublicLayout({ children }: PropsWithChildren) {
             </footer>
         </div>
         </>
+    );
+
+    if (!recaptchaSiteKey) return layout;
+    return (
+        <GoogleReCaptchaProvider reCaptchaKey={recaptchaSiteKey} scriptProps={{ defer: true }}>
+            {layout}
+        </GoogleReCaptchaProvider>
     );
 }

@@ -38,7 +38,11 @@ export default function LoginModal({ open, onOpenChange, onSwitchToRegister, onS
         e.preventDefault();
 
         if (executeRecaptcha) {
-            tokenRef.current = await executeRecaptcha('login');
+            try {
+                tokenRef.current = await executeRecaptcha('login');
+            } catch {
+                // reCAPTCHA not available (no key configured), continue without token
+            }
         }
 
         post(route('login'), {

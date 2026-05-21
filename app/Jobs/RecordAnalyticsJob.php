@@ -31,7 +31,9 @@ class RecordAnalyticsJob implements ShouldQueue
         public readonly ?string $routeName,
         public readonly string $url,
         public readonly bool $isNewSession,
-    ) {}
+    ) {
+        $this->onQueue('analytics');
+    }
 
     public function handle(): void
     {

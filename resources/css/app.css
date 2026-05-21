@@ -120,6 +120,15 @@
   }
 }
 
+/* ── Hide reCAPTCHA floating badge ───────────────────────────────────────────
+   Per Google TOS, the badge may be hidden when attribution text is displayed
+   inline. Attribution text is shown on the Login and Event Registration pages.
+   https://developers.google.com/recaptcha/docs/faq#id-like-to-hide-the-recaptcha-badge.-what-is-allowed
+   ─────────────────────────────────────────────────────────────────────────── */
+.grecaptcha-badge {
+    visibility: hidden !important;
+}
+
 @layer utilities {
   .scrollbar-none {
     scrollbar-width: none; /* Firefox */
