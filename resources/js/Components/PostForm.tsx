@@ -90,14 +90,22 @@ export default function PostForm({
         return m ? m[1] : null;
     }
 
-    async function useYouTubeThumbnail() {
-        const videoId = getYouTubeId(data.embed_url);
-        if (!videoId) return;
+    function isSpotifyUrl(url: string): boolean {
+        try {
+            const parsed = new URL(url);
+            const hostname = parsed.hostname.replace(/^www\./, '');
+            return hostname === 'spotify.com' || hostname === 'open.spotify.com' || hostname === 'play.spotify.com';
+        } catch {
+            return false;
+        }
+    }
+
+    async function useEmbedThumbnail() {
+        if (!data.embed_url) return;
         setFetchingThumb(true);
         setThumbError('');
         try {
-            const thumbUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-            const { data: res } = await axios.post<{ media: Media }>('/admin/media/from-url', { url: thumbUrl });
+            const { data: res } = await axios.post<{ media: Media }>('/admin/media/from-url', { url: data.embed_url });
             setData('media_id', String(res.media.id));
             setActiveMedia(res.media);
         } catch {
@@ -301,14 +309,14 @@ export default function PostForm({
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <CardTitle>Featured Image</CardTitle>
-                                {getYouTubeId(data.embed_url) && (
+                                {(getYouTubeId(data.embed_url) || isSpotifyUrl(data.embed_url)) && (
                                     <button
                                         type="button"
-                                        onClick={useYouTubeThumbnail}
+                                        onClick={useEmbedThumbnail}
                                         disabled={fetchingThumb}
                                         className="text-xs font-medium text-brand hover:underline disabled:opacity-50"
                                     >
-                                        {fetchingThumb ? 'Fetching…' : '▶ Use YouTube thumbnail'}
+                                        {fetchingThumb ? 'Fetching…' : isSpotifyUrl(data.embed_url) ? '▶ Use Spotify thumbnail' : '▶ Use YouTube thumbnail'}
                                     </button>
                                 )}
                             </div>

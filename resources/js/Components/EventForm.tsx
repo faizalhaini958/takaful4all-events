@@ -35,7 +35,7 @@ export interface EventFormData {
     max_attendees: string;
     require_approval: boolean;
     faqs: { question: string; answer: string }[];
-    sponsors: { name: string; role: string; logo_url: string; sort_order: number }[];
+    sponsors: { name: string; role: string; logo_url: string; logo_media_id: string; sort_order: number }[];
     custom_tabs: { label: string; type: 'text' | 'image'; content_html: string; images: { id: string; url: string }[] }[];
     event_category: EventCategory | '';
     registration_fields: RegistrationField[];
@@ -558,7 +558,7 @@ export default function EventForm({
                                 type="button" 
                                 variant="outline" 
                                 size="sm" 
-                                onClick={() => setData('sponsors', [...data.sponsors, { name: '', role: '', logo_url: '', sort_order: 1 }])}
+                                onClick={() => setData('sponsors', [...data.sponsors, { name: '', role: '', logo_url: '', logo_media_id: '', sort_order: 1 }])}
                                 className="h-8 gap-1"
                             >
                                 <Plus className="w-3.5 h-3.5" /> Add Partner
@@ -608,17 +608,50 @@ export default function EventForm({
                                                     />
                                                 </div>
                                                 <div>
-                                                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Logo URL</Label>
-                                                    <Input
-                                                        value={sponsor.logo_url}
-                                                        onChange={e => {
-                                                            const newSponsors = [...data.sponsors];
-                                                            newSponsors[index].logo_url = e.target.value;
-                                                            setData('sponsors', newSponsors);
-                                                        }}
-                                                        placeholder="https://…"
-                                                        className="mt-1 h-8 text-sm font-mono"
-                                                    />
+                                                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Logo</Label>
+                                                    <div className="mt-1">
+                                                        <ImageUpload
+                                                            value={sponsor.logo_media_id || ''}
+                                                            currentMedia={(sponsor.logo_media_id || sponsor.logo_url)
+                                                                ? { id: Number(sponsor.logo_media_id) || 0, url: sponsor.logo_url, title: '' } as unknown as Media
+                                                                : null}
+                                                            onChange={(id, media) => {
+                                                                const newSponsors = [...data.sponsors];
+                                                                newSponsors[index] = {
+                                                                    ...newSponsors[index],
+                                                                    logo_media_id: id,
+                                                                    logo_url: media.url,
+                                                                };
+                                                                setData('sponsors', newSponsors);
+                                                            }}
+                                                            onClear={() => {
+                                                                const newSponsors = [...data.sponsors];
+                                                                newSponsors[index] = {
+                                                                    ...newSponsors[index],
+                                                                    logo_media_id: '',
+                                                                    logo_url: '',
+                                                                };
+                                                                setData('sponsors', newSponsors);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div className="mt-2 flex items-center gap-1.5">
+                                                        <span className="text-[9px] text-muted-foreground shrink-0">or URL:</span>
+                                                        <Input
+                                                            value={sponsor.logo_url}
+                                                            onChange={e => {
+                                                                const newSponsors = [...data.sponsors];
+                                                                newSponsors[index] = {
+                                                                    ...newSponsors[index],
+                                                                    logo_url: e.target.value,
+                                                                    logo_media_id: '',
+                                                                };
+                                                                setData('sponsors', newSponsors);
+                                                            }}
+                                                            placeholder="https://…"
+                                                            className="h-7 text-xs font-mono"
+                                                        />
+                                                    </div>
                                                 </div>
                                                 <div>
                                                     <Label className="text-[10px] uppercase font-bold text-muted-foreground">Tier Order</Label>
@@ -1019,6 +1052,15 @@ export default function EventForm({
                         >
                             <Link href="/admin/events">Cancel</Link>
                         </Button>
+                        <Select value={data.is_published} onValueChange={v => setData('is_published', v)}>
+                            <SelectTrigger className={`h-9 w-[130px] text-xs font-semibold lg:hidden ${data.is_published === '1' ? 'border-green-400 bg-green-50 text-green-800' : 'border-amber-300 bg-amber-50 text-amber-800'}`}>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="1">Published</SelectItem>
+                                <SelectItem value="0">Draft</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {/* Centre — utility */}

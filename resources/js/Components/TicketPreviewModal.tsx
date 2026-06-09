@@ -33,11 +33,12 @@ interface Props {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-    confirmed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    attended: 'bg-blue-100 text-blue-700 border-blue-200',
-    pending: 'bg-amber-100 text-amber-700 border-amber-200',
-    cancelled: 'bg-red-100 text-red-700 border-red-200',
-    waitlisted: 'bg-gray-100 text-gray-700 border-gray-200',
+    confirmed:         'bg-emerald-100 text-emerald-700 border-emerald-200',
+    attended:          'bg-blue-100 text-blue-700 border-blue-200',
+    pending:           'bg-amber-100 text-amber-700 border-amber-200',
+    awaiting_payment:  'bg-orange-100 text-orange-700 border-orange-200',
+    cancelled:         'bg-red-100 text-red-700 border-red-200',
+    waitlisted:        'bg-gray-100 text-gray-700 border-gray-200',
 };
 
 export default function TicketPreviewModal({ registration, open, onOpenChange }: Props) {
@@ -109,10 +110,17 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
     }, [registration, attendee, currentTicket]);
 
     const handlePrint = useCallback(() => {
-        if (!ticketRef.current) return;
+        if (!registration || !attendee) return;
 
-        window.print();
-    }, []);
+        const attendeeNo = attendee.attendee_no ?? (currentTicket + 1);
+        const previewUrl = route('tickets.download', {
+            registration: registration.id,
+            attendee_no: attendeeNo,
+            inline: 1,
+        });
+
+        window.open(previewUrl, '_blank');
+    }, [registration, attendee, currentTicket]);
 
     if (!registration || !attendee) return null;
 

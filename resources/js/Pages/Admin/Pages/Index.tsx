@@ -115,9 +115,9 @@ export default function PagesIndex({ pages }: Props) {
                         <TableHeader>
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Page</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Slug</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Slug</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Updated</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Updated</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -132,7 +132,7 @@ export default function PagesIndex({ pages }: Props) {
                                             <span className="font-medium text-foreground">{page.title}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden md:table-cell">
                                         <code className="text-xs font-mono text-muted-foreground bg-muted/60 px-2 py-0.5 rounded">/{page.slug}</code>
                                     </TableCell>
                                     <TableCell>
@@ -146,7 +146,7 @@ export default function PagesIndex({ pages }: Props) {
                                             </span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap hidden md:table-cell">
                                         {new Date(page.updated_at).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })}
                                     </TableCell>
                                     <TableCell>
@@ -198,7 +198,7 @@ export default function PagesIndex({ pages }: Props) {
                         <>
                             <Separator />
                             <div className="flex items-center justify-between px-4 py-3">
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground hidden sm:block">
                                     Showing <span className="font-medium text-foreground">{pages.from}</span> to <span className="font-medium text-foreground">{pages.to}</span> of <span className="font-medium text-foreground">{pages.total}</span>
                                 </p>
                                 <div className="flex items-center gap-2">

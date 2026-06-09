@@ -68,9 +68,11 @@ export default function RichEditor({ value, onChange, placeholder = 'Write somet
 
     const editor = useEditor({
         extensions: [
-            StarterKit,
+            StarterKit.configure({
+                link: false,
+                underline: false,
+            }),
             Underline,
-            TextAlign.configure({ types: ['heading', 'paragraph'] }),
             Link.configure({ openOnClick: false, HTMLAttributes: { class: 'text-brand underline' } }),
             Placeholder.configure({ placeholder }),
             Image.configure({ HTMLAttributes: { class: 'rounded-lg max-w-full my-4' } }),

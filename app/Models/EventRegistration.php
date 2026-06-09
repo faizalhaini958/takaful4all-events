@@ -8,9 +8,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class EventRegistration extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'event_id',
         'ticket_id',
@@ -34,6 +38,7 @@ class EventRegistration extends Model
         'notes',
         'checked_in_at',
         'meta_json',
+        'confirmation_email_sent_at',
     ];
 
     protected $casts = [
@@ -42,8 +47,9 @@ class EventRegistration extends Model
         'discount_amount' => 'decimal:2',
         'products_total'  => 'decimal:2',
         'total_amount'    => 'decimal:2',
-        'checked_in_at'   => 'datetime',
-        'meta_json'       => 'array',
+        'checked_in_at'             => 'datetime',
+        'meta_json'                 => 'array',
+        'confirmation_email_sent_at' => 'datetime',
     ];
 
     // ─── Boot ─────────────────────────────────────────────────────────────────
@@ -114,6 +120,16 @@ class EventRegistration extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->whereNotIn('status', ['cancelled']);
+    }
+
+    public function scopeExcludeStalePending(Builder $query, int $graceMinutes = 30): Builder
+    {
+        $cutoff = now()->subMinutes($graceMinutes);
+
+        return $query->whereNot(function (Builder $q) use ($cutoff) {
+            $q->where('status', 'awaiting_payment')
+              ->where('created_at', '<', $cutoff);
+        });
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -220,5 +236,14 @@ class EventRegistration extends Model
         }
 
         return $attendees;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'payment_status', 'name', 'email', 'total_amount'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('registration');
     }
 }

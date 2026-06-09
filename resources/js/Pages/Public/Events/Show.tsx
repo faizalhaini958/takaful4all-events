@@ -6,7 +6,7 @@ import { Calendar, Clock, MapPin, ExternalLink, ChevronRight, ChevronLeft, Ticke
 import { type Event, type EventTicket, type EventZone } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
 import { useAnalytics } from '@/hooks/use-analytics';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Tab } from '@headlessui/react';
 
 interface Props {
@@ -174,8 +174,8 @@ export default function EventShow({ event, related, ogUrl }: Props) {
     const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
     const hasMobileStickyCta = isStickyVisible && event.status === 'upcoming';
 
-    const startDate = new Date(event.start_at);
-    const endDate = event.end_at ? new Date(event.end_at) : null;
+    const startDate = useMemo(() => new Date(event.start_at), [event.start_at]);
+    const endDate = useMemo(() => event.end_at ? new Date(event.end_at) : null, [event.end_at]);
     const location = [event.venue, event.city, event.state].filter(Boolean).join(', ');
 
     const faqs = (event.meta_json?.faqs as { question: string; answer: string }[]) ?? [];
@@ -266,26 +266,26 @@ export default function EventShow({ event, related, ogUrl }: Props) {
         <PublicLayout>
             <Head>
                 <title>{`${event.title} | Takaful4All Events`}</title>
-                <meta name="description" content={event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
+                <meta name="description" content={event.meta_description ?? event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
                 <link rel="canonical" href={ogUrl} />
                 {/* Open Graph */}
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content={ogUrl} />
                 <meta property="og:title" content={`${event.title} | Takaful4All Events`} />
-                <meta property="og:description" content={event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
+                <meta property="og:description" content={event.meta_description ?? event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
                 {event.media?.url ? <meta property="og:image" content={event.media.url} /> : null}
                 <meta property="og:site_name" content="Takaful4All Events" />
                 {/* Twitter Card */}
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content={`${event.title} | Takaful4All Events`} />
-                <meta name="twitter:description" content={event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
+                <meta name="twitter:description" content={event.meta_description ?? event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
                 {event.media?.url ? <meta name="twitter:image" content={event.media.url} /> : null}
                 {/* Structured Data */}
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
                     '@context': 'https://schema.org',
                     '@type': 'Event',
                     name: event.title,
-                    description: event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`,
+                    description: event.meta_description ?? event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`,
                     startDate: event.start_at,
                     ...(event.end_at ? { endDate: event.end_at } : {}),
                     url: ogUrl,
@@ -486,7 +486,7 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                 {/* Event Organizer */}
                 <div className="mt-8 rounded-xl overflow-hidden bg-white shadow-md" style={{ border: '1px solid rgba(0,159,187,0.12)' }}>
                     <div className="px-5 py-4 bg-gray-50" style={{ borderBottom: '1px solid rgba(0,159,187,0.1)' }}>
-                        <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Event Organizer</h2>
+                        <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Event Sponsor</h2>
                     </div>
                     <div className="p-6 space-y-6">
                         {sponsorGroups.length > 0 ? (

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CheckInLog;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -207,6 +209,20 @@ class CheckInController extends Controller
 
         $attendee->markAsCheckedIn();
 
+        CheckInLog::create([
+            'event_id'        => $event->id,
+            'registration_id' => $registration->id,
+            'attendee_id'     => $attendee->id,
+            'user_id'         => Auth::id(),
+            'action'          => 'checked_in',
+            'performed_at'    => now(),
+            'meta_json'       => [
+                'attendee_name' => $attendee->name,
+                'attendee_no'   => $attendee->attendee_no,
+                'method'        => $request->wantsJson() ? 'qr_scan' : 'manual',
+            ],
+        ]);
+
         // Keep registration-level checked_in_at for backward compatibility once all attendees are checked in.
         $remaining = $registration->attendees()->whereNull('checked_in_at')->count();
         if ($remaining === 0 && !$registration->checked_in_at) {
@@ -229,5 +245,70 @@ class CheckInController extends Controller
         }
 
         return redirect()->back()->with('success', "{$attendee->name} checked in successfully!");
+    }
+
+    /**
+     * View the check-in audit log for an event.
+     */
+    public function log(Request $request, Event $event): Response
+    {
+        $dateFrom = $request->get('date_from', '');
+        $dateTo   = $request->get('date_to', '');
+        $search   = $request->get('search', '');
+
+        $query = CheckInLog::where('event_id', $event->id)
+            ->with(['registration', 'attendee', 'user'])
+            ->latest('performed_at');
+
+        if ($dateFrom) {
+            $query->whereDate('performed_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('performed_at', '<=', $dateTo);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('registration', fn ($r) => $r->where('name', 'like', "%{$search}%")
+                    ->orWhere('reference_no', 'like', "%{$search}%"))
+                  ->orWhereHas('attendee', fn ($a) => $a->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $logs = $query->paginate(25)->withQueryString();
+
+        $stats = [
+            'total'      => CheckInLog::where('event_id', $event->id)->count(),
+            'today'      => CheckInLog::where('event_id', $event->id)->whereDate('performed_at', today())->count(),
+        ];
+
+        return Inertia::render('Admin/Events/CheckInLog', [
+            'event'          => $event->only(['id', 'title', 'slug']),
+            'logs'           => $logs->through(fn ($log) => [
+                'id'              => $log->id,
+                'action'          => $log->action,
+                'performed_at'    => $log->performed_at?->toIso8601String(),
+                'meta_json'       => $log->meta_json,
+                'registration'    => $log->registration ? [
+                    'id'           => $log->registration->id,
+                    'reference_no' => $log->registration->reference_no,
+                    'name'         => $log->registration->name,
+                ] : null,
+                'attendee'        => $log->attendee ? [
+                    'id'   => $log->attendee->id,
+                    'name' => $log->attendee->name,
+                ] : null,
+                'user'            => $log->user ? [
+                    'id'   => $log->user->id,
+                    'name' => $log->user->name,
+                ] : null,
+            ]),
+            'stats'          => $stats,
+            'currentSearch'  => $search,
+            'currentDateFrom'=> $dateFrom,
+            'currentDateTo'  => $dateTo,
+        ]);
     }
 }

@@ -4,10 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
+import { Separator } from '@/Components/ui/separator';
 import { Textarea } from '@/Components/ui/textarea';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Ticket, Package, ShoppingCart, Users, Pencil, Copy, Trash2, MapPin, CalendarDays, Globe, Shield, QrCode, Bell } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Ticket, Package, ShoppingCart, Users, Pencil, Copy, Trash2, MapPin, CalendarDays, Globe, Shield, QrCode, Bell, FileText } from 'lucide-react';
 import { type Event, type PaginatedData, type SharedProps } from '@/types';
 
 interface Props {
@@ -60,7 +61,9 @@ export default function EventsIndex({ events }: Props) {
     }
 
     function handlePerPageChange(value: string) {
-        router.get('/admin/events', { per_page: value }, { preserveState: true, preserveScroll: true });
+        const params = new URLSearchParams(window.location.search);
+        params.set('per_page', value);
+        router.get('/admin/events?' + params.toString(), {}, { preserveState: true, preserveScroll: true });
     }
 
     function sendReminder() {
@@ -101,8 +104,8 @@ export default function EventsIndex({ events }: Props) {
                                 <TableHead className="w-10"></TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Event</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Registrations</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Date</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right hidden md:table-cell">Registrations</TableHead>
                                 <TableHead className="w-12"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -137,7 +140,7 @@ export default function EventsIndex({ events }: Props) {
                 {/* Pagination footer */}
                 <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>Rows per page</span>
+                        <span className="hidden sm:inline">Rows per page</span>
                         <Select defaultValue={String(events.per_page)} onValueChange={handlePerPageChange}>
                             <SelectTrigger className="h-8 w-[70px] border-border/60">
                                 <SelectValue />
@@ -271,7 +274,7 @@ function EventRowBlock({
                         {event.status}
                     </span>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                <TableCell className="text-sm text-muted-foreground whitespace-nowrap hidden md:table-cell">
                     <span className="inline-flex items-center gap-1.5">
                         <CalendarDays className="h-3.5 w-3.5 text-muted-foreground/60" />
                         {formatDate(event.start_at)}
@@ -279,7 +282,7 @@ function EventRowBlock({
                         {event.end_at && formatDate(event.end_at)}
                     </span>
                 </TableCell>
-                <TableCell className="text-right text-sm font-semibold tabular-nums">
+                <TableCell className="text-right text-sm font-semibold tabular-nums hidden md:table-cell">
                     {event.rsvp_enabled ? (
                         <span className="text-foreground">{event.registrations_count ?? 0}</span>
                     ) : (
@@ -351,6 +354,8 @@ function EventRowBlock({
 
                                 {/* Stats — hidden for checkin_staff */}
                                 {!isCheckinStaff && (
+                                <>
+                                <Separator className="md:hidden border-border/30" />
                                 <div className="space-y-3">
                                     <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest">Stats</h4>
                                     <div className="grid grid-cols-2 gap-2.5">
@@ -360,9 +365,11 @@ function EventRowBlock({
                                         <StatCard value={event.zones_count ?? 0} label="Zones" accent="muted" />
                                     </div>
                                 </div>
+                                </>
                                 )}
 
                                 {/* Quick actions */}
+                                <Separator className="md:hidden border-border/30" />
                                 <div className="space-y-3">
                                     <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest">{isCheckinStaff ? 'Actions' : 'Manage'}</h4>
                                     <div className="flex flex-col gap-1.5">
@@ -374,6 +381,7 @@ function EventRowBlock({
                                         </>
                                         )}
                                         <ActionLink href={`/admin/events/${event.slug}/check-in`} icon={QrCode} label="Check-In Scanner" />
+                                        <ActionLink href={`/admin/events/${event.slug}/check-in/log`} icon={FileText} label="Check-in Log" />
                                         <ActionLink href={`/admin/events/${event.slug}/registrations`} icon={Users} label="Registrations" />
                                         {!isCheckinStaff && (
                                         <>

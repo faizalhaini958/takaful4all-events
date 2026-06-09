@@ -65,7 +65,7 @@ const STEPS = [
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function EventRegister({ event, tickets, products, zones }: Props) {
-    const { flash, auth } = usePage().props as SharedProps & { flash: { success?: string; error?: string } };
+    const { flash, auth } = usePage().props as any;
     const authUser: AuthUser | null = auth?.user ?? null;
     const returnTo = `/events/${event.slug}/register`;
     const { t, locale } = useTranslation();

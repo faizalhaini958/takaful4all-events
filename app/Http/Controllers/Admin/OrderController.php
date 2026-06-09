@@ -20,6 +20,7 @@ class OrderController extends Controller
         $query = EventRegistrationProduct::with([
             'registration.event',
             'registration.ticket',
+            'registration.invoice',
             'product.media',
         ])
             ->whereHas('registration', fn ($q) => $q->whereNotIn('status', ['cancelled']))

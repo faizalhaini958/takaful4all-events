@@ -3,7 +3,7 @@ import EventForm from '@/Components/EventForm';
 import { EventAnalyticsPanel } from '@/Components/EventAnalyticsPanel';
 import { Link, useForm } from '@inertiajs/react';
 import { type FormEventHandler } from 'react';
-import { ChevronLeft, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { type Event, type Media, type EventCategory, type RegistrationField } from '@/types';
 
 interface Props {
@@ -38,7 +38,7 @@ export default function EventEdit({ event, tickets }: Props) {
         max_attendees:    event.max_attendees ? String(event.max_attendees) : '',
         require_approval: event.require_approval ?? false,
         faqs:             (event.meta_json?.faqs as any[]) ?? [],
-        sponsors:         (event.meta_json?.sponsors as any[]) ?? [],
+        sponsors:         ((event.meta_json?.sponsors as any[]) ?? []).map((s: any) => ({ ...s, logo_media_id: s.logo_media_id ?? '' })),
         custom_tabs:      ((event.meta_json?.custom_tabs as any[]) ?? []).map((t: any) => ({
             label: t.label ?? '',
             type: (t.type === 'image' ? 'image' : 'text') as 'image' | 'text',
@@ -76,16 +76,24 @@ export default function EventEdit({ event, tickets }: Props) {
     return (
         <AdminLayout>
             <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                    <Link href="/admin/events" className="text-muted-foreground hover:text-foreground transition-colors">
-                        <ChevronLeft className="w-5 h-5" />
-                    </Link>
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                        <Pencil className="h-5 w-5 text-primary" />
+                <div>
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5 flex-wrap">
+                        <Link href="/admin" className="hover:text-foreground transition-colors">Dashboard</Link>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <Link href="/admin/events" className="hover:text-foreground transition-colors">Events</Link>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <span className="text-foreground font-medium truncate max-w-[180px]">{event.title}</span>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <span className="text-foreground font-medium">Edit</span>
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-foreground">Edit Event</h1>
-                        <p className="text-sm text-muted-foreground">{event.title}</p>
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                            <Pencil className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-foreground">Edit Event</h1>
+                            <p className="text-sm text-muted-foreground">{event.title}</p>
+                        </div>
                     </div>
                 </div>
 

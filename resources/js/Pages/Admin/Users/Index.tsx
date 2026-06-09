@@ -224,8 +224,8 @@ export default function UsersIndex({ users, filters }: Props) {
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">User</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Role</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Joined</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Company</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Joined</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -250,7 +250,7 @@ export default function UsersIndex({ users, filters }: Props) {
                                                 {user.role}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">
+                                        <TableCell className="text-sm text-muted-foreground hidden md:table-cell">
                                             {user.company_name ? (
                                                 <span className="flex items-center gap-1.5">
                                                     <Building2 className="w-3.5 h-3.5 shrink-0 text-muted-foreground/60" />
@@ -260,7 +260,7 @@ export default function UsersIndex({ users, filters }: Props) {
                                                 <span className="text-muted-foreground/40">—</span>
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap hidden md:table-cell">
                                             {new Date(user.created_at).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })}
                                         </TableCell>
                                         <TableCell>
@@ -308,7 +308,7 @@ export default function UsersIndex({ users, filters }: Props) {
                         <>
                             <Separator />
                             <div className="flex items-center justify-between px-4 py-3">
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground hidden sm:block">
                                     Showing <span className="font-medium text-foreground">{users.from}</span> to <span className="font-medium text-foreground">{users.to}</span> of <span className="font-medium text-foreground">{users.total}</span>
                                 </p>
                                 <div className="flex items-center gap-2">

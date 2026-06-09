@@ -9,6 +9,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
+use App\Http\Controllers\Admin\ContentBannerController as AdminContentBannerController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\EventTicketController as AdminEventTicketController;
 use App\Http\Controllers\Admin\EventProductController as AdminEventProductController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\ParticipantsController as AdminParticipantsController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
+use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\ChipInWebhookController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocaleController;
@@ -68,6 +70,7 @@ Route::get('/events/{slug}/register/confirmation/{reference}', [EventRegistratio
 Route::get('/webinars', [PostController::class, 'webinars'])->name('webinars.index');
 Route::get('/agent360', [PostController::class, 'agent360'])->name('agent360.index');
 Route::get('/content', [PostController::class, 'content'])->name('content.index');
+Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
 
 // Static-ish pages driven from DB
 Route::get('/about', [PageController::class, 'show'])->defaults('slug', 'about')->name('about');
@@ -143,6 +146,13 @@ Route::prefix('admin')
         Route::post('banners/{banner}', [AdminBannerController::class, 'update'])->name('banners.update')->where('banner', '[0-9]+');
         Route::delete('banners/{banner}', [AdminBannerController::class, 'destroy'])->name('banners.destroy');
 
+        // Content Banners
+        Route::get('content-banners', [AdminContentBannerController::class, 'index'])->name('content-banners.index');
+        Route::post('content-banners', [AdminContentBannerController::class, 'store'])->name('content-banners.store');
+        Route::post('content-banners/reorder', [AdminContentBannerController::class, 'reorder'])->name('content-banners.reorder');
+        Route::post('content-banners/{banner}', [AdminContentBannerController::class, 'update'])->name('content-banners.update')->where('banner', '[0-9]+');
+        Route::delete('content-banners/{banner}', [AdminContentBannerController::class, 'destroy'])->name('content-banners.destroy');
+
         // Events
         Route::resource('events', AdminEventController::class)
             ->except(['show']);
@@ -189,6 +199,7 @@ Route::prefix('admin')
         Route::post('events/{event}/registrations/bulk-status', [AdminEventRegistrationController::class, 'bulkUpdateStatus'])->name('events.registrations.bulk-status');
         Route::delete('events/{event}/registrations/bulk', [AdminEventRegistrationController::class, 'bulkDestroy'])->name('events.registrations.bulk-destroy');
         Route::delete('events/{event}/registrations/{registration}', [AdminEventRegistrationController::class, 'destroy'])->name('events.registrations.destroy');
+        Route::post('events/{event}/registrations/{registration}/resend-confirmation', [AdminEventRegistrationController::class, 'resendConfirmation'])->name('events.registrations.resend-confirmation');
 
         // Event Participants (custom field data)
         Route::get('events/{event}/participants', [AdminParticipantsController::class, 'index'])->name('events.participants.index');
@@ -197,6 +208,7 @@ Route::prefix('admin')
 
         // Check-in Scanner
         Route::get('events/{event}/check-in', [AdminCheckInController::class, 'scanner'])->name('events.check-in');
+        Route::get('events/{event}/check-in/log', [AdminCheckInController::class, 'log'])->name('events.check-in.log');
         Route::post('events/{event}/check-in/lookup', [AdminCheckInController::class, 'lookup'])
             ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
             ->name('events.check-in.lookup');
@@ -252,6 +264,10 @@ Route::prefix('admin')
         Route::post('settings/shipping-zones', [AdminShippingZoneController::class, 'store'])->name('shipping-zones.store');
         Route::put('settings/shipping-zones/{zone}', [AdminShippingZoneController::class, 'update'])->name('shipping-zones.update');
         Route::delete('settings/shipping-zones/{zone}', [AdminShippingZoneController::class, 'destroy'])->name('shipping-zones.destroy');
+
+        // Activity Log
+        Route::get('activity-log', [AdminActivityLogController::class, 'index'])->name('activity-log.index');
+        Route::get('activity-log/export', [AdminActivityLogController::class, 'export'])->name('activity-log.export');
 
         // Profile
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -1464,7 +1464,7 @@ function ShippingSettingsTab({ shippingZones }: { shippingZones: ShippingZone[] 
                                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Zone Name</TableHead>
                                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Countries</TableHead>
                                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rate</TableHead>
-                                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Free Shipping Min</TableHead>
+                                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Free Shipping Min</TableHead>
                                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
                                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
                                 </TableRow>
@@ -1509,7 +1509,7 @@ function ShippingSettingsTab({ shippingZones }: { shippingZones: ShippingZone[] 
                                                 / {zone.rate_type === 'per_item' ? 'item' : 'order'}
                                             </span>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="hidden md:table-cell">
                                             {zone.free_shipping_min ? (
                                                 <span className="text-sm">RM {Number(zone.free_shipping_min).toFixed(2)}</span>
                                             ) : (
@@ -1892,7 +1892,36 @@ export default function SettingsIndex({ tab, smtp, chipin, general, booking, not
                 </div>
 
                 <Tabs defaultValue={tab} className="space-y-6">
-                    <TabsList className="flex-wrap h-auto gap-1 p-1.5">
+                    <div className="md:hidden">
+                        <Select value={tab} onValueChange={v => {
+                            const tabRoutes: Record<string, string> = {
+                                general: '/admin/settings',
+                                smtp: '/admin/settings/smtp',
+                                payment: '/admin/settings/payment',
+                                booking: '/admin/settings/booking',
+                                notifications: '/admin/settings/notifications',
+                                invoicing: '/admin/settings/invoicing',
+                                localisation: '/admin/settings/localisation',
+                                shipping: '/admin/settings/shipping',
+                            };
+                            router.get(tabRoutes[v] ?? '/admin/settings', {}, { preserveState: false });
+                        }}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="general">General</SelectItem>
+                                <SelectItem value="smtp">SMTP Mail</SelectItem>
+                                <SelectItem value="payment">Payment</SelectItem>
+                                <SelectItem value="booking">Booking Rules</SelectItem>
+                                <SelectItem value="notifications">Notifications</SelectItem>
+                                <SelectItem value="invoicing">Invoicing</SelectItem>
+                                <SelectItem value="localisation">Localisation</SelectItem>
+                                <SelectItem value="shipping">Shipping</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <TabsList className="hidden md:flex flex-wrap h-auto gap-1 p-1.5">
                         <TabsTrigger value="general" className="gap-2">
                             <Settings className="h-4 w-4" />
                             General

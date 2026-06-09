@@ -203,7 +203,7 @@ export default function ProductsIndex({ events, currentEvent, event, products }:
                                     <TableRow>
                                         <TableHead>Product</TableHead>
                                         <TableHead>Price</TableHead>
-                                        <TableHead>Variants</TableHead>
+                                        <TableHead className="hidden md:table-cell">Variants</TableHead>
                                         <TableHead>Stock</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
@@ -226,7 +226,7 @@ export default function ProductsIndex({ events, currentEvent, event, products }:
                                                 </div>
                                             </TableCell>
                                             <TableCell>{product.currency} {Number(product.price).toFixed(2)}</TableCell>
-                                            <TableCell>
+                                            <TableCell className="hidden md:table-cell">
                                                 {product.variants_json?.map(v => (
                                                     <div key={v.label} className="text-xs">
                                                         <span className="font-medium">{v.label}:</span> {v.options.join(', ')}

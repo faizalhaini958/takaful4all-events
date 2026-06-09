@@ -1,6 +1,6 @@
 ﻿import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import {
     AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -563,10 +563,24 @@ function KpiCard({ label, value, change, suffix, icon, accent, live, tip }: {
 }
 
 function InfoTip({ text }: { text: string }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLSpanElement>(null);
+
+    useEffect(() => {
+        if (!open) return;
+        const handleClick = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener('click', handleClick);
+        return () => document.removeEventListener('click', handleClick);
+    }, [open]);
+
     return (
-        <span className="group relative inline-flex shrink-0">
+        <span ref={ref} className="group relative inline-flex shrink-0" onClick={() => setOpen(!open)}>
             <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/40 hover:text-muted-foreground cursor-help transition-colors" />
-            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 rounded-xl bg-popover border border-border px-3 py-2.5 text-xs text-popover-foreground shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50 leading-relaxed text-left">
+            <span className={`pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 rounded-xl bg-popover border border-border px-3 py-2.5 text-xs text-popover-foreground shadow-xl transition-opacity duration-150 z-50 leading-relaxed text-left ${open ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                 {text}
             </span>
         </span>

@@ -5,12 +5,13 @@ interface Props {
     onClick?: () => void;
 }
 
-const IS_VIDEO_TYPE = (type: string) => type === 'webinar' || type === 'agent360';
+const IS_VIDEO_TYPE = (type: string) => type === 'webinar' || type === 'agent360' || type === 'podcast';
 
 const TYPE_BADGE: Record<string, string> = {
     podcast: 'bg-purple-100 text-purple-800',
     webinar: 'bg-blue-100 text-blue-800',
     article: 'bg-orange-100 text-orange-800',
+    agent360: 'bg-sky-100 text-sky-800',
 };
 
 const TYPE_ICON = {

@@ -55,9 +55,9 @@ export default function PublicLayout({ children }: PropsWithChildren) {
     const layout = (
         <>
         <Head>
-            <link rel="alternate" hreflang="en" href={currentUrl} />
-            <link rel="alternate" hreflang="ms" href={currentUrl} />
-            <link rel="alternate" hreflang="x-default" href={currentUrl} />
+            <link rel="alternate" hrefLang="en" href={currentUrl} />
+            <link rel="alternate" hrefLang="ms" href={currentUrl} />
+            <link rel="alternate" hrefLang="x-default" href={currentUrl} />
         </Head>
         <div className="min-h-screen flex flex-col bg-white text-gray-900">
             {/* ── Navbar ── */}

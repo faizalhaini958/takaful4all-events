@@ -154,6 +154,7 @@ export default function Dashboard({ upcomingRegistrations, recentOrders }: Props
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                                     nextEvent.status === 'confirmed' ? 'bg-emerald-500 text-white' :
                                                     nextEvent.status === 'pending'   ? 'bg-amber-500 text-white'   :
+                                                    nextEvent.status === 'awaiting_payment' ? 'bg-orange-500 text-white' :
                                                     'bg-gray-500 text-white'
                                                 }`}>{getRegistrationStatusLabel(nextEvent.status, nextEvent.payment_status)}</span>
                                             </div>

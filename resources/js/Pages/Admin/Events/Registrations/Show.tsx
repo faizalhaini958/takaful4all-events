@@ -3,7 +3,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Link, router } from '@inertiajs/react';
-import { ChevronLeft, UserCheck, Clock, Mail, Phone, Building2, Utensils, FileText, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, UserCheck, Clock, Mail, Phone, Building2, Utensils, FileText, Users, Download, Ticket, Receipt, Send } from 'lucide-react';
 import { type Event, type EventRegistration, type RegistrationStatus, type RegistrationField, fieldAppliesToTicket } from '@/types';
 import { getRegistrationStatusLabel } from '@/lib/status-colors';
 
@@ -23,11 +23,12 @@ interface Props {
 }
 
 const STATUS_BADGE: Record<RegistrationStatus, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; color: string }> = {
-    pending:    { variant: 'outline',     label: 'Pending',    color: 'text-amber-600' },
-    confirmed:  { variant: 'default',     label: 'Confirmed',  color: 'text-emerald-600' },
-    cancelled:  { variant: 'destructive', label: 'Cancelled',  color: 'text-red-600' },
-    waitlisted: { variant: 'secondary',   label: 'Waitlisted', color: 'text-gray-600' },
-    attended:   { variant: 'default',     label: 'Attended',   color: 'text-blue-600' },
+    pending:           { variant: 'outline',     label: 'Pending',           color: 'text-amber-600' },
+    awaiting_payment:  { variant: 'outline',     label: 'Awaiting Payment',  color: 'text-orange-600' },
+    confirmed:         { variant: 'default',     label: 'Confirmed',         color: 'text-emerald-600' },
+    cancelled:         { variant: 'destructive', label: 'Cancelled',         color: 'text-red-600' },
+    waitlisted:        { variant: 'secondary',   label: 'Waitlisted',        color: 'text-gray-600' },
+    attended:          { variant: 'default',     label: 'Attended',          color: 'text-blue-600' },
 };
 
 export default function RegistrationShow({ event, registration }: Props) {
@@ -46,23 +47,33 @@ export default function RegistrationShow({ event, registration }: Props) {
         router.post(`/admin/events/${event.slug}/registrations/${registration.id}/check-in`);
     }
 
+    function resendConfirmation() {
+        router.post(`/admin/events/${event.slug}/registrations/${registration.id}/resend-confirmation`);
+    }
+
     return (
         <AdminLayout>
             <div className="space-y-6 max-w-4xl">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Link href={`/admin/events/${event.slug}/registrations`} className="text-muted-foreground hover:text-foreground transition-colors">
-                            <ChevronLeft className="w-5 h-5" />
-                        </Link>
+                <div>
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5 flex-wrap">
+                        <Link href="/admin" className="hover:text-foreground transition-colors">Dashboard</Link>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <Link href="/admin/events" className="hover:text-foreground transition-colors">Events</Link>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <Link href={`/admin/events/${event.slug}/registrations`} className="hover:text-foreground transition-colors truncate max-w-[180px]">{event.title}</Link>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <span className="text-foreground font-medium">Detail</span>
+                    </div>
+                    <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-foreground">Registration Detail</h1>
                             <p className="text-sm text-muted-foreground font-mono">{registration.reference_no}</p>
                         </div>
+                        <Badge variant={statusCfg.variant} className="text-sm px-3 py-1">
+                            {statusLabel}
+                        </Badge>
                     </div>
-                    <Badge variant={statusCfg.variant} className="text-sm px-3 py-1">
-                        {statusLabel}
-                    </Badge>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
@@ -135,6 +146,18 @@ export default function RegistrationShow({ event, registration }: Props) {
                                         <p className="text-sm">{registration.notes}</p>
                                     </div>
                                 )}
+                                <div className="pt-2 border-t flex gap-2">
+                                    <Button size="sm" variant="outline" asChild>
+                                        <a href={route('tickets.download', { registration: registration.id, attendee_no: 1 })}>
+                                            <Download className="w-3.5 h-3.5 mr-1" /> Ticket PDF
+                                        </a>
+                                    </Button>
+                                    <Button size="sm" variant="outline" asChild>
+                                        <a href={route('tickets.download', { registration: registration.id, attendee_no: 1, inline: 1 })} target="_blank">
+                                            <Ticket className="w-3.5 h-3.5 mr-1" /> Preview
+                                        </a>
+                                    </Button>
+                                </div>
                             </CardContent>
                         </Card>
 
@@ -199,6 +222,18 @@ export default function RegistrationShow({ event, registration }: Props) {
                                                 ));
                                         })()}
                                     </div>
+                                    <div className="pt-2 border-t flex gap-2">
+                                        <Button size="sm" variant="outline" asChild>
+                                            <a href={route('tickets.download', { registration: registration.id, attendee_no: index + 2 })}>
+                                                <Download className="w-3.5 h-3.5 mr-1" /> Ticket PDF
+                                            </a>
+                                        </Button>
+                                        <Button size="sm" variant="outline" asChild>
+                                            <a href={route('tickets.download', { registration: registration.id, attendee_no: index + 2, inline: 1 })} target="_blank">
+                                                <Ticket className="w-3.5 h-3.5 mr-1" /> Preview
+                                            </a>
+                                        </Button>
+                                    </div>
                                 </CardContent>
                             </Card>
                         ))}
@@ -258,6 +293,11 @@ export default function RegistrationShow({ event, registration }: Props) {
                         <Card>
                             <CardHeader><CardTitle>Actions</CardTitle></CardHeader>
                             <CardContent className="space-y-2">
+                                {['confirmed', 'attended'].includes(registration.status) && (
+                                    <Button variant="outline" onClick={resendConfirmation} className="w-full text-blue-600 border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+                                        <Send className="w-4 h-4 mr-1" /> Resend Confirmation Email
+                                    </Button>
+                                )}
                                 {registration.status === 'pending' && (
                                     <Button onClick={() => updateStatus('confirmed')} className="w-full bg-emerald-600 hover:bg-emerald-700">
                                         Approve Registration
@@ -268,7 +308,7 @@ export default function RegistrationShow({ event, registration }: Props) {
                                         <UserCheck className="w-4 h-4 mr-1" /> Check In
                                     </Button>
                                 )}
-                                {['pending', 'confirmed', 'waitlisted'].includes(registration.status) && (
+                                {['pending', 'awaiting_payment', 'confirmed', 'waitlisted'].includes(registration.status) && (
                                     <Button variant="destructive" onClick={() => updateStatus('cancelled')} className="w-full">
                                         Cancel Registration
                                     </Button>
@@ -280,6 +320,20 @@ export default function RegistrationShow({ event, registration }: Props) {
                                 )}
                             </CardContent>
                         </Card>
+
+                        {/* Downloads */}
+                        {registration.invoice && (
+                            <Card>
+                                <CardHeader><CardTitle>Downloads</CardTitle></CardHeader>
+                                <CardContent className="space-y-2">
+                                    <Button size="sm" variant="outline" className="w-full" asChild>
+                                        <a href={route('invoices.download', { invoiceNumber: registration.invoice.invoice_number })}>
+                                            <Receipt className="w-3.5 h-3.5 mr-1" /> Invoice PDF
+                                        </a>
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
 
                         {/* Meta */}
                         <Card>

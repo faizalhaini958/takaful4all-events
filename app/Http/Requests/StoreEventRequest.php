@@ -19,6 +19,7 @@ class StoreEventRequest extends FormRequest
             'title'            => 'required|string|max:255',
             'slug'             => 'nullable|string|max:255|unique:events,slug,' . $eventId,
             'excerpt'          => 'nullable|string',
+            'meta_description' => 'nullable|string|max:300',
             'content_html'     => 'nullable|string',
             'start_at'         => 'required|date',
             'end_at'           => 'nullable|date|after_or_equal:start_at',

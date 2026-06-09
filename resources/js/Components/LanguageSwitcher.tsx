@@ -19,6 +19,11 @@ export default function LanguageSwitcher() {
         availableLocales: LocaleInfo[];
     };
 
+    // Hide the language switcher if the current locale is English
+    if (locale === 'en') {
+        return null;
+    }
+
     const locales: LocaleInfo[] = availableLocales?.length
         ? availableLocales
         : [

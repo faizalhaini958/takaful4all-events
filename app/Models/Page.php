@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Page extends Model
 {
-    use HasSlug;
+    use HasSlug, LogsActivity;
 
     protected $fillable = [
         'title',
@@ -39,5 +41,13 @@ class Page extends Model
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('is_published', true);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['title', 'is_published', 'slug'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }

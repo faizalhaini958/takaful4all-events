@@ -159,11 +159,16 @@ class EventRegistrationController extends Controller
             $pricing = $pricingService->calculateTotal($ticket, $validated['quantity'], $productItems, $user);
 
             $totalAmount = $pricing['grand_total'];
-            $status = $event->require_approval ? 'pending' : 'confirmed';
+            $status = ($event->require_approval || $totalAmount > 0) ? 'pending' : 'confirmed';
             $paymentStatus = $totalAmount > 0 ? 'pending' : 'na';
+
+            if ($totalAmount > 0 && !$event->require_approval) {
+                $status = 'awaiting_payment';
+            }
 
             // For free registrations without approval, auto-confirm
             if ($totalAmount == 0 && !$event->require_approval) {
+                $status = 'confirmed';
                 $paymentStatus = 'na';
             }
 

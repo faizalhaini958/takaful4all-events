@@ -24,6 +24,7 @@ class ParticipantsController extends Controller
         $search   = request('search', '');
         $ticketId = request('ticket', '');
         $checkin  = request('checkin', ''); // '' | 'yes' | 'no'
+        $status   = request('status', '');
 
         $fields  = $event->registration_fields ?? [];
         $tickets = $event->tickets()->orderBy('sort_order')->get(['id', 'name']);
@@ -31,8 +32,14 @@ class ParticipantsController extends Controller
         // ── Stats (unfiltered total for the event) ───────────────────────────
         $statsBase = EventRegistrationAttendee::whereHas('registration', fn($q) => $q->where('event_id', $event->id));
         $stats = [
-            'total'      => $statsBase->count(),
-            'checked_in' => $statsBase->clone()->whereNotNull('checked_in_at')->count(),
+            'total'             => $statsBase->count(),
+            'checked_in'        => $statsBase->clone()->whereNotNull('checked_in_at')->count(),
+            'confirmed'         => (clone $statsBase)->whereHas('registration', fn($q) => $q->where('status', 'confirmed'))->count(),
+            'pending'           => (clone $statsBase)->whereHas('registration', fn($q) => $q->where('status', 'pending'))->count(),
+            'awaiting_payment'  => (clone $statsBase)->whereHas('registration', fn($q) => $q->where('status', 'awaiting_payment'))->count(),
+            'attended'          => (clone $statsBase)->whereHas('registration', fn($q) => $q->where('status', 'attended'))->count(),
+            'cancelled'         => (clone $statsBase)->whereHas('registration', fn($q) => $q->where('status', 'cancelled'))->count(),
+            'waitlisted'        => (clone $statsBase)->whereHas('registration', fn($q) => $q->where('status', 'waitlisted'))->count(),
         ];
 
         // ── Filtered query ───────────────────────────────────────────────────
@@ -60,6 +67,10 @@ class ParticipantsController extends Controller
             $query->whereNull('checked_in_at');
         }
 
+        if (in_array($status, ['pending', 'awaiting_payment', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
+            $query->whereHas('registration', fn($q) => $q->where('status', $status));
+        }
+
         $attendees = $query->paginate(50)->withQueryString();
 
         return Inertia::render('Admin/Events/Participants/Index', [
@@ -71,6 +82,7 @@ class ParticipantsController extends Controller
             'currentSearch'  => $search,
             'currentTicket'  => $ticketId,
             'currentCheckin' => $checkin,
+            'currentStatus'  => $status,
         ]);
     }
 
@@ -185,6 +197,7 @@ class ParticipantsController extends Controller
         $search   = request('search', '');
         $ticketId = request('ticket', '');
         $checkin  = request('checkin', '');
+        $status   = request('status', '');
 
         $query = EventRegistrationAttendee::whereHas('registration', function ($q) use ($event) {
                 $q->where('event_id', $event->id);
@@ -208,6 +221,10 @@ class ParticipantsController extends Controller
             $query->whereNotNull('checked_in_at');
         } elseif ($checkin === 'no') {
             $query->whereNull('checked_in_at');
+        }
+
+        if (in_array($status, ['pending', 'awaiting_payment', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
+            $query->whereHas('registration', fn($q) => $q->where('status', $status));
         }
 
         return $query;

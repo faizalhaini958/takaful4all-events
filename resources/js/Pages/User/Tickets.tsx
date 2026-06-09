@@ -16,19 +16,21 @@ interface Props {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-    confirmed:  'bg-emerald-100 text-emerald-700',
-    pending:    'bg-amber-100 text-amber-700',
-    attended:   'bg-blue-100 text-blue-700',
-    cancelled:  'bg-red-100 text-red-700',
-    waitlisted: 'bg-purple-100 text-purple-700',
+    confirmed:         'bg-emerald-100 text-emerald-700',
+    pending:           'bg-amber-100 text-amber-700',
+    awaiting_payment:  'bg-orange-100 text-orange-700',
+    attended:          'bg-blue-100 text-blue-700',
+    cancelled:         'bg-red-100 text-red-700',
+    waitlisted:        'bg-purple-100 text-purple-700',
 };
 
 const STATUS_ACCENT: Record<string, string> = {
-    confirmed:  'bg-emerald-500',
-    pending:    'bg-amber-400',
-    attended:   'bg-blue-500',
-    cancelled:  'bg-red-400',
-    waitlisted: 'bg-purple-400',
+    confirmed:         'bg-emerald-500',
+    pending:           'bg-amber-400',
+    awaiting_payment:  'bg-orange-400',
+    attended:          'bg-blue-500',
+    cancelled:         'bg-red-400',
+    waitlisted:        'bg-purple-400',
 };
 
 const TAB_FILTERS = [
@@ -36,6 +38,7 @@ const TAB_FILTERS = [
     { label: 'Upcoming',  value: 'confirmed' },
     { label: 'Attended',  value: 'attended' },
     { label: 'Pending',   value: 'pending' },
+    { label: 'Awaiting Payment', value: 'awaiting_payment' },
     { label: 'Cancelled', value: 'cancelled' },
 ];
 
@@ -255,6 +258,10 @@ export default function Tickets({ registrations, filters }: Props) {
                                         ) : reg.status === 'pending' ? (
                                             <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-xl font-medium text-center">
                                                 Awaiting confirmation
+                                            </span>
+                                        ) : reg.status === 'awaiting_payment' ? (
+                                            <span className="text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-xl font-medium text-center">
+                                                Awaiting payment
                                             </span>
                                         ) : null}
                                     </div>

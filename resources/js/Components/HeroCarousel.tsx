@@ -1,10 +1,10 @@
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { type Banner } from '@/types';
+import { type Banner, type ContentBanner } from '@/types';
 
 interface Props {
-    banners: Banner[];
+    banners: Banner[] | ContentBanner[];
     overlay?: ReactNode;
     contained?: boolean;
 }

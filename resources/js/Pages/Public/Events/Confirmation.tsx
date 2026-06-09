@@ -12,12 +12,12 @@ const POPPINS = "'Poppins', sans-serif";
 const INTER   = "'Inter', 'DM Sans', sans-serif";
 
 const PAGE_HEADER: Record<string, { iconBg: string; iconColor: string; Icon: React.ElementType; title: string; subtitle: string }> = {
-    confirmed:       { iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', Icon: CheckCircle2, title: 'Registration Successful!',       subtitle: 'Your registration has been confirmed. We look forward to seeing you!' },
-    attended:        { iconBg: 'bg-blue-100',    iconColor: 'text-blue-600',    Icon: UserCheck,   title: 'Attendance Recorded',             subtitle: 'Thank you for attending this event.' },
-    pending:         { iconBg: 'bg-amber-100',   iconColor: 'text-amber-600',   Icon: Clock,       title: 'Pending Approval',                subtitle: "Your registration is pending admin approval. We'll notify you once it's confirmed." },
-    pending_payment: { iconBg: 'bg-amber-100',   iconColor: 'text-amber-600',   Icon: Clock,       title: 'Complete Your Payment',           subtitle: 'Your spot is reserved. Please complete your payment to confirm your registration.' },
-    waitlisted:      { iconBg: 'bg-gray-100',    iconColor: 'text-gray-600',    Icon: AlertCircle, title: 'You\'re on the Waitlist',         subtitle: 'We\'ll notify you if a spot becomes available.' },
-    cancelled:       { iconBg: 'bg-red-100',     iconColor: 'text-red-600',     Icon: XCircle,     title: 'Registration Cancelled',          subtitle: 'This registration has been cancelled.' },
+    confirmed:         { iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', Icon: CheckCircle2, title: 'Registration Successful!',       subtitle: 'Your registration has been confirmed. We look forward to seeing you!' },
+    attended:          { iconBg: 'bg-blue-100',    iconColor: 'text-blue-600',    Icon: UserCheck,   title: 'Attendance Recorded',             subtitle: 'Thank you for attending this event.' },
+    pending:           { iconBg: 'bg-amber-100',   iconColor: 'text-amber-600',   Icon: Clock,       title: 'Pending Approval',                subtitle: "Your registration is pending admin approval. We'll notify you once it's confirmed." },
+    awaiting_payment:  { iconBg: 'bg-orange-100',  iconColor: 'text-orange-600',  Icon: Clock,       title: 'Complete Your Payment',           subtitle: 'Your spot is reserved. Please complete your payment to confirm your registration.' },
+    waitlisted:        { iconBg: 'bg-gray-100',    iconColor: 'text-gray-600',    Icon: AlertCircle, title: 'You\'re on the Waitlist',         subtitle: 'We\'ll notify you if a spot becomes available.' },
+    cancelled:         { iconBg: 'bg-red-100',     iconColor: 'text-red-600',     Icon: XCircle,     title: 'Registration Cancelled',          subtitle: 'This registration has been cancelled.' },
 };
 
 interface Props {
@@ -28,7 +28,7 @@ export default function RegistrationConfirmation({ registration }: Props) {
     const event = registration.event!;
     const startDate = new Date(event.start_at);
     const location = [event.venue, event.city, event.state].filter(Boolean).join(', ');
-    const pendingKey = (registration.status === 'pending' && registration.payment_status === 'pending') ? 'pending_payment' : registration.status;
+    const pendingKey = registration.status;
     const header = PAGE_HEADER[pendingKey] ?? PAGE_HEADER['pending'];
     const { Icon } = header;
     const { track } = useAnalytics();
@@ -142,14 +142,14 @@ export default function RegistrationConfirmation({ registration }: Props) {
 
                         {/* Status */}
                         {(() => {
-                            const statusConfig: Record<string, { bg: string; color: string; message: string }> = {
-                                confirmed:       { bg: '#ecfdf5', color: '#065f46', message: 'Your spot is confirmed. See you at the event!' },
-                                attended:        { bg: '#eff6ff', color: '#1e40af', message: 'You have attended this event. Thank you!' },
-                                pending:         { bg: '#fffbeb', color: '#92400e', message: 'Your registration is pending admin approval. You will receive an email once confirmed.' },
-                                pending_payment: { bg: '#fffbeb', color: '#92400e', message: 'Your spot is reserved. Please complete your payment to confirm your registration.' },
-                                waitlisted:      { bg: '#f3f4f6', color: '#374151', message: 'You are on the waitlist. We will notify you if a spot becomes available.' },
-                                cancelled:       { bg: '#fef2f2', color: '#991b1b', message: 'This registration has been cancelled.' },
-                            };
+                        const statusConfig: Record<string, { bg: string; color: string; message: string }> = {
+                            confirmed:         { bg: '#ecfdf5', color: '#065f46', message: 'Your spot is confirmed. See you at the event!' },
+                            attended:          { bg: '#eff6ff', color: '#1e40af', message: 'You have attended this event. Thank you!' },
+                            pending:           { bg: '#fffbeb', color: '#92400e', message: 'Your registration is pending admin approval. You will receive an email once confirmed.' },
+                            awaiting_payment:  { bg: '#fff7ed', color: '#9a3412', message: 'Your spot is reserved. Please complete your payment to confirm your registration.' },
+                            waitlisted:        { bg: '#f3f4f6', color: '#374151', message: 'You are on the waitlist. We will notify you if a spot becomes available.' },
+                            cancelled:         { bg: '#fef2f2', color: '#991b1b', message: 'This registration has been cancelled.' },
+                        };
                             const cfg = statusConfig[pendingKey] ?? statusConfig['pending'];
                             return (
                                 <div className="p-3 rounded-lg text-center text-sm font-medium"

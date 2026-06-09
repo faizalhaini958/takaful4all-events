@@ -74,6 +74,24 @@ export interface Banner {
     updated_at: string;
 }
 
+export interface ContentBanner {
+    id: number;
+    title: string;
+    subtitle: string | null;
+    image_path: string;
+    image_url: string;
+    mobile_image_url: string | null;
+    link_url: string | null;
+    button_text: string | null;
+    button_link: string | null;
+    sort_order: number;
+    is_active: boolean;
+    start_date: string | null;
+    end_date: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Media {
     id: number;
     disk: string;
@@ -96,6 +114,7 @@ export interface Event {
     title: string;
     slug: string;
     excerpt: string | null;
+    meta_description: string | null;
     content_html: string | null;
     start_at: string;
     end_at: string | null;
@@ -186,7 +205,7 @@ export interface EventProduct {
 
 // ─── Registrations / RSVP ────────────────────────────────────────────────────
 
-export type RegistrationStatus = 'pending' | 'confirmed' | 'cancelled' | 'waitlisted' | 'attended';
+export type RegistrationStatus = 'pending' | 'awaiting_payment' | 'confirmed' | 'cancelled' | 'waitlisted' | 'attended';
 export type PaymentStatus = 'na' | 'pending' | 'paid' | 'refunded';
 
 export interface EventRegistrationProduct {
@@ -256,6 +275,7 @@ export interface RegistrationStats {
     total: number;
     confirmed: number;
     pending: number;
+    awaiting_payment: number;
     attended: number;
     cancelled: number;
     waitlisted: number;
@@ -413,6 +433,7 @@ export interface DashboardStats {
         total: number;
         confirmed: number;
         pending: number;
+        awaiting_payment: number;
         revenue: number;
     };
     posts: {

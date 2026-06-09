@@ -7,7 +7,7 @@ import { Separator } from '@/Components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { ShoppingCart, Package, DollarSign, Search, Eye, ChevronLeft, ChevronRight, CalendarDays, User, Hash, Tag, X } from 'lucide-react';
+import { ShoppingCart, Package, DollarSign, Search, Eye, ChevronLeft, ChevronRight, CalendarDays, User, Hash, Tag, X, Receipt } from 'lucide-react';
 import { type EventRegistrationProduct, type PaginatedData, type Event, type EventProduct } from '@/types';
 
 interface OrderItem extends Omit<EventRegistrationProduct, 'product'> {
@@ -19,6 +19,7 @@ interface OrderItem extends Omit<EventRegistrationProduct, 'product'> {
         status: string;
         event: Pick<Event, 'id' | 'title' | 'slug'> | null;
         ticket: { id: number; name: string } | null;
+        invoice?: { id: number; invoice_number: string } | null;
     };
     product: EventProduct | null;
 }
@@ -38,11 +39,12 @@ interface Props {
 }
 
 const STATUS_PILL: Record<string, string> = {
-    pending:    'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
-    confirmed:  'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
-    attended:   'bg-brand/15 text-brand border-brand/30',
-    cancelled:  'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30',
-    waitlisted: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30',
+    pending:           'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
+    awaiting_payment:  'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30',
+    confirmed:         'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+    attended:          'bg-brand/15 text-brand border-brand/30',
+    cancelled:         'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30',
+    waitlisted:        'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30',
 };
 
 export default function OrdersIndex({ orders, stats, events, products, currentSearch, currentEvent, currentProduct }: Props) {
@@ -168,12 +170,12 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reference</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Buyer</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Event</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Event</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Product</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Qty</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Amount</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Date</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -189,7 +191,7 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
                                             <div className="font-medium text-sm text-foreground">{order.registration?.name}</div>
                                             <div className="text-xs text-muted-foreground">{order.registration?.email}</div>
                                         </TableCell>
-                                        <TableCell className="text-sm max-w-[180px]">
+                                        <TableCell className="text-sm max-w-[180px] hidden md:table-cell">
                                             {order.registration?.event ? (
                                                 <span className="text-foreground truncate block">{order.registration.event.title}</span>
                                             ) : <span className="text-muted-foreground/50">—</span>}
@@ -234,7 +236,7 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
                                                 {order.registration?.status}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap hidden md:table-cell">
                                             {new Date(order.created_at).toLocaleDateString('en-MY', {
                                                 day: '2-digit', month: 'short', year: 'numeric',
                                             })}
@@ -268,7 +270,7 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
                         <>
                             <Separator />
                             <div className="flex items-center justify-between px-4 py-3">
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground hidden sm:block">
                                     Showing <span className="font-medium text-foreground">{orders.from}</span> to <span className="font-medium text-foreground">{orders.to}</span> of <span className="font-medium text-foreground">{orders.total}</span>
                                 </p>
                                 <div className="flex items-center gap-2">
@@ -414,6 +416,13 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
 
                                 {/* Actions */}
                                 <div className="flex justify-end gap-2">
+                                    {selectedOrder.registration?.invoice && (
+                                        <Button size="sm" variant="outline" asChild>
+                                            <a href={route('invoices.download', { invoiceNumber: selectedOrder.registration.invoice.invoice_number })}>
+                                                <Receipt className="w-3.5 h-3.5 mr-1.5" /> Invoice PDF
+                                            </a>
+                                        </Button>
+                                    )}
                                     {selectedOrder.registration?.event && (
                                         <Button size="sm" asChild>
                                             <Link href={`/admin/events/${selectedOrder.registration.event.slug}/registrations/${selectedOrder.registration.id}`}>

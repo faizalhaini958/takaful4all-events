@@ -15,6 +15,7 @@
         "laravel/socialite": "^5.27",
         "laravel/tinker": "^2.10.1",
         "simplesoftwareio/simple-qrcode": "^4.2",
+        "spatie/laravel-activitylog": "*",
         "spatie/laravel-sluggable": "^3.8",
         "tightenco/ziggy": "^2.0"
     },

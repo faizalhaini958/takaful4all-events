@@ -1,10 +1,11 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import PostCard from '@/Components/PostCard';
+import HeroCarousel from '@/Components/HeroCarousel';
 import VideoModal from '@/Components/VideoModal';
 import { Link, Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Video } from 'lucide-react';
-import { type Post, type PaginatedData } from '@/types';
+import { Sparkles, Video } from 'lucide-react';
+import { type ContentBanner, type Post, type PaginatedData } from '@/types';
 
 const POPPINS = "'Poppins', sans-serif";
 const INTER   = "'Inter', 'DM Sans', sans-serif";
@@ -19,10 +20,11 @@ const TABS = [
 interface Props {
     posts:        PaginatedData<Post>;
     activeType:   string;
+    banners:      ContentBanner[];
     canonicalUrl: string;
 }
 
-export default function ContentIndex({ posts, activeType, canonicalUrl }: Props) {
+export default function ContentIndex({ posts, activeType, banners, canonicalUrl }: Props) {
     const [activePost, setActivePost] = useState<Post | null>(null);
 
     function switchTab(type: string) {
@@ -68,6 +70,23 @@ export default function ContentIndex({ posts, activeType, canonicalUrl }: Props)
                 <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-20">
+
+                    {/* ── Featured banners carousel ── */}
+                    {banners.length > 0 && (
+                        <div className="mb-10">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" style={{ color: '#18C8FF' }} strokeWidth={2} />
+                                    <span style={{ fontFamily: POPPINS, fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'linear-gradient(90deg, #009FBB, #18C8FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                        Featured Highlights
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="rounded-2xl overflow-hidden" style={{ boxShadow: '0 4px 32px rgba(0,159,187,0.12), 0 0 0 1.5px rgba(0,159,187,0.15)' }}>
+                                <HeroCarousel banners={banners} contained />
+                            </div>
+                        </div>
+                    )}
 
                     {/* Tab filter */}
                     <div className="flex gap-2 flex-wrap mb-10">

@@ -3,20 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Event extends Model
 {
-    use HasSlug;
+    use HasSlug, LogsActivity;
 
     protected $fillable = [
         'title',
         'slug',
         'excerpt',
+        'meta_description',
         'content_html',
         'start_at',
         'end_at',
@@ -63,6 +67,14 @@ class Event extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['title', 'is_published', 'rsvp_enabled', 'start_at', 'end_at', 'venue', 'city'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
     // --- Relationships ---
@@ -126,7 +138,7 @@ class Event extends Model
 
     public function getRegistrationCountAttribute(): int
     {
-        return $this->registrations()->active()->sum('quantity');
+        return $this->registrations()->active()->excludeStalePending()->sum('quantity');
     }
 
     public function getIsRegistrationOpenAttribute(): bool

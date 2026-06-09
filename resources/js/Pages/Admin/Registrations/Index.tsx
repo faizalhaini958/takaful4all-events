@@ -3,11 +3,11 @@ import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/Components/ui/dialog';
 import { Separator } from '@/Components/ui/separator';
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Users, CheckCircle2, Clock, UserCheck, XCircle, AlertCircle, DollarSign, Search, Eye, ChevronLeft, ChevronRight, Mail, Phone, Building2, Utensils, FileText, CalendarDays, CreditCard, Hash, ExternalLink } from 'lucide-react';
+import { Users, CheckCircle2, Clock, UserCheck, XCircle, AlertCircle, DollarSign, Search, Eye, ChevronLeft, ChevronRight, Mail, Phone, Building2, Utensils, FileText, CalendarDays, CreditCard, Hash, ExternalLink, Download, Receipt, Send } from 'lucide-react';
 import { type EventRegistration, type RegistrationStats, type PaginatedData, type Event } from '@/types';
 import { getRegistrationStatusLabel } from '@/lib/status-colors';
 
@@ -21,11 +21,12 @@ interface Props {
 }
 
 const STATUS_PILL: Record<string, { class: string; label: string }> = {
-    pending:    { class: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',   label: 'Pending' },
-    confirmed:  { class: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30', label: 'Confirmed' },
-    attended:   { class: 'bg-primary/15 text-primary border-primary/30',                              label: 'Attended' },
-    cancelled:  { class: 'bg-destructive/15 text-destructive border-destructive/30',                  label: 'Cancelled' },
-    waitlisted: { class: 'bg-muted text-muted-foreground border-muted-foreground/20',                 label: 'Waitlisted' },
+    pending:           { class: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',   label: 'Pending' },
+    awaiting_payment:  { class: 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30',   label: 'Awaiting Payment' },
+    confirmed:         { class: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30', label: 'Confirmed' },
+    attended:          { class: 'bg-primary/15 text-primary border-primary/30',                              label: 'Attended' },
+    cancelled:         { class: 'bg-destructive/15 text-destructive border-destructive/30',                  label: 'Cancelled' },
+    waitlisted:        { class: 'bg-muted text-muted-foreground border-muted-foreground/20',                 label: 'Waitlisted' },
 };
 
 const PAYMENT_PILL: Record<string, { class: string; label: string }> = {
@@ -39,6 +40,7 @@ const STAT_CARDS = [
     { key: 'total',      label: 'Total',      icon: Users,       accent: 'text-primary',                       iconBg: 'bg-primary/10',          border: 'hover:border-primary/50' },
     { key: 'confirmed',  label: 'Confirmed',  icon: CheckCircle2, accent: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-500/10', border: 'hover:border-emerald-500/50' },
     { key: 'pending',    label: 'Pending',    icon: Clock,       accent: 'text-amber-600 dark:text-amber-400', iconBg: 'bg-amber-500/10',        border: 'hover:border-amber-500/50' },
+    { key: 'awaiting_payment', label: 'Awaiting Payment', icon: Clock, accent: 'text-orange-600 dark:text-orange-400', iconBg: 'bg-orange-500/10', border: 'hover:border-orange-500/50' },
     { key: 'attended',   label: 'Attended',   icon: UserCheck,   accent: 'text-sky-600 dark:text-sky-400',     iconBg: 'bg-sky-500/10',          border: 'hover:border-sky-500/50' },
     { key: 'cancelled',  label: 'Cancelled',  icon: XCircle,     accent: 'text-destructive',                   iconBg: 'bg-destructive/10',      border: 'hover:border-destructive/50' },
     { key: 'waitlisted', label: 'Waitlisted', icon: AlertCircle, accent: 'text-muted-foreground',              iconBg: 'bg-muted',               border: 'hover:border-muted-foreground/50' },
@@ -47,6 +49,8 @@ const STAT_CARDS = [
 export default function RegistrationsIndex({ registrations, stats, events, currentStatus, currentSearch, currentEvent }: Props) {
     const [search, setSearch] = useState(currentSearch);
     const [selectedReg, setSelectedReg] = useState<(EventRegistration & { event: Event }) | null>(null);
+    const [checkInTarget, setCheckInTarget] = useState<(EventRegistration & { event: Event }) | null>(null);
+    const [resendTarget, setResendTarget] = useState<(EventRegistration & { event: Event }) | null>(null);
 
     function applyFilters(overrides: Record<string, string> = {}) {
         const params: Record<string, string> = {
@@ -62,9 +66,22 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
         router.get('/admin/registrations', params, { preserveState: true, preserveScroll: true });
     }
 
-    function handleSearch(e: React.FormEvent) {
-        e.preventDefault();
-        applyFilters();
+    function confirmCheckIn() {
+        if (!checkInTarget) return;
+        router.post(`/admin/events/${checkInTarget.event?.slug}/registrations/${checkInTarget.id}/check-in`, {}, {
+            onFinish: () => setCheckInTarget(null),
+        });
+    }
+
+    function resendConfirmation(reg: EventRegistration & { event: Event }) {
+        setResendTarget(reg);
+    }
+
+    function confirmResend() {
+        if (!resendTarget) return;
+        router.post(`/admin/events/${resendTarget.event?.slug}/registrations/${resendTarget.id}/resend-confirmation`, {}, {
+            onFinish: () => setResendTarget(null),
+        });
     }
 
     return (
@@ -157,6 +174,7 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
                         <SelectContent>
                             <SelectItem value="all">All Statuses</SelectItem>
                             <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="awaiting_payment">Awaiting Payment</SelectItem>
                             <SelectItem value="confirmed">Confirmed</SelectItem>
                             <SelectItem value="attended">Attended</SelectItem>
                             <SelectItem value="waitlisted">Waitlisted</SelectItem>
@@ -170,15 +188,15 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reference</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Reference</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Participant</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Event</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ticket</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Qty</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Event</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Ticket</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center hidden md:table-cell">Qty</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Total</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Registered</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Payment</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Registered</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -189,12 +207,12 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
                                 const paymentPill = PAYMENT_PILL[reg.payment_status] ?? PAYMENT_PILL.na;
                                 return (
                                     <TableRow key={reg.id}>
-                                        <TableCell className="font-mono text-xs text-muted-foreground">{reg.reference_no}</TableCell>
+                                        <TableCell className="font-mono text-xs text-muted-foreground hidden md:table-cell">{reg.reference_no}</TableCell>
                                         <TableCell>
                                             <div className="font-medium text-foreground">{reg.name}</div>
                                             <div className="text-xs text-muted-foreground">{reg.email}</div>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="hidden md:table-cell">
                                             <Link
                                                 href={`/admin/events/${reg.event?.slug}/registrations`}
                                                 className="text-sm text-primary hover:text-primary/80 hover:underline transition-colors"
@@ -202,8 +220,8 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
                                                 {reg.event?.title ?? '—'}
                                             </Link>
                                         </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">{reg.ticket?.name ?? '—'}</TableCell>
-                                        <TableCell className="text-center tabular-nums">{reg.quantity}</TableCell>
+                                        <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{reg.ticket?.name ?? '—'}</TableCell>
+                                        <TableCell className="text-center tabular-nums hidden md:table-cell">{reg.quantity}</TableCell>
                                         <TableCell className="text-right font-semibold tabular-nums">
                                             {Number(reg.total_amount) > 0
                                                 ? `RM ${Number(reg.total_amount).toFixed(2)}`
@@ -214,25 +232,38 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
                                                 {statusLabel}
                                             </span>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="hidden md:table-cell">
                                             <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${paymentPill.class}`}>
                                                 {paymentPill.label}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap hidden md:table-cell">
                                             {new Date(reg.created_at).toLocaleDateString('en-MY', {
                                                 day: 'numeric', month: 'short', year: 'numeric',
                                             })}
                                         </TableCell>
                                         <TableCell>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                                onClick={() => setSelectedReg(reg)}
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </Button>
+                                            <div className="flex items-center gap-0.5">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                                    onClick={() => setSelectedReg(reg)}
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </Button>
+                                                {['confirmed', 'attended'].includes(reg.status) && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-blue-500"
+                                                        onClick={() => resendConfirmation(reg)}
+                                                        title="Resend confirmation email"
+                                                    >
+                                                        <Send className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 );
@@ -255,7 +286,7 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
 
                 {/* Pagination */}
                 <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-muted-foreground hidden sm:inline">
                         Showing <span className="font-medium text-foreground">{registrations.from ?? 0}</span> to <span className="font-medium text-foreground">{registrations.to ?? 0}</span> of <span className="font-medium text-foreground">{registrations.total}</span>
                     </span>
                     <div className="flex items-center gap-3">
@@ -282,7 +313,45 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
             <RegistrationDetailModal
                 registration={selectedReg}
                 onClose={() => setSelectedReg(null)}
+                onCheckIn={(reg) => setCheckInTarget(reg)}
+                onResend={(reg) => setResendTarget(reg)}
             />
+
+            {/* Check-in confirmation */}
+            <Dialog open={!!checkInTarget} onOpenChange={open => !open && setCheckInTarget(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirm Check-in</DialogTitle>
+                        <DialogDescription>
+                            Mark {checkInTarget?.name} ({checkInTarget?.reference_no}) as <strong>attended</strong>?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setCheckInTarget(null)}>Cancel</Button>
+                        <Button onClick={confirmCheckIn} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                            <UserCheck className="w-3.5 h-3.5 mr-1.5" /> Confirm Check-in
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Resend confirmation */}
+            <Dialog open={!!resendTarget} onOpenChange={open => !open && setResendTarget(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Resend Confirmation Email</DialogTitle>
+                        <DialogDescription>
+                            Resend the confirmation email to {resendTarget?.name} ({resendTarget?.email})?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setResendTarget(null)}>Cancel</Button>
+                        <Button onClick={confirmResend} className="text-blue-600 border-blue-300 hover:bg-blue-50">
+                            <Send className="w-3.5 h-3.5 mr-1.5" /> Resend Email
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AdminLayout>
     );
 }
@@ -292,9 +361,13 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
 function RegistrationDetailModal({
     registration: reg,
     onClose,
+    onCheckIn,
+    onResend,
 }: {
     registration: (EventRegistration & { event: Event }) | null;
     onClose: () => void;
+    onCheckIn: (reg: EventRegistration & { event: Event }) => void;
+    onResend: (reg: EventRegistration & { event: Event }) => void;
 }) {
     if (!reg) return null;
 
@@ -311,11 +384,11 @@ function RegistrationDetailModal({
     }
 
     function checkIn() {
-        router.post(`/admin/events/${reg!.event?.slug}/registrations/${reg!.id}/check-in`, {}, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => onClose(),
-        });
+        if (reg) onCheckIn(reg);
+    }
+
+    function resendConfirmation() {
+        if (reg) onResend(reg);
     }
 
     return (
@@ -357,6 +430,18 @@ function RegistrationDetailModal({
                                 <p className="text-sm text-foreground">{reg.notes}</p>
                             </div>
                         )}
+                        <div className="mt-3 flex gap-2">
+                            <Button size="sm" variant="outline" asChild>
+                                <a href={route('tickets.download', { registration: reg.id, attendee_no: 1 })}>
+                                    <Download className="w-3.5 h-3.5 mr-1" /> Ticket PDF
+                                </a>
+                            </Button>
+                            <Button size="sm" variant="outline" asChild>
+                                <a href={route('tickets.download', { registration: reg.id, attendee_no: 1, inline: 1 })} target="_blank">
+                                    <Eye className="w-3.5 h-3.5 mr-1" /> Preview
+                                </a>
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Sub-Attendees (when qty > 1) */}
@@ -384,7 +469,10 @@ function RegistrationDetailModal({
                                                     <p className="text-xs text-muted-foreground truncate">{att.email}</p>
                                                 </div>
                                             </div>
-                                            <div className="shrink-0">
+                                            <div className="shrink-0 flex items-center gap-2">
+                                                <a href={route('tickets.download', { registration: reg.id, attendee_no: att.attendee_no })} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-card px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors">
+                                                    <Download className="w-3 h-3" /> PDF
+                                                </a>
                                                 {att.checked_in_at ? (
                                                     <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                                                         <UserCheck className="w-3 h-3" /> Checked In
@@ -496,12 +584,26 @@ function RegistrationDetailModal({
 
                 {/* Footer Actions */}
                 <div className="px-6 py-4 flex items-center justify-between gap-3">
-                    <Button variant="outline" size="sm" asChild>
-                        <Link href={`/admin/events/${reg.event?.slug}/registrations/${reg.id}`}>
-                            <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Full Details
-                        </Link>
-                    </Button>
                     <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                            <Link href={`/admin/events/${reg.event?.slug}/registrations/${reg.id}`}>
+                                <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Full Details
+                            </Link>
+                        </Button>
+                        {reg.invoice && (
+                            <Button variant="outline" size="sm" asChild>
+                                <a href={route('invoices.download', { invoiceNumber: reg.invoice.invoice_number })}>
+                                    <Receipt className="w-3.5 h-3.5 mr-1.5" /> Invoice PDF
+                                </a>
+                            </Button>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {['confirmed', 'attended'].includes(reg.status) && (
+                            <Button size="sm" variant="outline" onClick={resendConfirmation} className="text-blue-600 border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+                                <Send className="w-3.5 h-3.5 mr-1.5" /> Resend Confirmation
+                            </Button>
+                        )}
                         {reg.status === 'pending' && (
                             <Button size="sm" onClick={() => updateStatus('confirmed')} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                                 <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Approve
@@ -512,7 +614,7 @@ function RegistrationDetailModal({
                                 <UserCheck className="w-3.5 h-3.5 mr-1.5" /> Check In
                             </Button>
                         )}
-                        {['pending', 'confirmed', 'waitlisted'].includes(reg.status) && (
+                        {['pending', 'awaiting_payment', 'confirmed', 'waitlisted'].includes(reg.status) && (
                             <Button size="sm" variant="destructive" onClick={() => updateStatus('cancelled')}>
                                 <XCircle className="w-3.5 h-3.5 mr-1.5" /> Cancel
                             </Button>

@@ -14,11 +14,12 @@ import type { RegistrationStatus, PaymentStatus } from '@/types';
 type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
 
 const REGISTRATION_STATUS_MAP: Record<RegistrationStatus, { variant: BadgeVariant; className?: string }> = {
-    confirmed:  { variant: 'default',     className: 'bg-emerald-600 hover:bg-emerald-600 text-white' },
-    pending:    { variant: 'outline',     className: 'border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-950' },
-    waitlisted: { variant: 'outline',     className: 'border-orange-500 text-orange-600 bg-orange-50 dark:bg-orange-950' },
-    attended:   { variant: 'default',     className: 'bg-blue-600 hover:bg-blue-600 text-white' },
-    cancelled:  { variant: 'destructive' },
+    confirmed:         { variant: 'default',     className: 'bg-emerald-600 hover:bg-emerald-600 text-white' },
+    pending:           { variant: 'outline',     className: 'border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-950' },
+    awaiting_payment:  { variant: 'outline',     className: 'border-orange-500 text-orange-600 bg-orange-50 dark:bg-orange-950' },
+    waitlisted:        { variant: 'outline',     className: 'border-orange-500 text-orange-600 bg-orange-50 dark:bg-orange-950' },
+    attended:          { variant: 'default',     className: 'bg-blue-600 hover:bg-blue-600 text-white' },
+    cancelled:         { variant: 'destructive' },
 };
 
 export function registrationStatusBadge(status: RegistrationStatus) {
@@ -43,12 +44,15 @@ export function paymentStatusBadge(status: PaymentStatus) {
 /**
  * Returns a human-readable label for a registration status, distinguishing
  * between the two "pending" sub-states:
- *   - status=pending + payment_status=pending  → "Pending Payment"
- *   - status=pending + payment_status=na       → "Pending Approval"
+ *   - awaiting_payment                   → "Awaiting Payment"
+ *   - status=pending + payment_status=na → "Pending Approval"
  */
 export function getRegistrationStatusLabel(status: string, paymentStatus: string): string {
+    if (status === 'awaiting_payment') {
+        return 'Awaiting Payment';
+    }
     if (status === 'pending') {
-        return paymentStatus === 'pending' ? 'Pending Payment' : 'Pending Approval';
+        return 'Pending Approval';
     }
     return status.charAt(0).toUpperCase() + status.slice(1);
 }

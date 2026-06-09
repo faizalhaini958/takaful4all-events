@@ -154,21 +154,14 @@
 
         /* Totals */
         .totals-section {
-            display: table;
-            width: 100%;
             margin-bottom: 30px;
-        }
-
-        .totals-qr {
-            display: table-cell;
-            vertical-align: top;
-            width: 40%;
+            text-align: right;
         }
 
         .totals-table {
-            display: table-cell;
-            vertical-align: top;
+            display: inline-block;
             width: 60%;
+            text-align: right;
         }
 
         .total-row {
@@ -207,18 +200,7 @@
 
         /* QR Code */
         .qr-section {
-            text-align: center;
-        }
-
-        .qr-section img {
-            width: 120px;
-            height: 120px;
-        }
-
-        .qr-label {
-            font-size: 9px;
-            color: #999;
-            margin-top: 5px;
+            display: none;
         }
 
         /* Footer */
@@ -357,16 +339,8 @@
             </tbody>
         </table>
 
-        {{-- Totals + QR --}}
+        {{-- Totals --}}
         <div class="totals-section">
-            <div class="totals-qr">
-                @if ($qrCode)
-                    <div class="qr-section">
-                        <img src="data:image/svg+xml;base64,{{ base64_encode($qrCode) }}" alt="QR Code">
-                        <div class="qr-label">Scan for booking confirmation</div>
-                    </div>
-                @endif
-            </div>
             <div class="totals-table">
                 <div class="total-row">
                     <div class="total-label">Subtotal</div>

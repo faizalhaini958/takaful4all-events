@@ -5,7 +5,7 @@ import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
 import { Link } from '@inertiajs/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ChevronLeft, QrCode, Search, CheckCircle2, XCircle, AlertCircle, UserCheck, Camera, Keyboard, Video, VideoOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, QrCode, Search, CheckCircle2, XCircle, AlertCircle, UserCheck, Camera, Keyboard, Video, VideoOff, FileText } from 'lucide-react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import { type Event } from '@/types';
 import { registrationStatusBadge, paymentStatusBadge } from '@/lib/status-colors';
@@ -91,6 +91,8 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
     const [checkedInCount, setCheckedInCount] = useState(checked_in_count);
     const [scanMode, setScanMode] = useState<ScanMode>('manual');
     const [cameraActive, setCameraActive] = useState(false);
+    const [cameraPaused, setCameraPaused] = useState(false);
+    const [scannerFlash, setScannerFlash] = useState<'success' | 'error' | null>(null);
     const [cameraError, setCameraError] = useState<string | null>(null);
     const [cardFlash, setCardFlash] = useState<'success' | 'error' | null>(null);
     const [scanLog, setScanLog] = useState<ScanLogEntry[]>([]);
@@ -181,17 +183,23 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                 if (data.registration.checked_in_at) {
                     playBeep('warning');
                     flash('error');
+                    setScannerFlash('error');
+                    setTimeout(() => setScannerFlash(null), 1200);
                     setMessage({ type: 'warning', text: `Already checked in at ${new Date(data.registration.checked_in_at).toLocaleTimeString()}` });
-                    setScanLog(prev => [{ id: crypto.randomUUID(), name: data.registration.name, reference: data.registration.reference_no, ticket: data.registration.ticket, status: 'already_in', time: new Date() }, ...prev].slice(0, 10));
+                    setScanLog(prev => [{ id: crypto.randomUUID(), name: data.registration.name, reference: data.registration.reference_no, ticket: data.registration.ticket, status: 'already_in' as const, time: new Date() }, ...prev].slice(0, 10));
                 } else {
                     playBeep('success');
                     flash('success');
+                    setScannerFlash('success');
+                    setTimeout(() => setScannerFlash(null), 1200);
                 }
             } else {
                 playBeep('error');
                 flash('error');
+                setScannerFlash('error');
+                setTimeout(() => setScannerFlash(null), 1200);
                 setMessage({ type: 'error', text: data.message || 'Registration not found.' });
-                setScanLog(prev => [{ id: crypto.randomUUID(), name: '—', reference: ref, ticket: null, status: 'not_found', time: new Date() }, ...prev].slice(0, 10));
+                setScanLog(prev => [{ id: crypto.randomUUID(), name: '—', reference: ref, ticket: null, status: 'not_found' as const, time: new Date() }, ...prev].slice(0, 10));
             }
         } catch {
             setMessage({ type: 'error', text: 'Failed to look up registration. Please try again.' });
@@ -232,15 +240,16 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                 setResult(checkedInResult);
                 setCheckedInCount(c => c + 1);
                 if (result) {
-                    setScanLog(prev => [{ id: crypto.randomUUID(), name: result.name, reference: result.reference_no, ticket: result.ticket, status: 'checked_in', time: new Date() }, ...prev].slice(0, 10));
+                    setScanLog(prev => [{ id: crypto.randomUUID(), name: result.name, reference: result.reference_no, ticket: result.ticket, status: 'checked_in' as const, time: new Date() }, ...prev].slice(0, 10));
                 }
-                // Auto-clear fallback for camera mode
+                // Auto-clear and resume camera scanning after check-in
                 if (scanMode === 'camera') {
                     setTimeout(() => {
                         setReference('');
                         setResult(null);
                         setMessage(null);
-                    }, 2500);
+                        resumeScanner();
+                    }, 2000);
                 }
             } else {
                 playBeep('error');
@@ -283,10 +292,58 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
             scannerRef.current = null;
         }
         setCameraActive(false);
+        setCameraPaused(false);
     }, []);
+
+    // Pause the scanner (keep camera running, stop decoding) after a QR is found
+    const pauseScanner = useCallback(() => {
+        const scanner = scannerRef.current;
+        if (scanner) {
+            try {
+                const state = scanner.getState();
+                if (state === Html5QrcodeScannerState.SCANNING) {
+                    scanner.pause(true); // true = pause rendering too
+                }
+            } catch {
+                // ignore
+            }
+        }
+        setCameraPaused(true);
+    }, []);
+
+    // Resume decoding after cancel/check-in
+    const resumeScanner = useCallback(() => {
+        const scanner = scannerRef.current;
+        if (scanner) {
+            try {
+                const state = scanner.getState();
+                if (state === Html5QrcodeScannerState.PAUSED) {
+                    scanner.resume();
+                }
+            } catch {
+                // ignore
+            }
+        }
+        setCameraPaused(false);
+        lookupInProgress.current = false;
+    }, []);
+
+    // Cancel current scan result and resume camera
+    const cancelScan = useCallback(() => {
+        setReference('');
+        setResult(null);
+        setMessage(null);
+        setAttendeeNo(null);
+        setScannerFlash(null);
+        resumeScanner();
+        if (scanMode === 'manual') {
+            setTimeout(() => inputRef.current?.focus(), 50);
+        }
+    }, [resumeScanner, scanMode]);
 
     const startCamera = useCallback(async () => {
         setCameraError(null);
+        setCameraPaused(false);
 
         // Ensure any previous scanner is fully stopped
         if (scannerRef.current) {
@@ -316,6 +373,18 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                 { facingMode: 'environment' },
                 { fps: 10, qrbox: { width: 250, height: 250 } },
                 (decodedText) => {
+                    if (lookupInProgress.current) return; // already processing
+                    // Pause immediately so camera freezes while we show result
+                    if (scannerRef.current) {
+                        try {
+                            const st = scannerRef.current.getState();
+                            if (st === Html5QrcodeScannerState.SCANNING) {
+                                scannerRef.current.pause(true);
+                            }
+                        } catch { /* */ }
+                    }
+                    setCameraPaused(true);
+                    playBeep('success');
                     const parsed = parseInput(decodedText);
                     doLookup(parsed.reference, parsed.attendeeNo);
                 },
@@ -336,6 +405,7 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
             }
             scannerRef.current = null;
             setCameraActive(false);
+            setCameraPaused(false);
         }
     }, [parseInput, doLookup]);
 
@@ -345,7 +415,7 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
             stopCamera();
         }
         return () => { stopCamera(); };
-    }, [scanMode, stopCamera]);
+    }, [scanMode, stopCamera]); // eslint-disable-line react-hooks/exhaustive-deps
 
     function handleModeSwitch(mode: ScanMode) {
         setScanMode(mode);
@@ -389,21 +459,35 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
         <AdminLayout>
             <div className="max-w-2xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="flex items-center gap-3">
-                    <Link href="/admin/events" className="text-muted-foreground hover:text-foreground transition-colors">
-                        <ChevronLeft className="w-5 h-5" />
-                    </Link>
-                    <div className="flex-1">
-                        <h1 className="text-2xl font-bold text-foreground">Event Check-In</h1>
-                        <p className="text-sm text-muted-foreground">{event.title}</p>
+                <div>
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5 flex-wrap">
+                        <Link href="/admin" className="hover:text-foreground transition-colors">Dashboard</Link>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <Link href="/admin/events" className="hover:text-foreground transition-colors">Events</Link>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <span className="text-foreground font-medium truncate max-w-[160px]">{event.title}</span>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <span className="text-foreground font-medium">Check‑In</span>
                     </div>
-                    <div className="text-right">
-                        <Badge variant="secondary" className="text-sm">
-                            <UserCheck className="w-4 h-4 mr-1" /> {checkedInCount} checked in
-                        </Badge>
-                        {event.max_attendees && (
-                            <p className="text-xs text-muted-foreground mt-1">{event.max_attendees} capacity</p>
-                        )}
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                            <h1 className="text-2xl font-bold text-foreground">Event Check-In</h1>
+                            <p className="text-sm text-muted-foreground">{event.title}</p>
+                        </div>
+                        <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                            <Link href={`/admin/events/${event.slug}/check-in/log`}>
+                                <FileText className="w-4 h-4" />
+                                View Log
+                            </Link>
+                        </Button>
+                        <div className="text-right">
+                            <Badge variant="secondary" className="text-sm">
+                                <UserCheck className="w-4 h-4 mr-1" /> {checkedInCount} checked in
+                            </Badge>
+                            {event.max_attendees && (
+                                <p className="text-xs text-muted-foreground mt-1">{event.max_attendees} capacity</p>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -506,20 +590,46 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                             )}
 
                             {/* Container must always be in DOM and visible when camera is active */}
-                            <div
-                                id={scannerContainerId}
-                                style={{ minHeight: cameraActive ? '300px' : '0', display: cameraActive ? 'block' : 'none' }}
-                                className="rounded-lg overflow-hidden"
-                            />
+                            <div className="relative">
+                                <div
+                                    id={scannerContainerId}
+                                    style={{ minHeight: cameraActive ? '300px' : '0', display: cameraActive ? 'block' : 'none' }}
+                                    className={`rounded-lg overflow-hidden transition-all duration-300 ${
+                                        scannerFlash === 'success'
+                                            ? 'ring-4 ring-emerald-400 ring-offset-2'
+                                            : scannerFlash === 'error'
+                                            ? 'ring-4 ring-red-400 ring-offset-2'
+                                            : ''
+                                    }`}
+                                />
+                                {/* Paused overlay */}
+                                {cameraPaused && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg pointer-events-none">
+                                        <div className="bg-white/90 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                                            <span className="text-sm font-semibold text-gray-800">QR Detected — Paused</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
                             {cameraActive && (
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between gap-2">
                                     <p className="text-xs text-muted-foreground">
-                                        Point your camera at a QR code to scan automatically
+                                        {cameraPaused
+                                            ? 'Scanner paused. Check in or cancel to resume.'
+                                            : 'Point your camera at a QR code to scan automatically'}
                                     </p>
-                                    <Button variant="outline" size="sm" onClick={stopCamera}>
-                                        <VideoOff className="w-3.5 h-3.5 mr-1.5" /> Stop Camera
-                                    </Button>
+                                    <div className="flex gap-2 flex-shrink-0">
+                                        {cameraPaused && (
+                                            <Button variant="outline" size="sm" onClick={cancelScan} className="border-amber-300 text-amber-700 hover:bg-amber-50">
+                                                <XCircle className="w-3.5 h-3.5 mr-1.5" /> Cancel
+                                            </Button>
+                                        )}
+                                        <Button variant="outline" size="sm" onClick={stopCamera}>
+                                            <VideoOff className="w-3.5 h-3.5 mr-1.5" /> Stop
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
                         </CardContent>
@@ -585,9 +695,9 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
 
                                 const formatLabel = (key: string) =>
                                     key.replace(/_/g, ' ')
-                                       .replace(/\btshirt\b/gi, 'T-Shirt')
-                                       .replace(/\bic\b/gi, 'IC')
-                                       .replace(/\b\w/g, c => c.toUpperCase());
+                                        .replace(/\btshirt\b/gi, 'T-Shirt')
+                                        .replace(/\bic\b/gi, 'IC')
+                                        .replace(/\b\w/g, c => c.toUpperCase());
 
                                 const formatValue = (value: unknown) => {
                                     if (typeof value === 'boolean') return value ? '✓ Yes' : '✗ No';
@@ -625,14 +735,24 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                             })()}
 
                             {!result.checked_in_at && result.status !== 'cancelled' && (
-                                <Button
-                                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-lg py-6"
-                                    onClick={handleCheckIn}
-                                    disabled={loading}
-                                >
-                                    <CheckCircle2 className="w-5 h-5 mr-2" />
-                                    {loading ? 'Processing…' : 'Confirm Check-In'}
-                                </Button>
+                                <div className="flex flex-col gap-2">
+                                    <Button
+                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-lg py-6"
+                                        onClick={handleCheckIn}
+                                        disabled={loading}
+                                    >
+                                        <CheckCircle2 className="w-5 h-5 mr-2" />
+                                        {loading ? 'Processing…' : 'Confirm Check-In'}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                                        onClick={cancelScan}
+                                        disabled={loading}
+                                    >
+                                        <XCircle className="w-4 h-4 mr-2" /> Cancel & Scan Again
+                                    </Button>
+                                </div>
                             )}
 
                             {result.checked_in_at && (
@@ -672,11 +792,10 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                             <div className="divide-y max-h-56 overflow-y-auto">
                                 {scanLog.map(entry => (
                                     <div key={entry.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
-                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                                            entry.status === 'checked_in' ? 'bg-emerald-500' :
-                                            entry.status === 'already_in' ? 'bg-amber-400' :
-                                            'bg-red-400'
-                                        }`} />
+                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${entry.status === 'checked_in' ? 'bg-emerald-500' :
+                                                entry.status === 'already_in' ? 'bg-amber-400' :
+                                                    'bg-red-400'
+                                            }`} />
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium truncate">{entry.name}</p>
                                             <p className="text-xs text-muted-foreground font-mono">{entry.reference}</p>
@@ -685,11 +804,10 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                                             <span className="text-xs bg-muted px-2 py-0.5 rounded flex-shrink-0">{entry.ticket}</span>
                                         )}
                                         <div className="text-right flex-shrink-0">
-                                            <p className={`text-xs font-medium ${
-                                                entry.status === 'checked_in' ? 'text-emerald-600' :
-                                                entry.status === 'already_in' ? 'text-amber-600' :
-                                                'text-red-500'
-                                            }`}>
+                                            <p className={`text-xs font-medium ${entry.status === 'checked_in' ? 'text-emerald-600' :
+                                                    entry.status === 'already_in' ? 'text-amber-600' :
+                                                        'text-red-500'
+                                                }`}>
                                                 {entry.status === 'checked_in' ? '✓ In' : entry.status === 'already_in' ? '⚠ Dup' : '✗ Not found'}
                                             </p>
                                             <p className="text-xs text-muted-foreground">

@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\AggregateAnalytics;
+use App\Console\Commands\CancelStaleRegistrations;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -11,3 +12,6 @@ Artisan::command('inspire', function () {
 
 // Aggregate yesterday's analytics data every day at 01:00
 Schedule::command(AggregateAnalytics::class)->dailyAt('01:00');
+
+// Cancel stale unpaid-pending registrations every 5 minutes
+Schedule::command(CancelStaleRegistrations::class)->everyFiveMinutes();

@@ -71,20 +71,18 @@ class ChipInWebhookController extends Controller
                 ->first();
 
             if ($registration) {
+                $shouldConfirm = in_array($registration->status, ['pending', 'awaiting_payment']);
+
                 $registration->update([
                     'payment_status'    => 'paid',
                     'payment_method'    => $data['transaction_data']['payment_method'] ?? 'chipin',
                     'payment_reference' => $data['id'] ?? $registration->payment_reference,
+                    'status'            => $shouldConfirm ? 'confirmed' : $registration->status,
                     'meta_json'         => array_merge(
                         $registration->meta_json ?? [],
                         ['chipin_paid_at' => now()->toIso8601String(), 'chipin_purchase_id' => $data['id'] ?? null]
                     ),
                 ]);
-
-                // If payment is received, auto-confirm if pending
-                if ($registration->status === 'pending') {
-                    $registration->update(['status' => 'confirmed']);
-                }
 
                 Log::info('ChipIn payment confirmed for registration', [
                     'registration_id' => $registration->id,

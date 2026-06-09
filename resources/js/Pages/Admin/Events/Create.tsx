@@ -26,7 +26,7 @@ export default function EventCreate() {
         max_attendees: '',
         require_approval: false,
         faqs: [] as { question: string; answer: string }[],
-        sponsors: [] as { name: string; role: string; logo_url: string; sort_order: number }[],
+        sponsors: [] as { name: string; role: string; logo_url: string; logo_media_id: string; sort_order: number }[],
         custom_tabs: [] as { label: string; type: 'text' | 'image'; content_html: string; images: { id: string; url: string }[] }[],
         event_category: '' as EventCategory | '',
         registration_fields: [] as RegistrationField[],

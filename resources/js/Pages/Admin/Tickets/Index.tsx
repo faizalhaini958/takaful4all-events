@@ -164,7 +164,7 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
                                         <TableHead>Name</TableHead>
                                         <TableHead>Type</TableHead>
                                         <TableHead>Price</TableHead>
-                                        <TableHead>Sold / Capacity</TableHead>
+                                        <TableHead className="hidden md:table-cell">Sold / Capacity</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
@@ -190,7 +190,7 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
                                                     ? `${ticket.currency} ${Number(ticket.price).toFixed(2)}`
                                                     : 'Free'}
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="hidden md:table-cell">
                                                 {ticket.sold_count} / {ticket.quantity ?? '∞'}
                                             </TableCell>
                                             <TableCell>

@@ -293,26 +293,26 @@ export default function BannersIndex({ banners, slideshowEnabled }: Props) {
                         {banners.map(banner => (
                             <Card key={banner.id}>
                                 <CardContent className="p-4">
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-3 sm:gap-4">
                                         <GripVertical className="w-5 h-5 text-muted-foreground flex-shrink-0 cursor-grab" />
-                                        <img
-                                            src={banner.image_url}
-                                            alt={banner.title}
-                                            className="h-20 w-36 rounded-lg object-cover flex-shrink-0 bg-gray-100"
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-semibold text-foreground truncate">{banner.title}</h3>
-                                            {banner.link_url && (
-                                                <a
-                                                    href={banner.link_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-xs text-brand hover:underline flex items-center gap-1 mt-0.5"
-                                                >
-                                                    {banner.link_url} <ExternalLink className="w-3 h-3" />
-                                                </a>
-                                            )}
-                                            <div className="flex items-center gap-3 mt-1.5">
+                                    <img
+                                        src={banner.image_url}
+                                        alt={banner.title}
+                                        className="h-16 w-24 sm:h-20 sm:w-36 rounded-lg object-cover flex-shrink-0 bg-gray-100"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-semibold text-foreground truncate">{banner.title}</h3>
+                                        {banner.link_url && (
+                                            <a
+                                                href={banner.link_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs text-brand hover:underline flex items-center gap-1 mt-0.5 truncate"
+                                            >
+                                                {banner.link_url} <ExternalLink className="w-3 h-3 shrink-0" />
+                                            </a>
+                                        )}
+                                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                                                     banner.is_active
                                                         ? 'bg-emerald-100 text-emerald-700'

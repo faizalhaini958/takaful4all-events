@@ -31,7 +31,8 @@ class DashboardController extends Controller
                     'total'     => EventRegistration::count(),
                     'confirmed' => EventRegistration::where('status', 'confirmed')->count(),
                     'pending'   => EventRegistration::where('status', 'pending')->count(),
-                    'revenue'   => EventRegistration::whereNotIn('status', ['cancelled'])->sum('total_amount'),
+                    'awaiting_payment' => EventRegistration::where('status', 'awaiting_payment')->count(),
+                    'revenue'   => EventRegistration::where('payment_status', 'paid')->sum('total_amount'),
                 ],
                 'posts' => [
                     'total'   => Post::count(),

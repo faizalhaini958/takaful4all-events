@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\RegistrationConfirmationMail;
+use App\Models\CheckInLog;
 use App\Models\Event;
 use App\Models\EventProduct;
 use App\Models\EventRegistration;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,7 +26,7 @@ class EventRegistrationController extends Controller
         $status = request('status', 'all');
         $eventSlug = request('event', '');
 
-        $query = EventRegistration::with(['event.media', 'ticket', 'products.product', 'attendees'])
+        $query = EventRegistration::with(['event.media', 'ticket', 'products.product', 'attendees', 'invoice'])
             ->latest();
 
         if ($search) {
@@ -38,7 +42,7 @@ class EventRegistrationController extends Controller
             });
         }
 
-        if (in_array($status, ['pending', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
+        if (in_array($status, ['pending', 'awaiting_payment', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
             $query->where('status', $status);
         }
 
@@ -50,13 +54,14 @@ class EventRegistrationController extends Controller
 
         // Summary stats
         $stats = [
-            'total'      => EventRegistration::count(),
-            'confirmed'  => EventRegistration::where('status', 'confirmed')->count(),
-            'pending'    => EventRegistration::where('status', 'pending')->count(),
-            'attended'   => EventRegistration::where('status', 'attended')->count(),
-            'cancelled'  => EventRegistration::where('status', 'cancelled')->count(),
-            'waitlisted' => EventRegistration::where('status', 'waitlisted')->count(),
-            'revenue'    => EventRegistration::whereNotIn('status', ['cancelled'])->sum('total_amount'),
+            'total'             => EventRegistration::count(),
+            'confirmed'         => EventRegistration::where('status', 'confirmed')->count(),
+            'pending'           => EventRegistration::where('status', 'pending')->count(),
+            'awaiting_payment'  => EventRegistration::where('status', 'awaiting_payment')->count(),
+            'attended'          => EventRegistration::where('status', 'attended')->count(),
+            'cancelled'         => EventRegistration::where('status', 'cancelled')->count(),
+            'waitlisted'        => EventRegistration::where('status', 'waitlisted')->count(),
+            'revenue'           => EventRegistration::where('payment_status', 'paid')->sum('total_amount'),
         ];
 
         // Events dropdown filter
@@ -79,10 +84,10 @@ class EventRegistrationController extends Controller
         $status = request('status', 'all');
 
         $query = $event->registrations()
-            ->with(['ticket', 'products.product', 'attendees'])
+            ->with(['ticket', 'products.product', 'attendees', 'invoice'])
             ->latest();
 
-        if (in_array($status, ['pending', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
+        if (in_array($status, ['pending', 'awaiting_payment', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
             $query->where('status', $status);
         }
 
@@ -90,13 +95,14 @@ class EventRegistrationController extends Controller
 
         // Summary stats
         $stats = [
-            'total'      => $event->registrations()->count(),
-            'confirmed'  => $event->registrations()->where('status', 'confirmed')->count(),
-            'pending'    => $event->registrations()->where('status', 'pending')->count(),
-            'attended'   => $event->registrations()->where('status', 'attended')->count(),
-            'cancelled'  => $event->registrations()->where('status', 'cancelled')->count(),
-            'waitlisted' => $event->registrations()->where('status', 'waitlisted')->count(),
-            'revenue'    => $event->registrations()->whereNotIn('status', ['cancelled'])->sum('total_amount'),
+            'total'             => $event->registrations()->count(),
+            'confirmed'         => $event->registrations()->where('status', 'confirmed')->count(),
+            'pending'           => $event->registrations()->where('status', 'pending')->count(),
+            'awaiting_payment'  => $event->registrations()->where('status', 'awaiting_payment')->count(),
+            'attended'          => $event->registrations()->where('status', 'attended')->count(),
+            'cancelled'         => $event->registrations()->where('status', 'cancelled')->count(),
+            'waitlisted'        => $event->registrations()->where('status', 'waitlisted')->count(),
+            'revenue'           => $event->registrations()->whereNotIn('status', ['cancelled'])->sum('total_amount'),
         ];
 
         return Inertia::render('Admin/Events/Registrations/Index', [
@@ -109,7 +115,7 @@ class EventRegistrationController extends Controller
 
     public function show(Event $event, EventRegistration $registration): Response
     {
-        $registration->load(['ticket', 'products.product.media', 'event', 'attendees']);
+        $registration->load(['ticket', 'products.product.media', 'event', 'attendees', 'invoice']);
 
         return Inertia::render('Admin/Events/Registrations/Show', [
             'event'        => $event->load('media'),
@@ -120,7 +126,7 @@ class EventRegistrationController extends Controller
     public function updateStatus(Request $request, Event $event, EventRegistration $registration): RedirectResponse
     {
         $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled,waitlisted,attended',
+            'status' => 'required|in:pending,awaiting_payment,confirmed,cancelled,waitlisted,attended',
         ]);
 
         $update = ['status' => $request->status];
@@ -131,6 +137,20 @@ class EventRegistrationController extends Controller
         }
 
         $registration->update($update);
+
+        if ($request->status === 'attended') {
+            CheckInLog::create([
+                'event_id'        => $event->id,
+                'registration_id' => $registration->id,
+                'user_id'         => Auth::id(),
+                'action'          => 'checked_in',
+                'performed_at'    => now(),
+                'meta_json'       => [
+                    'attendee_name' => $registration->name,
+                    'method'        => 'status_update',
+                ],
+            ]);
+        }
 
         // Bug 4 fix: restore product stock when admin manually cancels a registration
         if ($request->status === 'cancelled') {
@@ -160,6 +180,18 @@ class EventRegistrationController extends Controller
     {
         $registration->markAsCheckedIn();
 
+        CheckInLog::create([
+            'event_id'        => $event->id,
+            'registration_id' => $registration->id,
+            'user_id'         => Auth::id(),
+            'action'          => 'checked_in',
+            'performed_at'    => now(),
+            'meta_json'       => [
+                'attendee_name' => $registration->name,
+                'method'        => 'admin_panel',
+            ],
+        ]);
+
         return redirect()->back()->with('success', "{$registration->name} checked in successfully.");
     }
 
@@ -168,7 +200,7 @@ class EventRegistrationController extends Controller
         $request->validate([
             'ids'    => 'required|array|min:1',
             'ids.*'  => 'exists:event_registrations,id',
-            'status' => 'required|in:pending,confirmed,cancelled,waitlisted,attended',
+            'status' => 'required|in:pending,awaiting_payment,confirmed,cancelled,waitlisted,attended',
         ]);
 
         $update = ['status' => $request->status];
@@ -176,6 +208,26 @@ class EventRegistrationController extends Controller
         // Bug 3 fix: set checked_in_at when bulk-marking as attended
         if ($request->status === 'attended') {
             $update['checked_in_at'] = now();
+
+            $registrations = EventRegistration::whereIn('id', $request->ids)
+                ->where('event_id', $event->id)
+                ->get();
+
+            $logs = $registrations->map(fn ($r) => [
+                'event_id'        => $event->id,
+                'registration_id' => $r->id,
+                'user_id'         => Auth::id(),
+                'action'          => 'checked_in',
+                'performed_at'    => now(),
+                'meta_json'       => json_encode([
+                    'attendee_name' => $r->name,
+                    'method'        => 'bulk_status_update',
+                ]),
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ])->toArray();
+
+            CheckInLog::insert($logs);
         }
 
         EventRegistration::whereIn('id', $request->ids)
@@ -221,5 +273,19 @@ class EventRegistrationController extends Controller
 
         return redirect()->route('admin.events.registrations.index', $event)
             ->with('success', 'Registration deleted.');
+    }
+
+    public function resendConfirmation(Event $event, EventRegistration $registration): RedirectResponse
+    {
+        try {
+            Mail::to($registration->email)
+                ->queue(new RegistrationConfirmationMail($registration));
+
+            $registration->updateQuietly(['confirmation_email_sent_at' => now()]);
+
+            return back()->with('success', "Confirmation email queued for {$registration->email}.");
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Failed to queue email: ' . $e->getMessage());
+        }
     }
 }

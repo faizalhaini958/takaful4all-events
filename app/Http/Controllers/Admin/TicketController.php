@@ -6,15 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\EventRegistration;
 use App\Services\TicketService;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class TicketController extends Controller
 {
     /**
-     * Download a ticket PDF for a specific attendee.
+     * Download or preview a ticket PDF for a specific attendee.
      * Uses cached PDF or generates on-demand (synchronous fallback).
      */
-    public function download(Request $request, EventRegistration $registration, int $attendee_no = 1): StreamedResponse
+    public function download(Request $request, EventRegistration $registration, int $attendee_no = 1): Response
     {
         // Authorization
         $user = $request->user();
@@ -28,6 +28,6 @@ class TicketController extends Controller
         $registration->loadMissing(['event', 'ticket', 'attendees']);
         $ticketService = app(TicketService::class);
 
-        return $ticketService->download($registration, $attendee_no);
+        return $ticketService->download($registration, $attendee_no, $request->boolean('inline'));
     }
 }

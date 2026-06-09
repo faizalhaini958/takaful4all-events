@@ -95,6 +95,7 @@ class EventTicket extends Model
     {
         return $this->registrations()
             ->whereNotIn('status', ['cancelled'])
+            ->excludeStalePending()
             ->sum('quantity');
     }
 

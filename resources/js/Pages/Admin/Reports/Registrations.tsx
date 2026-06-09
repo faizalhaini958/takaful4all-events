@@ -22,11 +22,12 @@ interface Props {
 }
 
 const STATUS_PILL: Record<string, { class: string; label: string }> = {
-    pending:    { class: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30',       label: 'Pending' },
-    confirmed:  { class: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30', label: 'Confirmed' },
-    attended:   { class: 'bg-primary/15 text-primary border border-primary/30',                                   label: 'Attended' },
-    cancelled:  { class: 'bg-destructive/15 text-destructive border border-destructive/30',                       label: 'Cancelled' },
-    waitlisted: { class: 'bg-muted text-muted-foreground border border-muted-foreground/20',                      label: 'Waitlisted' },
+    pending:           { class: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30',       label: 'Pending' },
+    awaiting_payment:  { class: 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30',   label: 'Awaiting Payment' },
+    confirmed:         { class: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30', label: 'Confirmed' },
+    attended:          { class: 'bg-primary/15 text-primary border border-primary/30',                                   label: 'Attended' },
+    cancelled:         { class: 'bg-destructive/15 text-destructive border border-destructive/30',                       label: 'Cancelled' },
+    waitlisted:        { class: 'bg-muted text-muted-foreground border border-muted-foreground/20',                      label: 'Waitlisted' },
 };
 
 const PAYMENT_PILL: Record<string, { class: string; label: string }> = {
@@ -40,6 +41,7 @@ const STAT_CARDS = [
     { key: 'total',      label: 'Total',      icon: Users,        accent: 'text-primary',                          iconBg: 'bg-primary/10',     border: 'hover:border-primary/50' },
     { key: 'confirmed',  label: 'Confirmed',  icon: CheckCircle2, accent: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-500/10', border: 'hover:border-emerald-500/50' },
     { key: 'pending',    label: 'Pending',    icon: Clock,        accent: 'text-amber-600 dark:text-amber-400',    iconBg: 'bg-amber-500/10',   border: 'hover:border-amber-500/50' },
+    { key: 'awaiting_payment', label: 'Awaiting Payment', icon: Clock, accent: 'text-orange-600 dark:text-orange-400', iconBg: 'bg-orange-500/10', border: 'hover:border-orange-500/50' },
     { key: 'attended',   label: 'Attended',   icon: UserCheck,    accent: 'text-sky-600 dark:text-sky-400',        iconBg: 'bg-sky-500/10',     border: 'hover:border-sky-500/50' },
     { key: 'cancelled',  label: 'Cancelled',  icon: XCircle,      accent: 'text-destructive',                      iconBg: 'bg-destructive/10', border: 'hover:border-destructive/50' },
     { key: 'waitlisted', label: 'Waitlisted', icon: AlertCircle,  accent: 'text-muted-foreground',                 iconBg: 'bg-muted',          border: 'hover:border-muted-foreground/50' },
@@ -214,6 +216,7 @@ export default function RegistrationsReport({
                                 <SelectContent>
                                     <SelectItem value="all">All Statuses</SelectItem>
                                     <SelectItem value="pending">Pending</SelectItem>
+                                    <SelectItem value="awaiting_payment">Awaiting Payment</SelectItem>
                                     <SelectItem value="confirmed">Confirmed</SelectItem>
                                     <SelectItem value="attended">Attended</SelectItem>
                                     <SelectItem value="waitlisted">Waitlisted</SelectItem>

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import ImageUpload from '@/Components/ImageUpload';
 import { Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { ChevronLeft, Plus, Pencil, Trash2, ShoppingBag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2, ShoppingBag } from 'lucide-react';
 import { type Event, type EventProduct, type Media } from '@/types';
 
 interface Props {
@@ -137,19 +137,25 @@ export default function EventProducts({ event, products }: Props) {
         <AdminLayout>
             <div className="space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Link href={`/admin/events/${event.slug}/edit`} className="text-muted-foreground hover:text-foreground transition-colors">
-                            <ChevronLeft className="w-5 h-5" />
-                        </Link>
+                <div>
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5 flex-wrap">
+                        <Link href="/admin" className="hover:text-foreground transition-colors">Dashboard</Link>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <Link href="/admin/events" className="hover:text-foreground transition-colors">Events</Link>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <span className="text-foreground font-medium truncate max-w-[180px]">{event.title}</span>
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                        <span className="text-foreground font-medium">Products</span>
+                    </div>
+                    <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-foreground">Products</h1>
                             <p className="text-sm text-muted-foreground">{event.title}</p>
                         </div>
+                        <Button onClick={openCreate} className="bg-brand hover:bg-brand-dark">
+                            <Plus className="w-4 h-4 mr-1" /> Add Product
+                        </Button>
                     </div>
-                    <Button onClick={openCreate} className="bg-brand hover:bg-brand-dark">
-                        <Plus className="w-4 h-4 mr-1" /> Add Product
-                    </Button>
                 </div>
 
                 {/* Products table */}

@@ -65,10 +65,12 @@ const NAV_FULL = [
     { href: '/admin/users',    label: 'Users',     icon: Users },
     { href: '/admin/pages',    label: 'Pages',     icon: FileText },
     { href: '/admin/posts',    label: 'Posts',     icon: PenSquare },
+    { href: '/admin/content-banners', label: 'Content Banners', icon: ImageIcon },
     { href: '/admin/media',    label: 'Media',     icon: Image },
     { href: '/admin/banners',  label: 'Banners',   icon: ImageIcon },
     { href: '/admin/menus',    label: 'Menus',     icon: Menu },
     { href: '/admin/settings', label: 'Settings',  icon: Settings },
+    { href: '/admin/activity-log', label: 'Activity Log', icon: ClipboardList },
 ];
 
 const NAV_CHECKIN_STAFF = [
@@ -79,6 +81,7 @@ const EVENTS_SUB = [
     { href: '/admin/registrations', label: 'All Registrations', icon: ClipboardList },
     { href: '/admin/tickets',       label: 'All Tickets',       icon: Ticket },
     { href: '/admin/products',      label: 'All Products',      icon: ShoppingBag },
+    { href: '/admin/activity-log',  label: 'Activity Log',      icon: ClipboardList },
 ];
 
 /**
@@ -257,7 +260,7 @@ function FlashToast({ message, type }: { message: string; type: 'success' | 'err
 
     return (
         <div
-            className={`fixed top-4 right-4 z-[9999] flex items-start gap-3 max-w-sm w-full rounded-xl border shadow-lg px-4 py-3.5 transition-all duration-300 ${
+            className={`fixed top-4 right-4 left-4 sm:left-auto z-[9999] flex items-start gap-3 max-w-sm w-auto sm:w-full rounded-xl border shadow-lg px-4 py-3.5 transition-all duration-300 ${
                 exiting ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'
             } ${
                 isSuccess
@@ -281,8 +284,8 @@ function FlashToast({ message, type }: { message: string; type: 'success' | 'err
 }
 
 export default function AdminLayout({ children }: PropsWithChildren) {
-    const { auth, flash } = usePage().props as unknown as SharedProps;
-    const currentPath = window.location.pathname;
+    const { auth, flash, url } = usePage().props as unknown as SharedProps & { url: string };
+    const currentPath = new URL(url, window.location.origin).pathname;
 
     const initials = (auth.user?.name ?? 'U')
         .split(' ')

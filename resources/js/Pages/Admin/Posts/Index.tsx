@@ -170,8 +170,8 @@ export default function PostsIndex({ posts, activeType }: Props) {
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Post</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Published</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Status</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Published</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -203,7 +203,7 @@ export default function PostsIndex({ posts, activeType }: Props) {
                                                 <TypeIcon className="w-3 h-3" /> {typePill.label}
                                             </span>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="hidden md:table-cell">
                                             {post.is_published ? (
                                                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
                                                     <Globe className="w-3 h-3" /> Published
@@ -214,7 +214,7 @@ export default function PostsIndex({ posts, activeType }: Props) {
                                                 </span>
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap hidden md:table-cell">
                                             {post.published_at
                                                 ? new Date(post.published_at).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })
                                                 : <span className="text-muted-foreground/40">—</span>}
@@ -276,7 +276,7 @@ export default function PostsIndex({ posts, activeType }: Props) {
                         <>
                             <Separator />
                             <div className="flex items-center justify-between px-4 py-3">
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground hidden sm:block">
                                     Showing <span className="font-medium text-foreground">{posts.from}</span> to <span className="font-medium text-foreground">{posts.to}</span> of <span className="font-medium text-foreground">{posts.total}</span>
                                 </p>
                                 <div className="flex items-center gap-2">

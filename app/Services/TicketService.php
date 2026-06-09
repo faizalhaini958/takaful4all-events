@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Models\Setting;
+use Symfony\Component\HttpFoundation\Response;
 
 class TicketService
 {
@@ -19,13 +20,21 @@ class TicketService
      * Stream ticket PDF as download response.
      * Generates on-demand if not cached (synchronous fallback).
      */
-    public function download(EventRegistration $registration, int $attendeeNo): StreamedResponse
+    public function download(EventRegistration $registration, int $attendeeNo, bool $inline = false): Response
     {
         $attendee = $registration->attendees()->where('attendee_no', $attendeeNo)->firstOrFail();
         $pdfPath = $this->getOrGeneratePdf($registration, $attendee);
         
         $filename = $registration->reference_no . '-ticket-' . str_pad($attendeeNo, 2, '0', STR_PAD_LEFT) . '.pdf';
         
+        if ($inline) {
+            $absolutePath = Storage::disk('local')->path($pdfPath);
+            return response()->file($absolutePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        }
+
         return Storage::disk('local')->download(
             $pdfPath,
             $filename,
@@ -70,21 +79,46 @@ class TicketService
             'attendee_no' => $attendee->attendee_no,
         ]);
 
-        $qrCode = base64_encode(
-            QrCode::format('png')
+        // Generate QR code PNG where possible; fall back to SVG if PNG backend unavailable
+        $qrType = 'png';
+        try {
+            $png = (string) QrCode::format('png')
                 ->size(160)
                 ->margin(1)
-                ->generate($qrData)
-        );
+                ->generate($qrData);
+
+            $qrCode = base64_encode($png);
+            $qrType = 'png';
+        } catch (\Exception $e) {
+            // Some environments may not have Imagick; fall back to SVG output
+            try {
+                $svg = (string) QrCode::format('svg')
+                    ->size(160)
+                    ->margin(1)
+                    ->generate($qrData);
+
+                $qrCode = $svg;
+                $qrType = 'svg';
+                Log::warning('Falling back to SVG QR code for ticket PDF; PNG generation failed', ['error' => $e->getMessage()]);
+            } catch (\Exception $e2) {
+                // As a last resort, rethrow original exception for visibility
+                Log::error('Failed to generate QR code as PNG and SVG', ['png_error' => $e->getMessage(), 'svg_error' => $e2->getMessage()]);
+                throw $e;
+            }
+        }
 
         // Generate PDF with explicit public path scope
+        $settings = Setting::getGroup('general');
+
         $pdf = Pdf::setOption('chroot', $dompdfPublicPath)
             ->loadView('tickets.template', [
                 'registration' => $registration,
                 'attendee'     => $attendee,
                 'qrCode'       => $qrCode,
+                'qrType'       => $qrType,
+                'settings'     => $settings,
             ])
-            ->setPaper('a5', 'landscape');
+            ->setPaper('a4', 'portrait');
 
         // Cache to storage/app/tickets/{year}/{ref}-{attendeeNo}.pdf
         $year = now()->format('Y');

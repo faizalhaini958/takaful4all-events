@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ContentBanner;
 use App\Models\Post;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -69,9 +70,22 @@ class PostController extends Controller
 
         $posts = $query->paginate(12)->withQueryString();
 
+        $banners = ContentBanner::published()->get();
+
         return Inertia::render('Public/Posts/Content', [
             'posts'        => $posts,
             'activeType'   => $type ?? 'all',
+            'banners'      => $banners,
+            'canonicalUrl' => url()->current(),
+        ]);
+    }
+
+    public function show(Post $post): Response
+    {
+        abort_unless($post->is_published, 404);
+
+        return Inertia::render('Public/Posts/Show', [
+            'post'         => $post->load('media'),
             'canonicalUrl' => url()->current(),
         ]);
     }

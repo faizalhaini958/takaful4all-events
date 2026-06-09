@@ -39,7 +39,7 @@ class UserDashboardController extends Controller
                 'totalTickets'   => $registrations->where('status', '!=', 'cancelled')->count(),
                 'upcomingEvents' => $upcomingRegistrations->count(),
                 'totalOrders'    => $registrations->count(),
-                'totalSpent'     => (float) $registrations->whereNotIn('status', ['cancelled'])->sum('total_amount'),
+                'totalSpent'     => (float) $registrations->where('payment_status', 'paid')->sum('total_amount'),
             ],
             'upcomingRegistrations' => $upcomingRegistrations->map(fn ($r) => array_merge($r->toArray(), [
                 'event' => $r->event ? array_merge($r->event->toArray(), [

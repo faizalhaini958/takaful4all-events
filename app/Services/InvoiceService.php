@@ -9,7 +9,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceService
@@ -98,14 +97,6 @@ class InvoiceService
         $dompdfPublicPath = $this->resolveDompdfPublicPath();
         Config::set('dompdf.public_path', $dompdfPublicPath);
 
-        // Generate QR code as SVG (no imagick required)
-        $confirmationUrl = url("/events/{$registration->event->slug}/register/confirmation/{$registration->reference_no}");
-        try {
-            $qrCode = QrCode::format('svg')->size(150)->generate($confirmationUrl);
-        } catch (\Throwable $e) {
-            $qrCode = null;
-        }
-
         // Get invoicing settings
         $invoiceSettings = Setting::getGroup('invoicing');
 
@@ -117,7 +108,6 @@ class InvoiceService
                 'event'        => $registration->event,
                 'ticket'       => $registration->ticket,
                 'products'     => $registration->products,
-                'qrCode'       => $qrCode,
                 'settings'     => $invoiceSettings,
             ]);
 

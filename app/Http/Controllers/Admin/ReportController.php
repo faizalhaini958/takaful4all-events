@@ -32,7 +32,7 @@ class ReportController extends Controller
             $query->whereHas('event', fn ($q) => $q->where('slug', $eventSlug));
         }
 
-        if (in_array($status, ['pending', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
+        if (in_array($status, ['pending', 'awaiting_payment', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
             $query->where('status', $status);
         }
 
@@ -63,10 +63,11 @@ class ReportController extends Controller
             'total'      => (clone $statsBase)->count(),
             'confirmed'  => (clone $statsBase)->where('status', 'confirmed')->count(),
             'pending'    => (clone $statsBase)->where('status', 'pending')->count(),
+            'awaiting_payment' => (clone $statsBase)->where('status', 'awaiting_payment')->count(),
             'attended'   => (clone $statsBase)->where('status', 'attended')->count(),
             'cancelled'  => (clone $statsBase)->where('status', 'cancelled')->count(),
             'waitlisted' => (clone $statsBase)->where('status', 'waitlisted')->count(),
-            'revenue'    => (clone $statsBase)->whereNotIn('status', ['cancelled'])->sum('total_amount'),
+            'revenue'    => (clone $statsBase)->where('payment_status', 'paid')->sum('total_amount'),
         ];
 
         $registrations = $query->paginate(25)->withQueryString();
@@ -102,7 +103,7 @@ class ReportController extends Controller
             $query->whereHas('event', fn ($q) => $q->where('slug', $eventSlug));
         }
 
-        if (in_array($status, ['pending', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
+        if (in_array($status, ['pending', 'awaiting_payment', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
             $query->where('status', $status);
         }
 
@@ -195,7 +196,7 @@ class ReportController extends Controller
             $query->whereHas('event', fn ($q) => $q->where('slug', $eventSlug));
         }
 
-        if (in_array($status, ['pending', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
+        if (in_array($status, ['pending', 'awaiting_payment', 'confirmed', 'cancelled', 'waitlisted', 'attended'])) {
             $query->where('status', $status);
         }
 
@@ -222,13 +223,14 @@ class ReportController extends Controller
         }
 
         $stats = [
-            'total'      => (clone $statsBase)->count(),
-            'confirmed'  => (clone $statsBase)->where('status', 'confirmed')->count(),
-            'pending'    => (clone $statsBase)->where('status', 'pending')->count(),
-            'attended'   => (clone $statsBase)->where('status', 'attended')->count(),
-            'cancelled'  => (clone $statsBase)->where('status', 'cancelled')->count(),
-            'waitlisted' => (clone $statsBase)->where('status', 'waitlisted')->count(),
-            'revenue'    => (clone $statsBase)->whereNotIn('status', ['cancelled'])->sum('total_amount'),
+            'total'             => (clone $statsBase)->count(),
+            'confirmed'         => (clone $statsBase)->where('status', 'confirmed')->count(),
+            'pending'           => (clone $statsBase)->where('status', 'pending')->count(),
+            'awaiting_payment'  => (clone $statsBase)->where('status', 'awaiting_payment')->count(),
+            'attended'          => (clone $statsBase)->where('status', 'attended')->count(),
+            'cancelled'         => (clone $statsBase)->where('status', 'cancelled')->count(),
+            'waitlisted'        => (clone $statsBase)->where('status', 'waitlisted')->count(),
+            'revenue'           => (clone $statsBase)->where('payment_status', 'paid')->sum('total_amount'),
         ];
 
         // Resolve event title for filter display

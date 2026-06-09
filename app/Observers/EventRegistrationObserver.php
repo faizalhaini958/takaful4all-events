@@ -100,6 +100,8 @@ class EventRegistrationObserver
             Mail::to($registration->email)
                 ->queue(new RegistrationConfirmationMail($registration));
 
+            $registration->updateQuietly(['confirmation_email_sent_at' => now()]);
+
             Log::info('Confirmation email queued for registration', [
                 'registration_id' => $registration->id,
                 'email'           => $registration->email,

@@ -1,7 +1,7 @@
 ﻿import UserDashboardLayout from '@/Layouts/UserDashboardLayout';
 import { usePage, Link } from '@inertiajs/react';
 import { type PageProps } from '@/types';
-import { Mail, BadgeCheck, Pencil, Ticket, ShoppingBag, Calendar } from 'lucide-react';
+import { Mail, BadgeCheck, Pencil, Ticket, ShoppingBag, Calendar, LogOut } from 'lucide-react';
 
 export default function Profile() {
     const user = usePage<PageProps>().props.auth.user;
@@ -55,14 +55,26 @@ export default function Profile() {
                                 </div>
                             </div>
                             {/* Edit button — full width on mobile, auto on desktop */}
-                            <Link
-                                href={route('user.profile.edit')}
-                                className="mt-4 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
-                                style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
-                            >
-                                <Pencil className="w-4 h-4" />
-                                Edit Profile
-                            </Link>
+                            <div className="mt-4">
+                                <Link
+                                    href={route('user.profile.edit')}
+                                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+                                    style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                    Edit Profile
+                                </Link>
+                                <Link
+                                    href={route('logout')}
+                                    method="post"
+                                    as="button"
+                                    className="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+                                    style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.18)' }}
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    Sign Out
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>

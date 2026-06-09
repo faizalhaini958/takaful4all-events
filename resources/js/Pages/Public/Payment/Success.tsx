@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default function PaymentSuccess({ registration }: Props) {
-    const { auth } = usePage().props as SharedProps;
+    const { auth } = usePage().props as any;
     const isGuest = !auth?.user;
     const [registerOpen, setRegisterOpen] = useState(false);
     const event = registration?.event;
