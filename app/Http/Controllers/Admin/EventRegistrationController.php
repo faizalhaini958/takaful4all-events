@@ -8,6 +8,7 @@ use App\Models\CheckInLog;
 use App\Models\Event;
 use App\Models\EventProduct;
 use App\Models\EventRegistration;
+use App\Models\EventRegistrationAttendee;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -102,7 +103,7 @@ class EventRegistrationController extends Controller
             'attended'          => $event->registrations()->where('status', 'attended')->count(),
             'cancelled'         => $event->registrations()->where('status', 'cancelled')->count(),
             'waitlisted'        => $event->registrations()->where('status', 'waitlisted')->count(),
-            'revenue'           => $event->registrations()->whereNotIn('status', ['cancelled'])->sum('total_amount'),
+            'revenue'           => $event->registrations()->where('payment_status', 'paid')->sum('total_amount'),
         ];
 
         return Inertia::render('Admin/Events/Registrations/Index', [
@@ -136,6 +137,15 @@ class EventRegistrationController extends Controller
             $update['checked_in_at'] = now();
         }
 
+        // When reverting from attended to another status, clear check-in data
+        if ($registration->status === 'attended' && $request->status !== 'attended') {
+            $update['checked_in_at'] = null;
+
+            CheckInLog::where('registration_id', $registration->id)->delete();
+
+            $registration->attendees()->update(['checked_in_at' => null]);
+        }
+
         $registration->update($update);
 
         if ($request->status === 'attended') {
@@ -150,6 +160,9 @@ class EventRegistrationController extends Controller
                     'method'        => 'status_update',
                 ],
             ]);
+
+            $registration->ensureAttendeesExist();
+            $registration->attendees()->update(['checked_in_at' => now()]);
         }
 
         // Bug 4 fix: restore product stock when admin manually cancels a registration
@@ -179,6 +192,10 @@ class EventRegistrationController extends Controller
     public function checkIn(Event $event, EventRegistration $registration): RedirectResponse
     {
         $registration->markAsCheckedIn();
+
+        // Also mark all attendees as checked in so the UI counter reflects correctly
+        $registration->ensureAttendeesExist();
+        $registration->attendees()->update(['checked_in_at' => now()]);
 
         CheckInLog::create([
             'event_id'        => $event->id,
@@ -228,6 +245,29 @@ class EventRegistrationController extends Controller
             ])->toArray();
 
             CheckInLog::insert($logs);
+
+            // Also mark all attendees as checked in for each registration
+            foreach ($registrations as $r) {
+                $r->ensureAttendeesExist();
+                $r->attendees()->update(['checked_in_at' => now()]);
+            }
+        }
+
+        // When reverting any registrations from attended to another status, clean up check-in data
+        $revertedIds = EventRegistration::whereIn('id', $request->ids)
+            ->where('event_id', $event->id)
+            ->where('status', 'attended')
+            ->pluck('id');
+
+        if ($revertedIds->isNotEmpty()) {
+            CheckInLog::whereIn('registration_id', $revertedIds)->delete();
+
+            EventRegistrationAttendee::whereIn('registration_id', $revertedIds)
+                ->update(['checked_in_at' => null]);
+
+            EventRegistration::whereIn('id', $revertedIds)
+                ->where('event_id', $event->id)
+                ->update(['checked_in_at' => null]);
         }
 
         EventRegistration::whereIn('id', $request->ids)

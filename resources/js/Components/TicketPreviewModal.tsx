@@ -167,8 +167,8 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                 `}</style>
 
                 {/* Action buttons (sticky top) */}
-                <div className="sticky top-0 z-10 bg-white border-b px-6 py-3 flex items-center justify-between">
-                    <h3 className="font-semibold text-sm text-gray-700 flex items-center gap-1.5">
+                <div className="sticky top-0 z-10 bg-white dark:bg-card border-b dark:border-border px-6 py-3 flex items-center justify-between">
+                    <h3 className="font-semibold text-sm text-gray-700 dark:text-foreground flex items-center gap-1.5">
                         <Ticket className="w-4 h-4" />
                         {totalTickets > 1
                             ? `Ticket ${currentTicket + 1} of ${totalTickets}`
@@ -191,7 +191,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
 
                 {/* Ticket navigation (only for multi-ticket) */}
                 {totalTickets > 1 && (
-                    <div className="px-6 py-2 bg-gray-50 border-b flex items-center justify-between">
+                    <div className="px-6 py-2 bg-gray-50 dark:bg-muted/50 border-b dark:border-border flex items-center justify-between">
                         <Button
                             variant="ghost"
                             size="sm"
@@ -209,7 +209,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                                     className={`w-7 h-7 rounded-full text-xs font-medium transition-colors ${
                                         i === currentTicket
                                             ? 'bg-[#1a2332] text-white'
-                                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                            : 'bg-gray-200 dark:bg-muted text-gray-600 dark:text-muted-foreground hover:bg-gray-300 dark:hover:bg-muted/70'
                                     }`}
                                 >
                                     {i + 1}
@@ -271,7 +271,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                         {/* Status + Reference + Ticket number */}
                         <div className="flex items-center justify-between mb-5">
                             <div className="flex items-center gap-2">
-                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${STATUS_COLOR[registration.status] ?? 'bg-gray-100 text-gray-700'}`}>
+                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${STATUS_COLOR[registration.status] ?? 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-muted-foreground dark:border-border'}`}>
                                     {registration.status.charAt(0).toUpperCase() + registration.status.slice(1)}
                                 </span>
                                 {registration.ticket && (
@@ -286,7 +286,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                                     </Badge>
                                 )}
                             </div>
-                            <span className="font-mono text-xs text-gray-400">{registration.reference_no}</span>
+                            <span className="font-mono text-xs text-gray-400 dark:text-muted-foreground">{registration.reference_no}</span>
                         </div>
 
                         {/* Main content: Attendee Info + QR */}
@@ -294,45 +294,45 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                             {/* Attendee details */}
                             <div className="flex-1 space-y-3">
                                 {totalTickets > 1 && (
-                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                                    <p className="text-xs font-semibold text-gray-400 dark:text-muted-foreground uppercase tracking-wide mb-1">
                                         {currentTicket === 0 ? 'Primary Buyer / Attendee 1' : `Attendee ${currentTicket + 1}`}
                                     </p>
                                 )}
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                                     <div>
-                                        <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5">
+                                        <p className="text-xs text-gray-400 dark:text-muted-foreground flex items-center gap-1 mb-0.5">
                                             <User className="w-3 h-3" /> Name
                                         </p>
-                                        <p className="font-medium text-gray-900">{attendee.name}</p>
+                                        <p className="font-medium text-gray-900 dark:text-foreground">{attendee.name}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5">
+                                        <p className="text-xs text-gray-400 dark:text-muted-foreground flex items-center gap-1 mb-0.5">
                                             <Mail className="w-3 h-3" /> Email
                                         </p>
-                                        <p className="font-medium text-gray-900 truncate">{attendee.email}</p>
+                                        <p className="font-medium text-gray-900 dark:text-foreground truncate">{attendee.email}</p>
                                     </div>
                                     {attendee.company && (
                                         <div>
-                                            <p className="text-xs text-gray-400 mb-0.5">Company</p>
-                                            <p className="font-medium text-gray-900">{attendee.company}</p>
+                                            <p className="text-xs text-gray-400 dark:text-muted-foreground mb-0.5">Company</p>
+                                            <p className="font-medium text-gray-900 dark:text-foreground">{attendee.company}</p>
                                         </div>
                                     )}
                                     {attendee.job_title && (
                                         <div>
-                                            <p className="text-xs text-gray-400 mb-0.5">Job Title</p>
-                                            <p className="font-medium text-gray-900">{attendee.job_title}</p>
+                                            <p className="text-xs text-gray-400 dark:text-muted-foreground mb-0.5">Job Title</p>
+                                            <p className="font-medium text-gray-900 dark:text-foreground">{attendee.job_title}</p>
                                         </div>
                                     )}
                                     <div>
-                                        <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5">
+                                        <p className="text-xs text-gray-400 dark:text-muted-foreground flex items-center gap-1 mb-0.5">
                                             <Ticket className="w-3 h-3" /> Ticket Type
                                         </p>
-                                        <p className="font-medium text-gray-900">{registration.ticket?.name ?? '—'}</p>
+                                        <p className="font-medium text-gray-900 dark:text-foreground">{registration.ticket?.name ?? '—'}</p>
                                     </div>
                                     {attendee.phone && (
                                         <div>
-                                            <p className="text-xs text-gray-400 mb-0.5">Phone</p>
-                                            <p className="font-medium text-gray-900">{attendee.phone}</p>
+                                            <p className="text-xs text-gray-400 dark:text-muted-foreground mb-0.5">Phone</p>
+                                            <p className="font-medium text-gray-900 dark:text-foreground">{attendee.phone}</p>
                                         </div>
                                     )}
                                 </div>
@@ -340,20 +340,20 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                                 {/* Order summary — only show on the first ticket */}
                                 {currentTicket === 0 && Number(registration.total_amount) > 0 && (
                                     <div className="pt-3 mt-2 border-t">
-                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Order Summary</p>
+                                        <p className="text-xs font-semibold text-gray-400 dark:text-muted-foreground uppercase tracking-wide mb-2">Order Summary</p>
                                         <div className="text-sm space-y-1">
-                                            <div className="flex justify-between text-gray-500">
+                                            <div className="flex justify-between text-gray-500 dark:text-muted-foreground">
                                                 <span>{registration.ticket?.name} × {registration.quantity}</span>
                                                 <span>RM {Number(registration.subtotal).toFixed(2)}</span>
                                             </div>
                                             {Number(registration.products_total) > 0 && (
-                                                <div className="flex justify-between text-gray-500">
+                                                <div className="flex justify-between text-gray-500 dark:text-muted-foreground">
                                                     <span>Add-ons</span>
                                                     <span>RM {Number(registration.products_total).toFixed(2)}</span>
                                                 </div>
                                             )}
                                             <Separator />
-                                            <div className="flex justify-between font-bold text-gray-900">
+                                            <div className="flex justify-between font-bold text-gray-900 dark:text-foreground">
                                                 <span>Total</span>
                                                 <span>RM {Number(registration.total_amount).toFixed(2)}</span>
                                             </div>
@@ -366,7 +366,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                             <div className="flex flex-col items-center justify-center sm:border-l sm:pl-5">
                                 {(registration.status === 'confirmed' || registration.status === 'attended') ? (
                                     <>
-                                        <div className="bg-white p-3 rounded-lg border">
+                                        <div className="bg-white dark:bg-card p-3 rounded-lg border dark:border-border">
                                             <QRCodeSVG
                                                 value={qrPayload}
                                                 size={140}
@@ -374,10 +374,10 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                                                 includeMargin={false}
                                             />
                                         </div>
-                                        <p className="text-[10px] text-gray-400 mt-2 text-center">
+                                        <p className="text-[10px] text-gray-400 dark:text-muted-foreground mt-2 text-center">
                                             Scan for attendance
                                         </p>
-                                        <p className="font-mono text-[10px] text-gray-400 text-center mt-0.5">
+                                        <p className="font-mono text-[10px] text-gray-400 dark:text-muted-foreground text-center mt-0.5">
                                             {registration.reference_no}-{String(attendeeNo).padStart(2, '0')}
                                         </p>
                                     </>
@@ -393,14 +393,14 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                         {/* Add-on products — only on first ticket */}
                         {currentTicket === 0 && registration.products && registration.products.length > 0 && (
                             <div className="mt-5 pt-4 border-t">
-                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+                                <p className="text-xs font-semibold text-gray-400 dark:text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
                                     <Package className="w-3 h-3" /> Add-ons
                                 </p>
                                 <div className="flex flex-wrap gap-2">
                                     {registration.products.map((p) => (
                                         <span
                                             key={p.id}
-                                            className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full"
+                                            className="text-xs bg-gray-100 dark:bg-muted text-gray-700 dark:text-muted-foreground px-2.5 py-1 rounded-full"
                                         >
                                             {p.product?.name ?? 'Product'}
                                             {p.variant ? ` (${p.variant})` : ''}
@@ -413,7 +413,7 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
 
                         {/* Footer note */}
                         <div className="mt-5 pt-4 border-t text-center">
-                            <p className="text-[11px] text-gray-400">
+                            <p className="text-[11px] text-gray-400 dark:text-muted-foreground">
                                 Malaysian Takaful Association (MTA) &middot; Please present this ticket (QR code) at the event entrance.
                             </p>
                         </div>

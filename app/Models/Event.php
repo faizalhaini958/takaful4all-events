@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use DateTimeInterface;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 use Spatie\Activitylog\LogOptions;
@@ -31,6 +32,7 @@ class Event extends Model
         'registration_url',
         'gdrive_link',
         'media_id',
+        'mobile_media_id',
         'venue_map_media_id',
         'is_published',
         'rsvp_enabled',
@@ -64,6 +66,11 @@ class Event extends Model
             ->saveSlugsTo('slug');
     }
 
+    protected function serializeDate(DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d\TH:i:s');
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -82,6 +89,11 @@ class Event extends Model
     public function media(): BelongsTo
     {
         return $this->belongsTo(Media::class, 'media_id');
+    }
+
+    public function mobileMedia(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'mobile_media_id');
     }
 
     public function venueMap(): BelongsTo

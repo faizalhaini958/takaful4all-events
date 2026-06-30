@@ -110,7 +110,7 @@ export default function PagesIndex({ pages }: Props) {
                 </div>
 
                 {/* Pages Table */}
-                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">

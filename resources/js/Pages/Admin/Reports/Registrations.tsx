@@ -250,19 +250,19 @@ export default function RegistrationsReport({
                 </div>
 
                 {/* Table */}
-                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reference</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Reference</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Participant</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Event</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ticket</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Qty</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Event</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Ticket</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center hidden md:table-cell">Qty</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Total (RM)</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Registered</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Payment</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Registered</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -278,7 +278,7 @@ export default function RegistrationsReport({
                                     const pp = PAYMENT_PILL[reg.payment_status] ?? PAYMENT_PILL.na;
                                     return (
                                         <TableRow key={reg.id} className="hover:bg-muted/30">
-                                            <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+                                            <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap hidden md:table-cell">
                                                 {reg.reference_no}
                                             </TableCell>
                                             <TableCell>
@@ -288,13 +288,13 @@ export default function RegistrationsReport({
                                                     <div className="text-xs text-muted-foreground">{reg.phone}</div>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-sm text-foreground max-w-[180px] truncate">
+                                            <TableCell className="text-sm text-foreground max-w-[180px] truncate hidden md:table-cell">
                                                 {reg.event?.title ?? '-'}
                                             </TableCell>
-                                            <TableCell className="text-sm text-foreground whitespace-nowrap">
+                                            <TableCell className="text-sm text-foreground whitespace-nowrap hidden md:table-cell">
                                                 {reg.ticket?.name ?? '-'}
                                             </TableCell>
-                                            <TableCell className="text-center text-sm tabular-nums">
+                                            <TableCell className="text-center text-sm tabular-nums hidden md:table-cell">
                                                 {reg.quantity}
                                             </TableCell>
                                             <TableCell className="text-right text-sm tabular-nums font-medium">
@@ -305,12 +305,12 @@ export default function RegistrationsReport({
                                                     {sp.label}
                                                 </span>
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="hidden md:table-cell">
                                                 <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${pp.class}`}>
                                                     {pp.label}
                                                 </span>
                                             </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                                            <TableCell className="text-xs text-muted-foreground whitespace-nowrap hidden md:table-cell">
                                                 {new Date(reg.created_at).toLocaleDateString('en-MY', {
                                                     day: '2-digit', month: 'short', year: 'numeric',
                                                 })}
@@ -326,7 +326,7 @@ export default function RegistrationsReport({
                 {/* Pagination */}
                 {registrations.last_page > 1 && (
                     <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-muted-foreground hidden sm:inline">
                             Showing <span className="font-medium text-foreground">{registrations.from ?? 0}</span> to{' '}
                             <span className="font-medium text-foreground">{registrations.to ?? 0}</span> of{' '}
                             <span className="font-medium text-foreground">{registrations.total}</span>

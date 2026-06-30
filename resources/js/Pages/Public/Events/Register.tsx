@@ -1,4 +1,4 @@
-﻿import PublicLayout from '@/Layouts/PublicLayout';
+import PublicLayout from '@/Layouts/PublicLayout';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
 import { Link, router, useForm, usePage, Head } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import {
     Calendar, MapPin, ChevronLeft, Ticket, ShoppingBag, Plus, Minus,
     AlertCircle, User, Clock, Check, ChevronRight, FileText, CreditCard,
-    CalendarDays, Users,
+    CalendarDays, Users, Tag, X,
 } from 'lucide-react';
 import { type Event, type EventTicket, type EventProduct, type EventZone, type RegistrationField, type SharedProps, type AuthUser, fieldAppliesToTicket, resolveFieldOptions } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
@@ -21,9 +22,9 @@ import LoginModal from '@/Components/LoginModal';
 import RegisterModal from '@/Components/RegisterModal';
 
 const POPPINS = "'Poppins', sans-serif";
-const INTER   = "'Inter', 'DM Sans', sans-serif";
+const INTER   = "'Inter', sans-serif";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// --- Types --------------------------------------------------------------------
 
 interface Props {
     event: Event;
@@ -53,7 +54,7 @@ const emptyAttendee = (): Attendee => ({
     job_title: '', dietary_requirements: '', custom_fields: {},
 });
 
-// ─── Step config ──────────────────────────────────────────────────────────────
+// --- Step config --------------------------------------------------------------
 
 const STEPS = [
     { number: 1, label: 'Types',     icon: Ticket },
@@ -62,12 +63,78 @@ const STEPS = [
     { number: 4, label: 'Payment',   icon: CreditCard },
 ];
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// --- Helpers -------------------------------------------------------------------
+
+/** Convert plain-text waiver to HTML: line breaks → &lt;br /&gt;, auto-detect section headings (lines ending with ':') and wrap in &lt;strong&gt;, convert `-` / `•` lists to &lt;ul&gt;&lt;li&gt;. Preserves existing HTML tags if present. */
+function formatWaiverHtml(text: string): string {
+    const cleaned = text.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ');
+
+    if (/<[a-z][\s\S]*?>/i.test(cleaned)) {
+        return cleaned.replace(/\r?\n/g, '<br />');
+    }
+
+    const bulletRe = /^\s*[-•*‣·]\s/;
+    const numberRe = /^\s*\d+[.)]\s/;
+
+    const lines = cleaned.split(/\r?\n/);
+    const result: string[] = [];
+    let i = 0;
+    let prevWasBlank = false;
+
+    while (i < lines.length) {
+        const trimmed = lines[i].trim();
+
+        if (trimmed === '') {
+            if (!prevWasBlank) {
+                result.push('');
+            }
+            prevWasBlank = true;
+            i++;
+            continue;
+        }
+        prevWasBlank = false;
+
+        if (bulletRe.test(lines[i])) {
+            result.push('<ul>');
+            while (i < lines.length && bulletRe.test(lines[i])) {
+                result.push(`<li>${lines[i].trim().replace(/^[-•*‣·]\s+/, '')}</li>`);
+                i++;
+            }
+            result.push('</ul>');
+            continue;
+        }
+
+        if (numberRe.test(lines[i])) {
+            result.push('<ol>');
+            while (i < lines.length && numberRe.test(lines[i])) {
+                result.push(`<li>${lines[i].trim().replace(/^\d+[.)]\s+/, '')}</li>`);
+                i++;
+            }
+            result.push('</ol>');
+            continue;
+        }
+
+        if (trimmed && (
+            (/^[A-Za-z][\w\s&\/,()\-\.']{2,70}:$/.test(trimmed) && !/^https?:\/\//i.test(trimmed) && !/@/.test(trimmed)) ||
+            (/^[A-Z][A-Z\s\-&]{2,60}$/.test(trimmed) && trimmed.length >= 3)
+        )) {
+            result.push(`<strong>${trimmed}</strong>`);
+        } else {
+            result.push(trimmed);
+        }
+        i++;
+    }
+
+    return result.join('<br />');
+}
+
+// --- Main component -----------------------------------------------------------
 
 export default function EventRegister({ event, tickets, products, zones }: Props) {
     const { flash, auth } = usePage().props as any;
     const authUser: AuthUser | null = auth?.user ?? null;
     const returnTo = `/events/${event.slug}/register`;
+    const SAVE_KEY = `reg_state_${event.slug}`;
     const { t, locale } = useTranslation();
     const { track } = useAnalytics();
     const { executeRecaptcha } = useGoogleReCaptcha();
@@ -80,8 +147,16 @@ export default function EventRegister({ event, tickets, products, zones }: Props
     const [loginModalOpen, setLoginModalOpen] = useState(false);
     const [registerModalOpen, setRegisterModalOpen] = useState(false);
     const [step2Prefilled, setStep2Prefilled] = useState(false);
+    const [restoredFromAuth, setRestoredFromAuth] = useState(false);
     const topRef = useRef<HTMLDivElement>(null);
     const hasTerms = Boolean(event.terms_conditions?.trim());
+
+    // Promo code state
+    const [promoCodeDiscount, setPromoCodeDiscount] = useState(0);
+    const [promoCodeLabel, setPromoCodeLabel] = useState<string | null>(null);
+    const [promoCodeValidating, setPromoCodeValidating] = useState(false);
+    const [promoCodeError, setPromoCodeError] = useState<string | null>(null);
+    const [promoCodeApplied, setPromoCodeApplied] = useState(false);
 
     const { data, setData, post, processing, errors, transform } = useForm({
         ticket_id: '',
@@ -89,6 +164,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
         attendees: [emptyAttendee()] as Attendee[],
         notes: '',
         products: [] as ProductSelection[],
+        promo_code: '',
     });
 
     transform(d => ({ ...d, recaptcha_token: tokenRef.current }));
@@ -100,7 +176,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
         const product = products.find(pr => pr.id === p.product_id);
         return sum + (product ? product.price * p.quantity : 0);
     }, 0);
-    const grandTotal = ticketSubtotal + productsTotal;
+    const grandTotal = Math.max(0, ticketSubtotal + productsTotal - promoCodeDiscount);
 
     const hasCustomFields = (event.registration_fields?.length ?? 0) > 0;
     const sortedFields: RegistrationField[] = hasCustomFields
@@ -142,13 +218,66 @@ export default function EventRegister({ event, tickets, products, zones }: Props
         }
     }, [step, authUser]);
 
+    // Restore registration state after login/register redirect
+    useEffect(() => {
+        if (restoredFromAuth) return;
+        const saved = sessionStorage.getItem(SAVE_KEY);
+        if (!saved) return;
+        try {
+            const state = JSON.parse(saved);
+            sessionStorage.removeItem(SAVE_KEY);
+
+            if (state.ticket_id) setData('ticket_id', state.ticket_id);
+            if (state.quantity) setData('quantity', state.quantity);
+            if (state.promo_code) setData('promo_code', state.promo_code);
+            if (state.selectedProducts?.length) {
+                setSelectedProducts(state.selectedProducts);
+                setData('products', state.selectedProducts);
+            }
+            if (state.promoCodeDiscount) setPromoCodeDiscount(state.promoCodeDiscount);
+            if (state.promoCodeLabel) setPromoCodeLabel(state.promoCodeLabel);
+            if (state.promoCodeApplied) setPromoCodeApplied(true);
+
+            setRestoredFromAuth(true);
+
+            // If user is now authenticated, auto-advance past the auth gate
+            if (authUser) {
+                setStep(2);
+            }
+        } catch {
+            sessionStorage.removeItem(SAVE_KEY);
+        }
+    }, [authUser]);
+
     function scrollToTop() {
         topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     const STEP_LABELS: Record<number, string> = { 1: 'step_1', 2: 'step_2', 3: 'step_3', 4: 'payment' };
 
-    function goTo(n: number) {
+    async function goTo(n: number) {
+        // Re-validate promo code on every forward step transition
+        // so the user sees an error immediately, not after filling all info
+        if (n > step && promoCodeApplied && data.promo_code?.trim() && data.ticket_id) {
+            try {
+                const response = await axios.post('/validate-promo-code', {
+                    code: data.promo_code.trim(),
+                    ticket_id: data.ticket_id,
+                    quantity: data.quantity,
+                });
+                if (!response.data.valid) {
+                    setPromoCodeDiscount(0);
+                    setPromoCodeLabel(null);
+                    setPromoCodeError(response.data.error);
+                    setPromoCodeApplied(false);
+                    scrollToTop();
+                    return; // stay on current step
+                }
+            } catch {
+                // If validation fails, let user proceed anyway — server will catch it
+            }
+        }
+
         setStep(n);
         scrollToTop();
         track('funnel_step', 'registration', STEP_LABELS[n] ?? `step_${n}`, { event: event.slug });
@@ -160,7 +289,64 @@ export default function EventRegister({ event, tickets, products, zones }: Props
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [event.slug]);
 
-    // ── Product helpers ──
+    // Reset promo code when ticket or quantity changes
+    useEffect(() => {
+        if (promoCodeApplied) {
+            setPromoCodeDiscount(0);
+            setPromoCodeLabel(null);
+            setPromoCodeError(null);
+            setPromoCodeApplied(false);
+        }
+    }, [data.ticket_id, data.quantity]);
+
+    // -- Promo code helper --
+    async function handleApplyPromoCode() {
+        const code = data.promo_code?.trim();
+        if (!code) {
+            setPromoCodeError('Please enter a promo code.');
+            return;
+        }
+
+        setPromoCodeValidating(true);
+        setPromoCodeError(null);
+
+        try {
+            const response = await axios.post('/validate-promo-code', {
+                code,
+                ticket_id: data.ticket_id,
+                quantity: data.quantity,
+            });
+
+            if (response.data.valid) {
+                setPromoCodeDiscount(response.data.discount);
+                setPromoCodeLabel(response.data.label);
+                setPromoCodeError(null);
+                setPromoCodeApplied(true);
+            } else {
+                setPromoCodeDiscount(0);
+                setPromoCodeLabel(null);
+                setPromoCodeError(response.data.error);
+                setPromoCodeApplied(false);
+            }
+        } catch {
+            setPromoCodeError('Failed to validate promo code. Please try again.');
+            setPromoCodeDiscount(0);
+            setPromoCodeLabel(null);
+            setPromoCodeApplied(false);
+        } finally {
+            setPromoCodeValidating(false);
+        }
+    }
+
+    function handleClearPromoCode() {
+        setData('promo_code', '');
+        setPromoCodeDiscount(0);
+        setPromoCodeLabel(null);
+        setPromoCodeError(null);
+        setPromoCodeApplied(false);
+    }
+
+    // -- Product helpers --
     function toggleProduct(productId: number) {
         const exists = selectedProducts.find(p => p.product_id === productId);
         const updated = exists
@@ -191,7 +377,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
         setData('products', updated);
     }
 
-    // ── Attendee helpers ──
+    // -- Attendee helpers --
     function updateAttendee(index: number, field: keyof Attendee, value: string) {
         const updated = [...data.attendees];
         updated[index] = { ...updated[index], [field]: value };
@@ -213,8 +399,16 @@ export default function EventRegister({ event, tickets, products, zones }: Props
         }
         track('funnel_step', 'registration', 'payment', { event: event.slug });
         post(`/events/${event.slug}/register`, {
-            // If backend returns validation errors, go back to Step 2 so they are visible
-            onError: () => goTo(2),
+            // If backend returns validation errors, go to the relevant step
+            onError: (errs: any) => {
+                if (errs.promo_code) {
+                    setPromoCodeDiscount(0);
+                    setPromoCodeLabel(null);
+                    setPromoCodeError(errs.promo_code);
+                    setPromoCodeApplied(false);
+                }
+                goTo(1);
+            },
         });
     }
 
@@ -238,7 +432,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
             </Dialog>
 
             <Head>
-                <title>{`Register — ${event.title} | Takaful4All Events`}</title>
+                <title>{`Register - ${event.title} | Takaful4All Events`}</title>
                 <meta name="robots" content="noindex, nofollow" />
             </Head>
             {/* Event header bar */}
@@ -295,7 +489,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
             {/* Gradient divider */}
             <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, transparent 0%, #009FBB 30%, #18C8FF 50%, #009FBB 70%, transparent 100%)' }} />
 
-            {/* Step Indicator — sticky below any nav */}
+            {/* Step Indicator � sticky below any nav */}
             <div ref={topRef} className="border-b dark:border-border bg-white dark:bg-card sticky top-0 z-10 shadow-sm" style={{ borderColor: '#c8dfe8' }}>
                 <div className="max-w-4xl mx-auto px-4 sm:px-6">
                     <div className="flex items-center">
@@ -356,6 +550,10 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                         ticketSubtotal={ticketSubtotal} grandTotal={grandTotal}
                         errors={errors}
                         toggleProduct={toggleProduct} updateProductQty={updateProductQty} updateProductVariant={updateProductVariant}
+                        promoCodeDiscount={promoCodeDiscount} promoCodeLabel={promoCodeLabel}
+                        promoCodeValidating={promoCodeValidating} promoCodeError={promoCodeError}
+                        promoCodeApplied={promoCodeApplied}
+                        handleApplyPromoCode={handleApplyPromoCode} handleClearPromoCode={handleClearPromoCode}
                         onBack={() => router.visit(`/events/${event.slug}`)}
                         onNext={() => {
                             if (!authUser) {
@@ -375,6 +573,8 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                         updateAttendee={updateAttendee} updateCustomField={updateCustomField}
                         hasTerms={hasTerms} termsAgreed={termsAgreed} setTermsAgreed={setTermsAgreed}
                         event={event}
+                        promoCodeDiscount={promoCodeDiscount} promoCodeLabel={promoCodeLabel}
+                        promoCodeApplied={promoCodeApplied}
                         onBack={() => goTo(1)} onNext={() => {
                             // Frontend eligibility pre-check before proceeding to review
                             if (selectedTicket) {
@@ -434,17 +634,43 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                         hasTerms={hasTerms} termsAgreed={termsAgreed} setTermsAgreed={setTermsAgreed}
                         processing={processing} locale={locale}
                         sortedFields={sortedFields} hasCustomFields={hasCustomFields}
+                        promoCodeDiscount={promoCodeDiscount} promoCodeLabel={promoCodeLabel}
+                        promoCodeApplied={promoCodeApplied}
                         onBack={() => goTo(2)} onSubmit={handleSubmit} t={t}
                     />
                 )}
             </div>
             </div>
-            {/* Auth gate — shown between Step 1 and Step 2 for unauthenticated users */}
+            {/* Auth gate � shown between Step 1 and Step 2 for unauthenticated users */}
             <RegistrationAuthGate
                 open={authGateOpen}
                 onOpenChange={setAuthGateOpen}
-                onSignIn={() => { setAuthGateOpen(false); setLoginModalOpen(true); }}
-                onCreateAccount={() => { setAuthGateOpen(false); setRegisterModalOpen(true); }}
+                onSignIn={() => {
+                    sessionStorage.setItem(SAVE_KEY, JSON.stringify({
+                        ticket_id: data.ticket_id,
+                        quantity: data.quantity,
+                        promo_code: data.promo_code,
+                        selectedProducts,
+                        promoCodeDiscount,
+                        promoCodeLabel,
+                        promoCodeApplied,
+                    }));
+                    setAuthGateOpen(false);
+                    setLoginModalOpen(true);
+                }}
+                onCreateAccount={() => {
+                    sessionStorage.setItem(SAVE_KEY, JSON.stringify({
+                        ticket_id: data.ticket_id,
+                        quantity: data.quantity,
+                        promo_code: data.promo_code,
+                        selectedProducts,
+                        promoCodeDiscount,
+                        promoCodeLabel,
+                        promoCodeApplied,
+                    }));
+                    setAuthGateOpen(false);
+                    setRegisterModalOpen(true);
+                }}
                 onContinueAsGuest={() => { setAuthGateOpen(false); goTo(2); }}
             />
             <LoginModal
@@ -464,11 +690,12 @@ export default function EventRegister({ event, tickets, products, zones }: Props
     );
 }
 
-// ─── Step 1: Ticket Types + Add-ons ──────────────────────────────────────────
+// --- Step 1: Ticket Types + Add-ons ------------------------------------------
 
 function Step1Tickets({ event, tickets, zones, products, data, setData, qty, selectedTicket,
     selectedProducts, ticketSubtotal, grandTotal, errors, toggleProduct, updateProductQty,
-    updateProductVariant, onBack, onNext, t }: any) {
+    updateProductVariant, promoCodeDiscount, promoCodeLabel, promoCodeValidating, promoCodeError,
+    promoCodeApplied, handleApplyPromoCode, handleClearPromoCode, onBack, onNext, t }: any) {
 
     return (
         <div className="space-y-6">
@@ -596,7 +823,7 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
                                                         'px-3 py-1.5 rounded-lg text-xs font-bold border transition-all',
                                                         isSelected ? 'bg-brand text-white border-brand' : 'border-gray-300 dark:border-border text-gray-700 dark:text-muted-foreground hover:border-brand hover:text-brand',
                                                     ].join(' ')}>
-                                                    {isSelected ? '✓ Added' : '+ Add'}
+                                                    {isSelected ? 'Added' : '+ Add'}
                                                 </button>
                                                 {isSelected && (
                                                     <div className="flex items-center border border-gray-200 dark:border-border rounded-lg overflow-hidden">
@@ -647,20 +874,66 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
                 </div>
             )}
 
+            {/* Promo Code */}
+            {selectedTicket && selectedTicket.type !== 'free' && (
+                <div className="bg-white dark:bg-card rounded-2xl border border-gray-200 dark:border-border overflow-hidden">
+                    <div className="px-5 py-4 border-b border-gray-100 dark:border-border flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-brand" />
+                        <h3 className="font-bold text-gray-900 dark:text-foreground text-sm">Promo Code</h3>
+                    </div>
+                    <div className="p-5">
+                        <div className="flex gap-2">
+                            <Input
+                                value={data.promo_code ?? ''}
+                                onChange={e => setData('promo_code', e.target.value.toUpperCase())}
+                                disabled={promoCodeApplied}
+                                className="font-mono tracking-wider"
+                                placeholder="Enter promo code"
+                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleApplyPromoCode(); } }}
+                            />
+                            {promoCodeApplied ? (
+                                <Button type="button" variant="outline" onClick={handleClearPromoCode}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300 flex-shrink-0">
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            ) : (
+                                <Button type="button" onClick={handleApplyPromoCode}
+                                    disabled={promoCodeValidating || !data.promo_code?.trim() || !data.ticket_id}
+                                    className="bg-brand hover:bg-brand-dark text-white flex-shrink-0">
+                                    {promoCodeValidating ? 'Checking…' : 'Apply'}
+                                </Button>
+                            )}
+                        </div>
+                        {promoCodeError && (
+                            <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                                <AlertCircle className="w-3.5 h-3.5" /> {promoCodeError}
+                            </p>
+                        )}
+                        {promoCodeApplied && promoCodeLabel && (
+                            <p className="text-sm text-emerald-600 mt-2 flex items-center gap-1">
+                                <Check className="w-3.5 h-3.5" /> {promoCodeLabel} — RM {promoCodeDiscount.toFixed(2)} off
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
+
             <OrderSummaryBar selectedTicket={selectedTicket} qty={qty}
                 ticketSubtotal={ticketSubtotal} selectedProducts={selectedProducts}
-                products={products} grandTotal={grandTotal} />
+                products={products} grandTotal={grandTotal}
+                promoCodeDiscount={promoCodeDiscount} promoCodeLabel={promoCodeLabel} />
 
             <StepNav onBack={onBack} onNext={onNext} nextDisabled={!data.ticket_id} nextLabel="Next: Your Info" backLabel="Back to Event" />
         </div>
     );
 }
 
-// ─── Step 2: Personal / Team Info ─────────────────────────────────────────────
+// --- Step 2: Personal / Team Info ---------------------------------------------
 
 function Step2Info({ data, setData, qty, selectedTicket, grandTotal, errors, hasCustomFields,
     sortedFields, locale, updateAttendee, updateCustomField,
     hasTerms, termsAgreed, setTermsAgreed, event,
+    promoCodeDiscount, promoCodeLabel, promoCodeApplied,
     onBack, onNext, t }: any) {
 
     function isValid(): boolean {
@@ -820,15 +1093,15 @@ function Step2Info({ data, setData, qty, selectedTicket, grandTotal, errors, has
                 </div>
             ))}
 
-            {/* Terms & Conditions — shown in Step 2, below the attendee form */}
+            {/* Terms & Conditions � shown in Step 2, below the attendee form */}
             {hasTerms && (
                 <div className="rounded-xl border border-gray-200 dark:border-border bg-white dark:bg-card overflow-hidden">
                     <div className="bg-gray-50 dark:bg-muted/50 border-b border-gray-200 dark:border-border px-4 py-2.5 flex items-center gap-2">
                         <svg className="w-3.5 h-3.5 text-brand flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                         <span className="text-xs font-bold text-gray-600 dark:text-muted-foreground uppercase tracking-wide">Terms &amp; Conditions</span>
                     </div>
-                    <div className="px-4 pt-3 pb-1 max-h-48 overflow-y-auto">
-                        <p className="text-sm text-gray-600 dark:text-muted-foreground whitespace-pre-wrap leading-relaxed">{event.terms_conditions}</p>
+                    <div className="px-5 py-4 max-h-80 overflow-y-auto">
+                        <p className="text-sm text-gray-700 dark:text-muted-foreground whitespace-pre-wrap leading-relaxed">{event.terms_conditions}</p>
                     </div>
                     <div className="px-4 py-3 bg-gray-50 dark:bg-muted/50 border-t border-gray-200 dark:border-border">
                         <label className="flex items-start gap-3 cursor-pointer select-none">
@@ -846,18 +1119,19 @@ function Step2Info({ data, setData, qty, selectedTicket, grandTotal, errors, has
 
             <OrderSummaryBar selectedTicket={selectedTicket} qty={qty}
                 ticketSubtotal={0} selectedProducts={[]} products={[]}
-                grandTotal={grandTotal} compact />
+                grandTotal={grandTotal} compact
+                promoCodeDiscount={promoCodeDiscount} promoCodeLabel={promoCodeLabel} />
 
             <StepNav onBack={onBack} onNext={onNext} nextDisabled={!isValid()} nextLabel="Next: Review" />
         </div>
     );
 }
 
-// ─── Step 3: Review & Submit ──────────────────────────────────────────────────
+// --- Step 3: Review & Submit --------------------------------------------------
 
 function Step3Review({ event, data, selectedTicket, selectedProducts, products, qty, ticketSubtotal,
     grandTotal, hasTerms, termsAgreed, setTermsAgreed, processing, locale,
-    sortedFields, hasCustomFields, onBack, onSubmit }: any) {
+    sortedFields, hasCustomFields, promoCodeDiscount, promoCodeLabel, promoCodeApplied, onBack, onSubmit }: any) {
 
     return (
         <div className="space-y-6">
@@ -887,7 +1161,7 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                         return (
                             <div key={sp.product_id} className="flex items-center justify-between text-sm">
                                 <div>
-                                    <p className="font-medium text-gray-800 dark:text-foreground">{product.name} × {sp.quantity}</p>
+                                    <p className="font-medium text-gray-800 dark:text-foreground">{product.name} x {sp.quantity}</p>
                                     {sp.variants.filter(Boolean).length > 0 && (
                                         <p className="text-xs text-gray-400 dark:text-muted-foreground">{sp.variants.filter(Boolean).join(', ')}</p>
                                     )}
@@ -896,6 +1170,14 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                             </div>
                         );
                     })}
+                    {promoCodeApplied && (promoCodeDiscount ?? 0) > 0 && (
+                        <div className="flex items-center justify-between text-sm text-emerald-600">
+                            <span className="flex items-center gap-1">
+                                <Check className="w-3.5 h-3.5" /> {promoCodeLabel ?? 'Promo Code'}
+                            </span>
+                            <span className="font-semibold">-RM {promoCodeDiscount.toFixed(2)}</span>
+                        </div>
+                    )}
                     <div className="border-t border-gray-100 dark:border-border pt-3 flex items-center justify-between font-bold">
                         <span>Total</span>
                         <span className="text-brand text-lg">{grandTotal > 0 ? `RM ${grandTotal.toFixed(2)}` : 'Free'}</span>
@@ -916,7 +1198,7 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                     </div>
                     <div className="p-5">
                         {/* Core contact fields */}
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
                             <div className="col-span-2">
                                 <ReviewField label="Full Name" value={attendee.name} />
                             </div>
@@ -931,12 +1213,12 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                         {hasCustomFields && (
                             <>
                                 <div className="border-t border-gray-100 dark:border-border my-4" />
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
                                     {(sortedFields as RegistrationField[]).filter(f => !f.locked).map(field => {
                                         const label = locale === 'ms' ? field.label_ms : field.label_en;
                                         const val = attendee.custom_fields[field.key];
                                         if (!val || val === 'false') return null;
-                                        const displayVal = val === 'true' ? '✓ Yes' : val;
+                                        const displayVal = val === 'true' ? 'Yes' : val;
                                         const isWide = field.type === 'textarea' || field.type === 'checkbox'
                                             || label.length > 16 || displayVal.length > 22;
                                         return (
@@ -977,12 +1259,12 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                         disabled={processing || !selectedTicket}
                         className="w-full sm:w-auto sm:min-w-[220px] bg-brand hover:bg-brand-dark text-white font-bold py-4 rounded-xl text-base disabled:opacity-50"
                         size="lg">
-                        {processing ? 'Submitting…' : grandTotal > 0 ? `Register — RM ${grandTotal.toFixed(2)}` : 'Register — Free'}
+                        {processing ? 'Submitting...' : grandTotal > 0 ? `Register - RM ${grandTotal.toFixed(2)}` : 'Register - Free'}
                     </Button>
                 </div>
-                <p className="text-center text-xs text-gray-500 dark:text-muted-foreground uppercase tracking-wider">🔒 Secure &amp; Instant Checkout</p>
+                <p className="text-center text-xs text-gray-500 dark:text-muted-foreground uppercase tracking-wider">Secure &amp; Instant Checkout</p>
                 <p className="text-center text-xs text-gray-400 dark:text-muted-foreground/60">
-                    Protected by reCAPTCHA —{' '}
+                    Protected by reCAPTCHA �{' '}
                     <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600 dark:hover:text-muted-foreground">Privacy</a>{' '}&amp;{' '}
                     <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600 dark:hover:text-muted-foreground">Terms</a>
                 </p>
@@ -991,7 +1273,7 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
     );
 }
 
-// ─── Shared sub-components ────────────────────────────────────────────────────
+// --- Shared sub-components ----------------------------------------------------
 
 function StepHeader({ title, subtitle }: { title: string; subtitle?: string }) {
     return (
@@ -1028,7 +1310,7 @@ function StepNav({ onBack, onNext, nextDisabled, nextLabel, backLabel, showBack 
     );
 }
 
-function OrderSummaryBar({ selectedTicket, qty, ticketSubtotal, selectedProducts, products, grandTotal, compact }: {
+function OrderSummaryBar({ selectedTicket, qty, ticketSubtotal, selectedProducts, products, grandTotal, compact, promoCodeDiscount, promoCodeLabel }: {
     selectedTicket: EventTicket | undefined;
     qty: number;
     ticketSubtotal: number;
@@ -1036,23 +1318,41 @@ function OrderSummaryBar({ selectedTicket, qty, ticketSubtotal, selectedProducts
     products: EventProduct[];
     grandTotal: number;
     compact?: boolean;
+    promoCodeDiscount?: number;
+    promoCodeLabel?: string | null;
 }) {
     if (!selectedTicket) return null;
+
+    const hasPromoDiscount = (promoCodeDiscount ?? 0) > 0;
 
     const summaryContent = (
         <>
             <div className="min-w-0">
                 <p className="text-[10px] text-gray-400 dark:text-muted-foreground uppercase font-semibold tracking-wide">Order Summary</p>
                 <p className="text-sm font-semibold text-gray-900 dark:text-foreground truncate mt-0.5">
-                    {selectedTicket.name} × {qty}
+                    {selectedTicket.name} x {qty}
                     {!compact && selectedProducts.length > 0 && ` + ${selectedProducts.length} add-on(s)`}
                 </p>
+                {hasPromoDiscount && promoCodeLabel && (
+                    <p className="text-xs text-emerald-600 mt-0.5 font-medium">{promoCodeLabel}</p>
+                )}
             </div>
             <div className="text-right flex-shrink-0">
                 <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Total</p>
-                <p className="text-lg font-extrabold text-brand">
-                    {grandTotal > 0 ? `RM ${grandTotal.toFixed(2)}` : 'Free'}
-                </p>
+                {hasPromoDiscount ? (
+                    <>
+                        <p className="text-lg font-extrabold text-brand">
+                            RM {grandTotal.toFixed(2)}
+                        </p>
+                        <p className="text-[10px] text-gray-400 line-through">
+                            RM {(ticketSubtotal + selectedProducts.reduce((sum, p) => { const pr = products.find(pr => pr.id === p.product_id); return sum + (pr ? pr.price * p.quantity : 0); }, 0)).toFixed(2)}
+                        </p>
+                    </>
+                ) : (
+                    <p className="text-lg font-extrabold text-brand">
+                        {grandTotal > 0 ? `RM ${grandTotal.toFixed(2)}` : 'Free'}
+                    </p>
+                )}
             </div>
         </>
     );
@@ -1076,12 +1376,12 @@ function ReviewField({ label, value }: { label: string; value: string }) {
     return (
         <div>
             <p className="text-[11px] uppercase tracking-wider text-gray-400 dark:text-muted-foreground font-semibold leading-tight break-words">{label}</p>
-            <p className="text-sm font-medium text-gray-900 dark:text-foreground mt-1 break-words">{value || '—'}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-foreground mt-1 break-words">{value || '�'}</p>
         </div>
     );
 }
 
-// ─── Custom Field Input ───────────────────────────────────────────────────────
+// --- Custom Field Input -------------------------------------------------------
 
 function CustomFieldInput({ field, value, onChange, onIcParsedDob, locale, ticketName, error, inputId }: {
     field: RegistrationField;
@@ -1097,7 +1397,7 @@ function CustomFieldInput({ field, value, onChange, onIcParsedDob, locale, ticke
     const placeholder = locale === 'ms' ? (field.placeholder_ms ?? '') : (field.placeholder_en ?? '');
     const options = resolveFieldOptions(field, ticketName ?? null, locale);
 
-    // ── IC Number masking: xxxxxx-xx-xxxx ─────────────────────────────────
+    // -- IC Number masking: xxxxxx-xx-xxxx ---------------------------------
     function handleIcChange(raw: string) {
         // Strip everything except digits
         const digits = raw.replace(/\D/g, '').slice(0, 12);
@@ -1105,7 +1405,7 @@ function CustomFieldInput({ field, value, onChange, onIcParsedDob, locale, ticke
         let masked = digits;
         if (digits.length > 6) masked = digits.slice(0, 6) + '-' + digits.slice(6);
         if (digits.length > 8) masked = digits.slice(0, 6) + '-' + digits.slice(6, 8) + '-' + digits.slice(8);
-        // Auto-fill DOB when all 12 digits are present — one atomic update
+        // Auto-fill DOB when all 12 digits are present � one atomic update
         if (digits.length === 12 && onIcParsedDob) {
             const yy = parseInt(digits.slice(0, 2), 10);
             const mm = digits.slice(2, 4);
@@ -1140,7 +1440,7 @@ function CustomFieldInput({ field, value, onChange, onIcParsedDob, locale, ticke
             {field.type === 'select' && (
                 <Select value={value} onValueChange={onChange}>
                     <SelectTrigger className="mt-2 h-12 sm:h-9">
-                        <SelectValue placeholder={placeholder || `— ${label} —`} />
+                        <SelectValue placeholder={placeholder || `� ${label} �`} />
                     </SelectTrigger>
                     <SelectContent>
                         {options.map((opt: string) => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
@@ -1170,8 +1470,8 @@ function CustomFieldInput({ field, value, onChange, onIcParsedDob, locale, ticke
                             <svg className="w-3.5 h-3.5 text-brand flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                             <span className="text-xs font-bold text-gray-600 dark:text-muted-foreground uppercase tracking-wide">Event Waiver</span>
                         </div>
-                        <div className="px-4 pt-3 pb-1 max-h-40 overflow-y-auto">
-                            <p className="text-sm text-gray-600 dark:text-muted-foreground leading-relaxed">{description}</p>
+                        <div className="px-5 py-4 max-h-80 overflow-y-auto">
+                            <div className="text-sm text-gray-700 dark:text-muted-foreground leading-relaxed prose prose-sm max-w-none prose-headings:text-gray-800 dark:prose-headings:text-foreground prose-strong:text-gray-800 dark:prose-strong:text-foreground" dangerouslySetInnerHTML={{ __html: formatWaiverHtml(description) }} />
                         </div>
                         <div className="px-4 py-3 bg-gray-50 dark:bg-muted/50 border-t border-gray-200 dark:border-border">
                             <label htmlFor={inputId} className="flex items-start gap-3 cursor-pointer select-none">
@@ -1204,7 +1504,7 @@ function CustomFieldInput({ field, value, onChange, onIcParsedDob, locale, ticke
     );
 }
 
-// ─── Ticket Option ────────────────────────────────────────────────────────────
+// --- Ticket Option ------------------------------------------------------------
 
 function TicketOption({ ticket, selected, onSelect }: {
     ticket: EventTicket;
@@ -1239,8 +1539,8 @@ function TicketOption({ ticket, selected, onSelect }: {
                                 <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
                                     <CalendarDays className="w-3 h-3" />
                                     {ticket.min_age && ticket.max_age
-                                        ? `Ages ${ticket.min_age}–${ticket.max_age}`
-                                        : ticket.min_age ? `Age ${ticket.min_age}+` : `Age ≤${ticket.max_age}`}
+                                        ? `Ages ${ticket.min_age}-${ticket.max_age}`
+                                        : ticket.min_age ? `Age ${ticket.min_age}+` : `Age =${ticket.max_age}`}
                                 </span>
                             )}
                             {ticket.allowed_gender && (
@@ -1271,7 +1571,7 @@ function TicketOption({ ticket, selected, onSelect }: {
                         <p className="text-xs text-gray-400 line-through">RM {Number(ticket.price).toFixed(2)}</p>
                     </>
                 ) : (
-                    <p className="font-extrabold text-gray-900">RM {Number(ticket.current_price).toFixed(2)}</p>
+                    <p className="font-extrabold text-gray-900 dark:text-foreground">RM {Number(ticket.current_price).toFixed(2)}</p>
                 )}
             </div>
         </label>

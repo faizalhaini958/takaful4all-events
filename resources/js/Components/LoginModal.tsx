@@ -143,7 +143,7 @@ export default function LoginModal({ open, onOpenChange, onSwitchToRegister, onS
                     </div>
 
                     <a
-                        href={route('auth.google.redirect')}
+                        href={route('auth.google.redirect') + (returnTo ? `?return_to=${encodeURIComponent(returnTo)}` : '')}
                         className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 dark:border-border bg-white dark:bg-card px-4 py-2 text-sm font-medium text-gray-700 dark:text-foreground shadow-sm transition hover:bg-gray-50 dark:hover:bg-muted focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
                     >
                         <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,6 +27,11 @@ class ContentBanner extends Model
         'start_date' => 'datetime',
         'end_date'   => 'datetime',
     ];
+
+    protected function serializeDate(DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d\TH:i:s');
+    }
 
     public function scopeActive(Builder $query): Builder
     {

@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import {
     TrendingUp, TrendingDown, Users, Eye, Globe,
-    Monitor, ExternalLink, RefreshCw, Activity, BarChart2, Tag, HelpCircle,
+    Monitor, ExternalLink, RefreshCw, Activity, BarChart2, Tag, HelpCircle, Download,
 } from 'lucide-react';
 
 // â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -187,11 +187,19 @@ export default function AnalyticsIndex({
                                 >{d}d</button>
                             ))}
                         </div>
+                        {/* Export PDF */}
+                        <a
+                            href={`/admin/analytics/export-pdf?days=${days}`}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            Export Report
+                        </a>
                     </div>
                 </div>
 
                 {/* â”€â”€ KPI cards â”€â”€ */}
-                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
                     <KpiCard
                         label="Total Visits"
                         tip="How many times people visited your website in this period. Each visit — even from the same person — counts as one."

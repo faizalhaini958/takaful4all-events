@@ -77,6 +77,11 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
         setResendTarget(reg);
     }
 
+    function handleSearch(e: React.FormEvent) {
+        e.preventDefault();
+        applyFilters();
+    }
+
     function confirmResend() {
         if (!resendTarget) return;
         router.post(`/admin/events/${resendTarget.event?.slug}/registrations/${resendTarget.id}/resend-confirmation`, {}, {
@@ -184,7 +189,7 @@ export default function RegistrationsIndex({ registrations, stats, events, curre
                 </div>
 
                 {/* Table */}
-                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
@@ -414,7 +419,7 @@ function RegistrationDetailModal({
                     {/* Attendee Info */}
                     <div>
                         <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest mb-3">Attendee Information</h4>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <InfoField icon={<Users className="w-3.5 h-3.5" />} label="Full Name" value={reg.name} />
                             <InfoField icon={<Mail className="w-3.5 h-3.5" />} label="Email" value={reg.email} />
                             {reg.phone && <InfoField icon={<Phone className="w-3.5 h-3.5" />} label="Phone" value={reg.phone} />}
@@ -495,7 +500,7 @@ function RegistrationDetailModal({
                     {/* Event & Ticket */}
                     <div>
                         <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest mb-3">Event & Ticket</h4>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <InfoField icon={<CalendarDays className="w-3.5 h-3.5" />} label="Event" value={reg.event?.title ?? '—'} />
                             <InfoField label="Ticket" value={reg.ticket?.name ?? '—'} />
                         </div>
@@ -554,7 +559,7 @@ function RegistrationDetailModal({
                     {/* Payment & Meta */}
                     <div>
                         <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest mb-3">Payment & Details</h4>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs text-muted-foreground mb-1">Payment Status</p>
                                 <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${paymentPill.class}`}>

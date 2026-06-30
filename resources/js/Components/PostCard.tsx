@@ -1,11 +1,9 @@
+import { Link } from '@inertiajs/react';
 import { type Post } from '@/types';
 
 interface Props {
     post: Post;
-    onClick?: () => void;
 }
-
-const IS_VIDEO_TYPE = (type: string) => type === 'webinar' || type === 'agent360' || type === 'podcast';
 
 const TYPE_BADGE: Record<string, string> = {
     podcast: 'bg-purple-100 text-purple-800',
@@ -37,15 +35,11 @@ const TYPE_ICON = {
     ),
 };
 
-export default function PostCard({ post, onClick }: Props) {
-    const isVideo = IS_VIDEO_TYPE(post.type) && !!post.embed_url;
+export default function PostCard({ post }: Props) {
     return (
-        <div
-            className={`bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200 ${isVideo ? 'cursor-pointer' : ''}`}
-            onClick={isVideo ? onClick : undefined}
-            role={isVideo ? 'button' : undefined}
-            tabIndex={isVideo ? 0 : undefined}
-            onKeyDown={isVideo ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick?.(); } : undefined}
+        <Link
+            href={`/posts/${post.slug}`}
+            className="bg-white dark:bg-card rounded-xl border border-gray-200 dark:border-border overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200"
         >
             {/* Image */}
             <div className="aspect-video bg-gray-100 overflow-hidden flex-shrink-0 relative group">
@@ -57,19 +51,8 @@ export default function PostCard({ post, onClick }: Props) {
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
+                    <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-muted text-gray-300 dark:text-muted-foreground/30">
                         {TYPE_ICON[post.type]}
-                    </div>
-                )}
-
-                {/* Play button overlay for video types */}
-                {isVideo && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                        <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                            <svg className="w-6 h-6 text-brand-navy ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
-                            </svg>
-                        </div>
                     </div>
                 )}
             </div>
@@ -80,20 +63,20 @@ export default function PostCard({ post, onClick }: Props) {
                     {post.type.charAt(0).toUpperCase() + post.type.slice(1)}
                 </span>
 
-                <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1">{post.title}</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-foreground line-clamp-2 flex-1">{post.title}</h3>
 
                 {post.excerpt && (
-                    <p className="mt-1 text-sm text-gray-500 line-clamp-2">{post.excerpt}</p>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-muted-foreground line-clamp-2">{post.excerpt}</p>
                 )}
 
                 {post.published_at && (
-                    <p className="mt-2 text-xs text-gray-400">
+                    <p className="mt-2 text-xs text-gray-400 dark:text-muted-foreground">
                         {new Date(post.published_at).toLocaleDateString('en-MY', {
                             day: 'numeric', month: 'short', year: 'numeric',
                         })}
                     </p>
                 )}
             </div>
-        </div>
+        </Link>
     );
 }

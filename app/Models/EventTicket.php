@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -46,6 +47,11 @@ class EventTicket extends Model
         'min_age'            => 'integer',
         'max_age'            => 'integer',
     ];
+
+    protected function serializeDate(DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d\TH:i:s');
+    }
 
     protected $appends = ['sold_count', 'available_count', 'is_on_sale', 'current_price', 'is_early_bird'];
 

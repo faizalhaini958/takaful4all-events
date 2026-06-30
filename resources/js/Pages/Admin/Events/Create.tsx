@@ -21,6 +21,7 @@ export default function EventCreate() {
         gdrive_link: '',
         is_published: '1',
         media_id: '',
+        mobile_media_id: '',
         rsvp_enabled: false,
         rsvp_deadline: '',
         max_attendees: '',
@@ -39,6 +40,7 @@ export default function EventCreate() {
         transform((data) => ({
             ...data,
             media_id: data.media_id && data.media_id !== 'none' ? data.media_id : null,
+            mobile_media_id: data.mobile_media_id && data.mobile_media_id !== 'none' ? data.mobile_media_id : null,
             meta_json: {
                 faqs: data.faqs,
                 sponsors: data.sponsors,

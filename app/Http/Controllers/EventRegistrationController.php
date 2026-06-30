@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\EventProduct;
 use App\Models\EventRegistration;
 use App\Models\EventTicket;
+use App\Models\PromoCode;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\ChipInService;
@@ -15,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -155,8 +157,41 @@ class EventRegistrationController extends Controller
 
             // ── Calculate pricing (with bulk discount for company users) ─
             $user = Auth::user();
+            $promoCodeInput = $validated['promo_code'] ?? null;
             $pricingService = app(RegistrationPricingService::class);
-            $pricing = $pricingService->calculateTotal($ticket, $validated['quantity'], $productItems, $user);
+            $pricing = $pricingService->calculateTotal($ticket, $validated['quantity'], $productItems, $user, $promoCodeInput);
+
+            // If promo code was provided but invalid, return validation error
+            if ($promoCodeInput && $pricing['promo_code_error']) {
+                throw ValidationException::withMessages([
+                    'promo_code' => $pricing['promo_code_error'],
+                ]);
+            }
+
+            // ── Atomic promo code redemption ──────────────────────────────
+            // If a promo code is being used, atomically claim a usage slot.
+            // This must happen BEFORE registration creation so that a failed
+            // redemption rolls back nothing.
+            $promoCodeId = $pricing['promo_code_id'];
+            $promoCodeClaimed = ! $promoCodeId; // no code = trivially "claimed"
+
+            if ($promoCodeId) {
+                $affected = \App\Models\PromoCode::where('id', $promoCodeId)
+                    ->where(function ($query) {
+                        $query->whereNull('max_uses')
+                              ->orWhereRaw('used_count < max_uses');
+                    })
+                    ->where('is_active', true)
+                    ->increment('used_count');
+
+                if ($affected === 0) {
+                    throw ValidationException::withMessages([
+                        'promo_code' => 'This promo code has reached its maximum usage limit.',
+                    ]);
+                }
+
+                $promoCodeClaimed = true;
+            }
 
             $totalAmount = $pricing['grand_total'];
             $status = ($event->require_approval || $totalAmount > 0) ? 'pending' : 'confirmed';
@@ -184,6 +219,9 @@ class EventRegistrationController extends Controller
             if ($pricing['discount_label']) {
                 $meta['discount_label'] = $pricing['discount_label'];
             }
+            if ($pricing['promo_code_id']) {
+                $meta['promo_code_label'] = $pricing['discount_label'];
+            }
             if (!empty($primary['custom_fields'])) {
                 $meta['custom_fields'] = $primary['custom_fields'];
             }
@@ -192,6 +230,8 @@ class EventRegistrationController extends Controller
                 'event_id'             => $event->id,
                 'ticket_id'            => $validated['ticket_id'],
                 'user_id'              => $user?->id,
+                'promo_code_id'        => $pricing['promo_code_id'],
+                'promo_code_discount'  => $pricing['promo_code_discount'],
                 'name'                 => $primary['name'],
                 'email'                => $primary['email'],
                 'phone'                => $primary['phone'] ?? null,
@@ -351,7 +391,7 @@ class EventRegistrationController extends Controller
     public function confirmation(string $slug, string $reference): Response
     {
         $registration = EventRegistration::where('reference_no', $reference)
-            ->with(['event.media', 'ticket', 'products.product', 'invoice'])
+            ->with(['event.media', 'ticket', 'products.product', 'invoice', 'attendees'])
             ->firstOrFail();
 
         return Inertia::render('Public/Events/Confirmation', [

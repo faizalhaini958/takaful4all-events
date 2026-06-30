@@ -70,14 +70,20 @@ export default function HeroCarousel({ banners, overlay, contained }: Props) {
                                     <img
                                         src={banner.image_url}
                                         alt={banner.title}
+                                        width={1600}
+                                        height={600}
                                         loading={i === 0 ? 'eager' : 'lazy'}
+                                        decoding={i === 0 ? 'sync' : 'async'}
                                         className="hidden md:block w-full object-cover"
                                         style={{ aspectRatio: '16 / 6' }}
                                     />
                                     <img
                                         src={banner.mobile_image_url ?? banner.image_url}
                                         alt={banner.title}
+                                        width={1200}
+                                        height={900}
                                         loading={i === 0 ? 'eager' : 'lazy'}
+                                        decoding={i === 0 ? 'sync' : 'async'}
                                         className="block md:hidden w-full object-cover"
                                         style={{ aspectRatio: banner.mobile_image_url ? '3 / 4' : '16 / 9' }}
                                     />

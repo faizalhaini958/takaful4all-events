@@ -51,6 +51,7 @@ class EventReminderMail extends Mailable implements ShouldQueue
                 'ticketUrl'     => $ticketUrl,
                 'siteName'      => $generalSettings['site_name'] ?? 'Takaful Events',
                 'contactEmail'  => $generalSettings['contact_email'] ?? null,
+                'contactPhone'  => $generalSettings['contact_phone'] ?? null,
             ],
         );
     }

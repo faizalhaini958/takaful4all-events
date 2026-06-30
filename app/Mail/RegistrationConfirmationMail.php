@@ -29,6 +29,7 @@ class RegistrationConfirmationMail extends Mailable implements ShouldQueue
         $generalSettings  = Setting::getGroup('general');
         $siteName         = $generalSettings['site_name'] ?? 'Takaful Events';
         $contactEmail     = $generalSettings['contact_email'] ?? null;
+        $contactPhone     = $generalSettings['contact_phone'] ?? null;
 
         // Build ticket download URLs — one per attendee
         $ticketUrls = [];
@@ -95,6 +96,7 @@ class RegistrationConfirmationMail extends Mailable implements ShouldQueue
                 'invoiceUrl'   => $invoiceUrl,
                 'siteName'     => $siteName,
                 'contactEmail' => $contactEmail,
+                'contactPhone' => $contactPhone,
                 'qrCids'       => $qrCids,
             ]);
     }

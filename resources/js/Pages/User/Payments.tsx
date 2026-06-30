@@ -78,8 +78,8 @@ export default function Payments({ paymentMethods }: Props) {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Payment Options</h1>
-                        <p className="text-sm text-gray-500 mt-1">Manage your saved payment methods for faster checkout.</p>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">Payment Options</h1>
+                        <p className="text-sm text-gray-500 dark:text-muted-foreground mt-1">Manage your saved payment methods for faster checkout.</p>
                     </div>
                     <Button onClick={() => setShowAddForm(!showAddForm)}>
                         <Plus className="w-4 h-4 mr-1" />
@@ -108,7 +108,7 @@ export default function Payments({ paymentMethods }: Props) {
                                 {/* Payment type selector */}
                                 <div className="space-y-2">
                                     <Label>Payment Type</Label>
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         {(['card', 'fpx', 'ewallet'] as const).map((type) => {
                                             const Icon = TYPE_ICON[type];
                                             return (
@@ -119,11 +119,11 @@ export default function Payments({ paymentMethods }: Props) {
                                                     className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors ${
                                                         form.data.type === type
                                                             ? 'border-brand bg-brand/5'
-                                                            : 'border-gray-200 hover:border-gray-300'
+                                                            : 'border-gray-200 dark:border-border hover:border-gray-300 dark:hover:border-gray-600'
                                                     }`}
                                                 >
-                                                    <Icon className={`w-6 h-6 ${form.data.type === type ? 'text-brand' : 'text-gray-400'}`} />
-                                                    <span className={`text-xs font-medium ${form.data.type === type ? 'text-brand-navy' : 'text-gray-500'}`}>
+                                                    <Icon className={`w-6 h-6 ${form.data.type === type ? 'text-brand' : 'text-gray-400 dark:text-muted-foreground'}`} />
+                                                    <span className={`text-xs font-medium ${form.data.type === type ? 'text-brand-navy dark:text-foreground' : 'text-gray-500 dark:text-muted-foreground'}`}>
                                                         {TYPE_LABEL[type]}
                                                     </span>
                                                 </button>
@@ -178,7 +178,7 @@ export default function Payments({ paymentMethods }: Props) {
                                             id="bank_name"
                                             value={form.data.bank_name}
                                             onChange={(e) => form.setData('bank_name', e.target.value)}
-                                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+                                            className="w-full rounded-md border border-gray-300 dark:border-border px-3 py-2 text-sm bg-white dark:bg-card dark:text-foreground"
                                         >
                                             <option value="">Select a bank...</option>
                                             <option value="Maybank">Maybank</option>
@@ -215,9 +215,9 @@ export default function Payments({ paymentMethods }: Props) {
                 {paymentMethods.length === 0 && !showAddForm ? (
                     <Card>
                         <CardContent className="py-16 text-center">
-                            <CreditCard className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                            <p className="text-gray-500 font-medium">No payment methods saved</p>
-                            <p className="text-sm text-gray-400 mt-1">Add a payment method for faster checkout.</p>
+                            <CreditCard className="w-12 h-12 mx-auto text-gray-300 dark:text-muted-foreground/30 mb-3" />
+                            <p className="text-gray-500 dark:text-muted-foreground font-medium">No payment methods saved</p>
+                            <p className="text-sm text-gray-400 dark:text-muted-foreground mt-1">Add a payment method for faster checkout.</p>
                             <Button className="mt-4" onClick={() => setShowAddForm(true)}>
                                 <Plus className="w-4 h-4 mr-1" /> Add Payment Method
                             </Button>
@@ -235,16 +235,16 @@ export default function Payments({ paymentMethods }: Props) {
                                                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                                                     method.is_default ? 'bg-brand/10' : 'bg-gray-100'
                                                 }`}>
-                                                    <Icon className={`w-6 h-6 ${method.is_default ? 'text-brand' : 'text-gray-400'}`} />
+                                                    <Icon className={`w-6 h-6 ${method.is_default ? 'text-brand' : 'text-gray-400 dark:text-muted-foreground'}`} />
                                                 </div>
                                                 <div>
                                                     <div className="flex items-center gap-2">
-                                                        <p className="font-medium text-gray-900">{method.label}</p>
+                                                        <p className="font-medium text-gray-900 dark:text-foreground">{method.label}</p>
                                                         {method.is_default && (
                                                             <Badge variant="default" className="text-xs">Default</Badge>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-gray-500">
+                                                    <p className="text-sm text-gray-500 dark:text-muted-foreground">
                                                         {TYPE_LABEL[method.type]}
                                                         {method.last4 && ` ending in ${method.last4}`}
                                                         {method.bank_name && ` — ${method.bank_name}`}

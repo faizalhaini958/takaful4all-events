@@ -26,6 +26,7 @@ class StoreEventRegistrationRequest extends FormRequest
             'attendees.*.email'     => 'required|email|max:255',
             'attendees.*.phone'     => 'required|string|max:30',
             'notes'                 => 'nullable|string|max:1000',
+            'promo_code'            => 'nullable|string|max:50',
             'products'              => 'nullable|array',
             'products.*.product_id' => 'required|exists:event_products,id',
             'products.*.variants'   => 'nullable|array',

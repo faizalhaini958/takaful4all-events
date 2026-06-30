@@ -255,7 +255,7 @@ export default function ProfileEdit({ mustVerifyEmail, status }: PageProps<{ mus
                                             Yes, Delete My Account
                                         </button>
                                         <button type="button" onClick={() => setConfirmingDeletion(false)}
-                                            className="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors">
+                                            className="px-6 py-2.5 bg-white dark:bg-card border border-gray-200 dark:border-border text-gray-600 dark:text-muted-foreground text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-muted transition-colors">
                                             Cancel
                                         </button>
                                     </div>

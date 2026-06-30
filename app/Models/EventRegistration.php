@@ -19,6 +19,8 @@ class EventRegistration extends Model
         'event_id',
         'ticket_id',
         'user_id',
+        'promo_code_id',
+        'promo_code_discount',
         'reference_no',
         'name',
         'email',
@@ -42,11 +44,12 @@ class EventRegistration extends Model
     ];
 
     protected $casts = [
-        'quantity'        => 'integer',
-        'subtotal'        => 'decimal:2',
-        'discount_amount' => 'decimal:2',
-        'products_total'  => 'decimal:2',
-        'total_amount'    => 'decimal:2',
+        'quantity'            => 'integer',
+        'subtotal'            => 'decimal:2',
+        'discount_amount'     => 'decimal:2',
+        'promo_code_discount' => 'decimal:2',
+        'products_total'      => 'decimal:2',
+        'total_amount'        => 'decimal:2',
         'checked_in_at'             => 'datetime',
         'meta_json'                 => 'array',
         'confirmation_email_sent_at' => 'datetime',
@@ -103,6 +106,11 @@ class EventRegistration extends Model
     public function invoice(): HasOne
     {
         return $this->hasOne(Invoice::class, 'registration_id');
+    }
+
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class, 'promo_code_id');
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────────────

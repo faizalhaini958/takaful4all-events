@@ -11,6 +11,25 @@ use Symfony\Component\HttpFoundation\Response;
 class TicketController extends Controller
 {
     /**
+     * Public ticket download — accessible via reference number (no auth required).
+     */
+    public function downloadByReference(string $reference, int $attendee_no = 1): Response
+    {
+        $registration = EventRegistration::where('reference_no', $reference)
+            ->with(['event', 'ticket', 'attendees'])
+            ->firstOrFail();
+
+        // Only allow download for confirmed/attended registrations
+        if (!in_array($registration->status, ['confirmed', 'attended'])) {
+            abort(404, 'Tickets are only available for confirmed registrations.');
+        }
+
+        $ticketService = app(TicketService::class);
+
+        return $ticketService->download($registration, $attendee_no, false);
+    }
+
+    /**
      * Download or preview a ticket PDF for a specific attendee.
      * Uses cached PDF or generates on-demand (synchronous fallback).
      */

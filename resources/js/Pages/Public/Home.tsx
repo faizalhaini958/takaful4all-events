@@ -47,7 +47,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 };
 
 const POPPINS = "'Poppins', sans-serif";
-const INTER   = "'Inter', 'DM Sans', sans-serif";
+const INTER   = "'Inter', sans-serif";
 
 export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, agent360, canonicalUrl }: Props) {
     const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -119,29 +119,73 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                 <title>Takaful4All Events | Conferences, Webinars &amp; Workshops</title>
                 <meta name="description" content="Discover and register for upcoming conferences, webinars and workshops organised by Takaful4All. Your gateway to takaful industry events." />
                 <link rel="canonical" href={canonicalUrl} />
+                {upcomingEvents[0]?.media?.url ? <link rel="preload" as="image" href={upcomingEvents[0].media.url} fetchPriority="high" /> : null}
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content={canonicalUrl} />
                 <meta property="og:title" content="Takaful4All Events | Conferences, Webinars &amp; Workshops" />
                 <meta property="og:description" content="Discover and register for upcoming conferences, webinars and workshops organised by Takaful4All. Your gateway to takaful industry events." />
                 <meta property="og:site_name" content="Takaful4All Events" />
+                {upcomingEvents[0]?.media?.url ? <meta property="og:image" content={upcomingEvents[0].media.url} /> : null}
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content="Takaful4All Events | Conferences, Webinars &amp; Workshops" />
                 <meta name="twitter:description" content="Discover and register for upcoming conferences, webinars and workshops organised by Takaful4All. Your gateway to takaful industry events." />
+                {upcomingEvents[0]?.media?.url ? <meta name="twitter:image" content={upcomingEvents[0].media.url} /> : null}
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([
                     {
                         '@context': 'https://schema.org',
                         '@type': 'Organization',
                         name: 'Takaful4All Events',
-                        description: 'Official events platform of the Malaysian Takaful Association.',
+                        alternateName: 'Takaful4All',
+                        description: 'Official events platform of the Malaysian Takaful Association — discover and register for conferences, webinars, workshops, and industry events.',
                         url: canonicalUrl.replace(/\/$/, ''),
-                        logo: `${canonicalUrl.replace(/\/$/, '')}/images/logo.png`,
+                        logo: {
+                            '@type': 'ImageObject',
+                            url: `${canonicalUrl.replace(/\/$/, '')}/images/logo.png`,
+                        },
+                        image: {
+                            '@type': 'ImageObject',
+                            url: `${canonicalUrl.replace(/\/$/, '')}/images/logo.png`,
+                        },
+                        sameAs: [
+                            'https://www.malaysiantakaful.com.my',
+                        ],
+                        address: {
+                            '@type': 'PostalAddress',
+                            addressCountry: 'MY',
+                        },
                     },
                     {
                         '@context': 'https://schema.org',
                         '@type': 'WebSite',
                         name: 'Takaful4All Events',
                         url: canonicalUrl.replace(/\/$/, ''),
+                        potentialAction: {
+                            '@type': 'SearchAction',
+                            target: {
+                                '@type': 'EntryPoint',
+                                urlTemplate: `${canonicalUrl.replace(/\/$/, '')}/events?search={search_term_string}`,
+                            },
+                            'query-input': 'required name=search_term_string',
+                        },
                     },
+                    ...upcomingEvents.slice(0, 6).map((event, i) => ({
+                        '@context': 'https://schema.org',
+                        '@type': 'Event',
+                        name: event.title,
+                        url: `${canonicalUrl.replace(/\/$/, '')}/events/${event.slug}`,
+                        startDate: event.start_at,
+                        ...(event.end_at ? { endDate: event.end_at } : {}),
+                        ...(event.media?.url ? { image: event.media.url } : {}),
+                        location: event.venue ? {
+                            '@type': 'Place',
+                            name: event.venue,
+                            address: {
+                                '@type': 'PostalAddress',
+                                addressLocality: event.city ?? '',
+                                addressCountry: event.country ?? 'MY',
+                            },
+                        } : undefined,
+                    })),
                 ]) }} />
             </Head>
             <VideoModal post={activePost} onClose={() => setActivePost(null)} />
@@ -213,10 +257,14 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                         <Link href={`/events/${ev.slug}`}
                                             className="block relative rounded-2xl overflow-hidden w-full"
                                             style={{ height: 'clamp(300px, 55vh, 480px)', transition: 'opacity 0.3s ease', opacity: mobileFade ? 1 : 0 }}>
-                                            {ev.media ? (
+                                        {ev.media ? (
+                                            <picture>
+                                                {ev.mobile_media?.url && <source media="(max-width: 767px)" srcSet={ev.mobile_media.url} />}
                                                 <img src={ev.media.url} alt={ev.title}
+                                                    fetchPriority="high" loading="eager" width={ev.media.width ?? undefined} height={ev.media.height ?? undefined}
                                                     className="w-full h-full object-cover" />
-                                            ) : (
+                                            </picture>
+                                        ) : (
                                                 <div className="w-full h-full flex items-center justify-center"
                                                     style={{ background: 'linear-gradient(145deg, #0d3352, #071B2A)' }}>
                                                     <LayoutGrid className="w-10 h-10" style={{ color: 'rgba(24,200,255,0.3)' }} />
@@ -302,8 +350,12 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                             className="absolute left-0 top-6 bottom-6 rounded-2xl overflow-hidden shadow-2xl group"
                                             style={{ width: '60%', opacity: heroFade ? 1 : 0, transition: 'opacity 0.3s ease' }}>
                                             {ev?.media ? (
-                                                <img src={ev.media.url} alt={ev.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                <picture>
+                                                    {ev.mobile_media?.url && <source media="(max-width: 767px)" srcSet={ev.mobile_media.url} />}
+                                                    <img src={ev.media.url} alt={ev.title}
+                                                        fetchPriority="high" loading="eager" width={ev.media.width ?? undefined} height={ev.media.height ?? undefined}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                </picture>
                                             ) : (
                                                 <div className="w-full h-full" style={{ background: 'linear-gradient(145deg, #0d3352, #071B2A)' }} />
                                             )}
@@ -336,8 +388,12 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                                 href={ev ? `/events/${ev.slug}` : '/events'}
                                                 className="flex-1 rounded-2xl overflow-hidden shadow-xl relative group">
                                                 {ev?.media ? (
-                                                    <img src={ev.media.url} alt={ev.title}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                    <picture>
+                                                        {ev.mobile_media?.url && <source media="(max-width: 767px)" srcSet={ev.mobile_media.url} />}
+                                                        <img src={ev.media.url} alt={ev.title}
+                                                            loading="lazy" width={ev.media.width ?? undefined} height={ev.media.height ?? undefined}
+                                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                    </picture>
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center"
                                                         style={{ background: 'linear-gradient(145deg, #0d3352, #071B2A)' }}>
@@ -399,8 +455,7 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                 const canNext = slideIndex < pageCount - 1;
                 return (
                     <section
-                        className="relative z-10 -mt-10 rounded-t-3xl overflow-hidden"
-                        style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}
+                        className="relative z-10 -mt-10 rounded-t-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background"
                     >
                         <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,159,187,0.05) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
@@ -413,17 +468,17 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                     value={search}
                                     onChange={e => { setSearch(e.target.value); setSlideIndex(0); }}
                                     placeholder="Search events..."
-                                    className="w-full pl-11 pr-4 py-3 rounded-xl text-sm outline-none"
-                                    style={{ background: '#fff', border: '1.5px solid #dde8ef', color: '#071B2A', fontFamily: INTER, boxShadow: '0 2px 8px rgba(0,159,187,0.08)' }}
+                                    className="w-full pl-11 pr-4 py-3 rounded-xl text-sm outline-none bg-white dark:bg-card border border-[#dde8ef] dark:border-border text-[#071B2A] dark:text-foreground"
+                                    style={{ fontFamily: INTER, boxShadow: '0 2px 8px rgba(0,159,187,0.08)' }}
                                 />
                                 {search && (
                                     <button onClick={() => setSearch('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-muted-foreground hover:text-gray-600 dark:hover:text-foreground text-lg leading-none">×</button>
                                 )}
                             </div>
 
                             {/* Upcoming / Past tabs */}
-                            <div className="flex items-center gap-1 p-1 rounded-xl w-fit mb-5" style={{ background: '#dde8ef' }}>
+                            <div className="flex items-center gap-1 p-1 rounded-xl w-fit mb-5 bg-[#dde8ef] dark:bg-muted">
                                 {([
                                     { key: 'upcoming', label: 'Upcoming Events', count: filteredEvents.length },
                                     { key: 'past',     label: 'Past Events',     count: filteredPastEvents.length },
@@ -432,12 +487,14 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                         onClick={() => { setActiveTab(key); setSlideIndex(0); }}
                                         className="px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
                                         style={activeTab === key
-                                            ? { background: '#fff', color: '#071B2A', fontFamily: INTER, boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }
-                                            : { background: 'transparent', color: 'rgba(7,27,42,0.5)', fontFamily: INTER }
-                                        }>
-                                        {label}
-                                        <span className="text-xs px-1.5 py-0.5 rounded-full"
-                                            style={{ background: activeTab === key ? 'rgba(0,159,187,0.12)' : 'rgba(7,27,42,0.08)', color: activeTab === key ? '#009FBB' : 'rgba(7,27,42,0.4)', fontFamily: INTER }}>
+                                            ? { boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }
+                                            : {}
+                                        }
+                                    >
+                                        <span className={activeTab === key ? 'text-[#071B2A] dark:text-foreground' : 'text-[#071B2A]/50 dark:text-muted-foreground'} style={{ fontFamily: INTER }}>
+                                            {label}
+                                        </span>
+                                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === key ? 'bg-brand/10 dark:bg-brand/20 text-brand' : 'bg-[#071B2A]/8 dark:bg-muted text-[#071B2A]/40 dark:text-muted-foreground'}`} style={{ fontFamily: INTER }}>
                                             {count}
                                         </span>
                                     </button>
@@ -461,10 +518,10 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                     return (
                                         <button key={key}
                                             onClick={() => { setActiveCategory(key); setSlideIndex(0); }}
-                                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold flex-shrink-0 transition-all"
+                                            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold flex-shrink-0 transition-all ${!active ? 'bg-white dark:bg-card text-[#071B2A]/60 dark:text-muted-foreground border border-[#dde8ef] dark:border-border' : ''}`}
                                             style={active
                                                 ? { background: 'linear-gradient(90deg, #009FBB, #18C8FF)', color: '#fff', border: '1.5px solid transparent', boxShadow: '0 4px 14px rgba(0,159,187,0.28)', fontFamily: INTER }
-                                                : { background: '#fff', color: 'rgba(7,27,42,0.6)', border: '1.5px solid #dde8ef', fontFamily: INTER }
+                                                : { fontFamily: INTER }
                                             }>
                                             <Icon className="w-4 h-4" strokeWidth={1.5} />
                                             {label}
@@ -478,13 +535,13 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                             {/* Header row */}
                             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
                                 <div>
-                                    <h2 className="text-2xl sm:text-3xl font-extrabold"
-                                        style={{ color: '#071B2A', fontFamily: POPPINS, letterSpacing: '-0.02em' }}>
+                                    <h2 className="text-2xl sm:text-3xl font-extrabold text-[#071B2A] dark:text-foreground"
+                                        style={{ fontFamily: POPPINS, letterSpacing: '-0.02em' }}>
                                         {activeTab === 'upcoming'
                                             ? (activeCategory === 'all' ? 'Upcoming Events' : (CATEGORY_LABELS[activeCategory] ?? activeCategory))
                                             : (activeCategory === 'all' ? 'Past Events' : `Past · ${CATEGORY_LABELS[activeCategory] ?? activeCategory}`)}
                                     </h2>
-                                    <p className="mt-1 text-sm" style={{ color: 'rgba(7,27,42,0.45)', fontFamily: INTER }}>
+                                    <p className="mt-1 text-sm text-[#071B2A]/45 dark:text-muted-foreground" style={{ fontFamily: INTER }}>
                                         {activeEvents.length} event{activeEvents.length !== 1 ? 's' : ''} found
                                     </p>
                                 </div>
@@ -492,16 +549,16 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                     {pageCount > 1 && (
                                         <div className="flex items-center gap-2">
                                             <button onClick={() => setSlideIndex(i => Math.max(0, i - 1))} disabled={!canPrev}
-                                                className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
-                                                style={{ border: '1.5px solid', borderColor: canPrev ? '#009FBB' : '#ddeef6', color: canPrev ? '#009FBB' : '#b8d5e2', backgroundColor: canPrev ? 'rgba(0,159,187,0.06)' : 'transparent', cursor: canPrev ? 'pointer' : 'default' }}>
+                                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${canPrev ? 'text-brand dark:text-brand' : 'text-[#b8d5e2] dark:text-muted-foreground/30'}`}
+                                                style={{ border: '1.5px solid', borderColor: canPrev ? '#009FBB' : '#ddeef6', backgroundColor: canPrev ? 'rgba(0,159,187,0.06)' : 'transparent', cursor: canPrev ? 'pointer' : 'default' }}>
                                                 <ChevronLeft className="w-4 h-4" />
                                             </button>
-                                            <span className="text-xs font-semibold tabular-nums min-w-[32px] text-center" style={{ color: 'rgba(7,27,42,0.45)', fontFamily: INTER }}>
+                                            <span className="text-xs font-semibold tabular-nums min-w-[32px] text-center text-[#071B2A]/45 dark:text-muted-foreground" style={{ fontFamily: INTER }}>
                                                 {slideIndex + 1} / {pageCount}
                                             </span>
                                             <button onClick={() => setSlideIndex(i => Math.min(pageCount - 1, i + 1))} disabled={!canNext}
-                                                className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
-                                                style={{ border: '1.5px solid', borderColor: canNext ? '#009FBB' : '#ddeef6', color: canNext ? '#009FBB' : '#b8d5e2', backgroundColor: canNext ? 'rgba(0,159,187,0.06)' : 'transparent', cursor: canNext ? 'pointer' : 'default' }}>
+                                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${canNext ? 'text-brand dark:text-brand' : 'text-[#b8d5e2] dark:text-muted-foreground/30'}`}
+                                                style={{ border: '1.5px solid', borderColor: canNext ? '#009FBB' : '#ddeef6', backgroundColor: canNext ? 'rgba(0,159,187,0.06)' : 'transparent', cursor: canNext ? 'pointer' : 'default' }}>
                                                 <ChevronRight className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -522,8 +579,8 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-16 rounded-2xl border border-dashed" style={{ borderColor: '#e2e8f0' }}>
-                                    <p className="text-sm" style={{ color: 'rgba(7,27,42,0.35)', fontFamily: INTER }}>No events found.</p>
+                                <div className="text-center py-16 rounded-2xl border border-dashed border-[#e2e8f0] dark:border-border">
+                                    <p className="text-sm text-[#071B2A]/35 dark:text-muted-foreground" style={{ fontFamily: INTER }}>No events found.</p>
                                 </div>
                             )}
                         </div>
@@ -580,12 +637,12 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
             {/* ─────────────────────────────────────────
                 WHY JOIN
             ───────────────────────────────────────── */}
-            <section className="py-16 sm:py-20" style={{ background: 'linear-gradient(160deg, #f0f7ff 0%, #e8f4f8 100%)' }}>
+            <section className="py-16 sm:py-20 bg-gradient-to-br from-[#f0f7ff] dark:from-background to-[#e8f4f8] dark:to-card">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header */}
                     <div className="mb-8 sm:mb-12">
-                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold"
-                            style={{ color: '#071B2A', fontFamily: POPPINS, letterSpacing: '-0.02em' }}>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#071B2A] dark:text-foreground"
+                            style={{ fontFamily: POPPINS, letterSpacing: '-0.02em' }}>
                             Why Join Takaful4All Events?
                         </h2>
                     </div>
@@ -599,11 +656,11 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                             { Icon: Heart,      title: 'Make an Impact',         desc: 'Be part of positive change in the takaful industry.', num: '04', accent: '#18C8FF' },
                         ].map(({ Icon, title, desc, num, accent }) => (
                             <div key={title}
-                                className="relative flex flex-col rounded-2xl sm:rounded-3xl p-4 sm:p-6 overflow-hidden"
-                                style={{ background: '#fff', boxShadow: '0 2px 16px rgba(7,27,42,0.07)', border: '1px solid rgba(7,27,42,0.06)' }}>
+                                className="relative flex flex-col rounded-2xl sm:rounded-3xl p-4 sm:p-6 overflow-hidden bg-white dark:bg-card border border-[#071B2A]/6 dark:border-border"
+                                style={{ boxShadow: '0 2px 16px rgba(7,27,42,0.07)' }}>
                                 {/* Number badge */}
-                                <span className="absolute top-3 right-4 text-[11px] font-black tracking-tight"
-                                    style={{ color: 'rgba(7,27,42,0.08)', fontFamily: POPPINS, fontSize: '28px', lineHeight: 1 }}>
+                                <span className="absolute top-3 right-4 text-[11px] font-black tracking-tight text-[#071B2A]/8 dark:text-foreground/10"
+                                    style={{ fontFamily: POPPINS, fontSize: '28px', lineHeight: 1 }}>
                                     {num}
                                 </span>
                                 {/* Icon */}
@@ -612,10 +669,10 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                     <Icon className="w-5 h-5 sm:w-7 sm:h-7" style={{ color: accent }} strokeWidth={1.5} />
                                 </div>
                                 {/* Text */}
-                                <p className="font-bold text-sm sm:text-base leading-snug mb-1.5 sm:mb-2 pr-4"
-                                    style={{ color: '#071B2A', fontFamily: POPPINS }}>{title}</p>
-                                <p className="text-xs sm:text-sm leading-relaxed"
-                                    style={{ color: 'rgba(7,27,42,0.5)', fontFamily: INTER }}>{desc}</p>
+                                <p className="font-bold text-sm sm:text-base leading-snug mb-1.5 sm:mb-2 pr-4 text-[#071B2A] dark:text-foreground"
+                                    style={{ fontFamily: POPPINS }}>{title}</p>
+                                <p className="text-xs sm:text-sm leading-relaxed text-[#071B2A]/50 dark:text-muted-foreground"
+                                    style={{ fontFamily: INTER }}>{desc}</p>
                                 {/* Bottom accent line */}
                                 <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-3xl"
                                     style={{ background: `linear-gradient(90deg, ${accent}, transparent)` }} />

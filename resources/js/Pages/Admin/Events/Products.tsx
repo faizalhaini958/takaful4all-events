@@ -270,7 +270,7 @@ export default function EventProducts({ event, products }: Props) {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="product_price">Price ({data.currency})</Label>
                                 <Input id="product_price" type="number" step="0.01" min="0" value={data.price} onChange={e => setData('price', e.target.value)} className="mt-1" />

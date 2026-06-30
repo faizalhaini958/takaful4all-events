@@ -81,7 +81,7 @@ export default function Orders({ orders, filters }: Props) {
                             className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 ${
                                 paymentStatus === tab.value
                                     ? 'bg-brand text-white shadow-sm shadow-brand/30'
-                                    : 'bg-white text-gray-600 border border-gray-200 hover:border-brand/50 hover:text-brand'
+                                    : 'bg-white dark:bg-card text-gray-600 dark:text-muted-foreground border border-gray-200 dark:border-border hover:border-brand/50 hover:text-brand'
                             }`}
                         >
                             <tab.icon className="w-3.5 h-3.5" />
@@ -92,25 +92,25 @@ export default function Orders({ orders, filters }: Props) {
 
                 {/* â”€â”€ Search â”€â”€ */}
                 <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search by reference or event name..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                        className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+                        className="w-full pl-11 pr-4 py-3 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl text-sm dark:text-foreground focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
                     />
                 </div>
 
                 {/* â”€â”€ Order cards â”€â”€ */}
                 {orders.data.length === 0 ? (
-                    <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 py-16 flex flex-col items-center text-center">
+                    <div className="bg-white dark:bg-card rounded-2xl border-2 border-dashed border-gray-200 dark:border-border py-16 flex flex-col items-center text-center">
                         <div className="w-16 h-16 rounded-full bg-brand/10 flex items-center justify-center mb-4">
                             <ShoppingBag className="w-8 h-8 text-brand" />
                         </div>
                         <h3 className="font-semibold text-brand-navy text-lg">No orders found</h3>
-                        <p className="text-sm text-gray-500 mt-1 max-w-xs">
+                        <p className="text-sm text-gray-500 dark:text-muted-foreground mt-1 max-w-xs">
                             {paymentStatus ? 'Try a different filter.' : 'Register for an event to create your first order.'}
                         </p>
                         <Link
@@ -126,12 +126,12 @@ export default function Orders({ orders, filters }: Props) {
                             /* â”€â”€ Receipt-style order card â”€â”€ */
                             <div
                                 key={order.id}
-                                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200"
+                                className="bg-white dark:bg-card rounded-2xl border border-gray-100 dark:border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200"
                             >
                                 {/* Card top â€” reference + date */}
-                                <div className="flex items-center justify-between px-5 py-3 border-b border-dashed border-gray-100 bg-gray-50/50">
-                                    <span className="text-xs font-mono text-gray-400">{order.reference_no}</span>
-                                    <span className="text-xs text-gray-400">
+                                <div className="flex items-center justify-between px-5 py-3 border-b border-dashed border-gray-100 dark:border-border bg-gray-50/50 dark:bg-muted/30">
+                                    <span className="text-xs font-mono text-gray-400 dark:text-muted-foreground">{order.reference_no}</span>
+                                    <span className="text-xs text-gray-400 dark:text-muted-foreground">
                                         {new Date(order.created_at).toLocaleDateString('en-MY', {
                                             day: 'numeric', month: 'short', year: 'numeric'
                                         })}
@@ -155,10 +155,10 @@ export default function Orders({ orders, filters }: Props) {
                                         <p className="font-semibold text-brand-navy text-sm truncate">{order.event?.title ?? '—'}</p>
                                         <div className="flex flex-wrap gap-2 mt-1.5">
                                             {order.ticket && (
-                                                <span className="text-xs text-gray-500">{order.ticket.name} &times; {order.quantity}</span>
+                                                <span className="text-xs text-gray-500 dark:text-muted-foreground">{order.ticket.name} &times; {order.quantity}</span>
                                             )}
                                             {order.products && order.products.length > 0 && (
-                                                <span className="text-xs text-gray-400">+{order.products.length} add-on{order.products.length > 1 ? 's' : ''}</span>
+                                                <span className="text-xs text-gray-400 dark:text-muted-foreground">+{order.products.length} add-on{order.products.length > 1 ? 's' : ''}</span>
                                             )}
                                         </div>
                                         <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -199,8 +199,8 @@ export default function Orders({ orders, filters }: Props) {
                                             link.active
                                                 ? 'bg-brand text-white'
                                                 : link.url
-                                                    ? 'bg-white border border-gray-200 text-gray-600 hover:border-brand/50 hover:text-brand'
-                                                    : 'text-gray-300 cursor-not-allowed'
+                                                    ? 'bg-white dark:bg-card border border-gray-200 dark:border-border text-gray-600 dark:text-muted-foreground hover:border-brand/50 hover:text-brand'
+                                                    : 'text-gray-300 dark:text-muted-foreground/30 cursor-not-allowed'
                                         }`}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                     />
@@ -227,8 +227,8 @@ export default function Orders({ orders, filters }: Props) {
                         return (
                             <div className="space-y-4 text-sm">
                                 {/* Reference pill */}
-                                <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                    <span className="flex items-center gap-1.5 text-gray-500 text-xs">
+                                <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-muted/50 border border-gray-100 dark:border-border">
+                                    <span className="flex items-center gap-1.5 text-gray-500 dark:text-muted-foreground text-xs">
                                         <Hash className="w-3.5 h-3.5" /> Reference
                                     </span>
                                     <span className="font-mono font-bold text-brand-navy">{o.reference_no}</span>
@@ -238,7 +238,7 @@ export default function Orders({ orders, filters }: Props) {
                                 {event && (
                                     <div className="space-y-1.5">
                                         <p className="font-bold text-base text-brand-navy">{event.title}</p>
-                                        <div className="flex flex-wrap gap-3 text-gray-500 text-xs">
+                                        <div className="flex flex-wrap gap-3 text-gray-500 dark:text-muted-foreground text-xs">
                                             {event.start_at && (
                                                 <span className="flex items-center gap-1">
                                                     <Calendar className="w-3.5 h-3.5 text-brand" />
@@ -258,25 +258,25 @@ export default function Orders({ orders, filters }: Props) {
                                 <Separator />
 
                                 {/* Attendee info */}
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5"><User className="w-3 h-3" /> Name</p>
-                                        <p className="font-medium">{o.name}</p>
+                                        <p className="text-xs text-gray-400 dark:text-muted-foreground flex items-center gap-1 mb-0.5"><User className="w-3 h-3" /> Name</p>
+                                        <p className="font-medium dark:text-foreground">{o.name}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5"><Mail className="w-3 h-3" /> Email</p>
-                                        <p className="font-medium break-all">{o.email}</p>
+                                        <p className="text-xs text-gray-400 dark:text-muted-foreground flex items-center gap-1 mb-0.5"><Mail className="w-3 h-3" /> Email</p>
+                                        <p className="font-medium dark:text-foreground break-all">{o.email}</p>
                                     </div>
                                     {o.phone && (
                                         <div>
-                                            <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5"><Phone className="w-3 h-3" /> Phone</p>
-                                            <p className="font-medium">{o.phone}</p>
+                                            <p className="text-xs text-gray-400 dark:text-muted-foreground flex items-center gap-1 mb-0.5"><Phone className="w-3 h-3" /> Phone</p>
+                                            <p className="font-medium dark:text-foreground">{o.phone}</p>
                                         </div>
                                     )}
                                     {o.company && (
                                         <div>
-                                            <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5"><Building2 className="w-3 h-3" /> Company</p>
-                                            <p className="font-medium">{o.company}</p>
+                                            <p className="text-xs text-gray-400 dark:text-muted-foreground flex items-center gap-1 mb-0.5"><Building2 className="w-3 h-3" /> Company</p>
+                                            <p className="font-medium dark:text-foreground">{o.company}</p>
                                         </div>
                                     )}
                                 </div>
@@ -285,10 +285,10 @@ export default function Orders({ orders, filters }: Props) {
 
                                 {/* Ticket line */}
                                 <div>
-                                    <p className="text-xs text-gray-400 flex items-center gap-1 mb-2"><Ticket className="w-3 h-3" /> Ticket</p>
-                                    <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
-                                        <span>{o.ticket?.name ?? '—'} &times; {o.quantity}</span>
-                                        <span className="font-semibold">RM {Number(o.subtotal).toFixed(2)}</span>
+                                    <p className="text-xs text-gray-400 dark:text-muted-foreground flex items-center gap-1 mb-2"><Ticket className="w-3 h-3" /> Ticket</p>
+                                    <div className="flex items-center justify-between rounded-xl border border-gray-100 dark:border-border bg-gray-50 dark:bg-muted/50 px-3 py-2.5">
+                                        <span className="dark:text-foreground">{o.ticket?.name ?? '—'} &times; {o.quantity}</span>
+                                        <span className="font-semibold dark:text-foreground">RM {Number(o.subtotal).toFixed(2)}</span>
                                     </div>
                                     {Number(o.discount_amount) > 0 && (
                                         <div className="flex justify-between text-xs text-emerald-600 px-3 mt-1">
@@ -301,8 +301,8 @@ export default function Orders({ orders, filters }: Props) {
                                 {/* Add-ons */}
                                 {o.products && o.products.length > 0 && (
                                     <div>
-                                        <p className="text-xs text-gray-400 flex items-center gap-1 mb-2"><Package className="w-3 h-3" /> Add-ons</p>
-                                        <div className="rounded-xl border border-gray-100 divide-y divide-gray-100">
+                                        <p className="text-xs text-gray-400 dark:text-muted-foreground flex items-center gap-1 mb-2"><Package className="w-3 h-3" /> Add-ons</p>
+                                        <div className="rounded-xl border border-gray-100 dark:border-border divide-y divide-gray-100 dark:divide-border">
                                             {o.products.map((p) => {
                                                 let variants: string[] = [];
                                                 if (p.variant) {
@@ -315,8 +315,8 @@ export default function Orders({ orders, filters }: Props) {
                                                     <div key={p.id} className="flex items-center justify-between px-3 py-2.5">
                                                         <span>
                                                             {p.product?.name ?? 'Item'}
-                                                            {variants.length > 0 && <span className="text-gray-400 ml-1">({variants.join(', ')})</span>}
-                                                            <span className="text-gray-400 ml-1">&times; {p.quantity}</span>
+                                                            {variants.length > 0 && <span className="text-gray-400 dark:text-muted-foreground ml-1">({variants.join(', ')})</span>}
+                                                            <span className="text-gray-400 dark:text-muted-foreground ml-1">&times; {p.quantity}</span>
                                                         </span>
                                                         <span className="font-semibold">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</span>
                                                     </div>
@@ -334,13 +334,13 @@ export default function Orders({ orders, filters }: Props) {
                                         <span>Total</span>
                                         <span>{Number(o.total_amount) > 0 ? `RM ${Number(o.total_amount).toFixed(2)}` : 'Free'}</span>
                                     </div>
-                                    <div className="flex justify-between text-xs text-gray-500">
+                                    <div className="flex justify-between text-xs text-gray-500 dark:text-muted-foreground">
                                         <span>Payment</span>
                                         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${PAYMENT_COLOR[o.payment_status] ?? 'bg-gray-100 text-gray-500'}`}>
                                             {o.payment_status === 'na' ? 'Free' : o.payment_status}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-xs text-gray-500">
+                                    <div className="flex justify-between text-xs text-gray-500 dark:text-muted-foreground">
                                         <span>Registration</span>
                                         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[o.status] ?? 'bg-gray-100 text-gray-500'}`}>
                                             {o.status}

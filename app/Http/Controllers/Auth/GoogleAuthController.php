@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
@@ -16,8 +17,14 @@ class GoogleAuthController extends Controller
     /**
      * Redirect the user to Google's OAuth consent screen.
      */
-    public function redirect(): SymfonyRedirectResponse
+    public function redirect(Request $request): SymfonyRedirectResponse
     {
+        // Store return_to in session so we can use it after the OAuth callback
+        $returnTo = $request->query('return_to');
+        if ($returnTo && is_string($returnTo) && preg_match('#^/[^/]#', $returnTo)) {
+            session()->put('google_oauth_return_to', $returnTo);
+        }
+
         return Socialite::driver('google')
             ->scopes(['openid', 'profile', 'email'])
             ->redirect();
@@ -79,6 +86,12 @@ class GoogleAuthController extends Controller
         Auth::login($user, remember: true);
 
         request()->session()->regenerate();
+
+        // Honor return_to from session (set in redirect() method, e.g. from registration page)
+        $returnTo = session()->pull('google_oauth_return_to');
+        if ($returnTo && is_string($returnTo) && preg_match('#^/[^/]#', $returnTo)) {
+            return redirect($returnTo);
+        }
 
         $redirectRoute = in_array($user->role, ['admin', 'editor', 'checkin_staff'], true)
             ? route('admin.dashboard', absolute: false)

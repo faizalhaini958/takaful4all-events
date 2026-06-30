@@ -343,7 +343,12 @@
             <td style="background-color:#f5f5f5;padding:18px 28px;text-align:center;border-top:1px solid #e0e0e0;">
                 <p style="margin:0 0 4px 0;font-size:12px;font-weight:bold;color:#444444;font-family:Arial,Helvetica,sans-serif;">{{ $siteName }}</p>
                 @if ($contactEmail)
-                    <p style="margin:0 0 6px 0;font-size:11px;color:#999999;font-family:Arial,Helvetica,sans-serif;">Need help? <a href="mailto:{{ $contactEmail }}" style="color:#156486;text-decoration:none;">{{ $contactEmail }}</a></p>
+                    <p style="margin:0 0 6px 0;font-size:11px;color:#999999;font-family:Arial,Helvetica,sans-serif;">
+                        Need help? <a href="mailto:{{ $contactEmail }}" style="color:#156486;text-decoration:none;">{{ $contactEmail }}</a>
+                        @if (!empty($contactPhone))
+                            or <a href="tel:{{ $contactPhone }}" style="color:#156486;text-decoration:none;">{{ $contactPhone }}</a>
+                        @endif
+                    </p>
                 @endif
                 <p style="margin:0;font-size:11px;color:#bbbbbb;font-family:Arial,Helvetica,sans-serif;">&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
             </td>

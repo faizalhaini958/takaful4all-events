@@ -1,14 +1,12 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import PostCard from '@/Components/PostCard';
 import HeroCarousel from '@/Components/HeroCarousel';
-import VideoModal from '@/Components/VideoModal';
 import { Link, Head, router } from '@inertiajs/react';
-import { useState } from 'react';
 import { Sparkles, Video } from 'lucide-react';
 import { type ContentBanner, type Post, type PaginatedData } from '@/types';
 
 const POPPINS = "'Poppins', sans-serif";
-const INTER   = "'Inter', 'DM Sans', sans-serif";
+const INTER   = "'Inter', sans-serif";
 
 const TABS = [
     { key: 'all',      label: 'All Videos' },
@@ -25,8 +23,6 @@ interface Props {
 }
 
 export default function ContentIndex({ posts, activeType, banners, canonicalUrl }: Props) {
-    const [activePost, setActivePost] = useState<Post | null>(null);
-
     function switchTab(type: string) {
         router.get('/content', type === 'all' ? {} : { type }, { preserveScroll: false });
     }
@@ -46,8 +42,6 @@ export default function ContentIndex({ posts, activeType, banners, canonicalUrl 
                 <meta name="twitter:title" content="Content | Takaful4All Events" />
                 <meta name="twitter:description" content="Watch on-demand webinars, Agent360 sessions and podcasts from Takaful4All." />
             </Head>
-            <VideoModal post={activePost} onClose={() => setActivePost(null)} />
-
             {/* ── Hero ── */}
             <section className="relative -mt-16 overflow-hidden" style={{ background: '#071B2A' }}>
                 {/* Dot grid */}
@@ -65,7 +59,7 @@ export default function ContentIndex({ posts, activeType, banners, canonicalUrl 
             </section>
 
             {/* ── Content ── */}
-            <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+            <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
                 {/* Dot grid */}
                 <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
@@ -111,7 +105,7 @@ export default function ContentIndex({ posts, activeType, banners, canonicalUrl 
                     {posts.data.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {posts.data.map(post => (
-                                <PostCard key={post.id} post={post} onClick={() => setActivePost(post)} />
+                                <PostCard key={post.id} post={post} />
                             ))}
                         </div>
                     ) : (

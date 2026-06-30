@@ -6,7 +6,7 @@ import { XCircle, Calendar, MapPin, Hash, RotateCcw, Home, HelpCircle } from 'lu
 import { type EventRegistration } from '@/types';
 
 const POPPINS = "'Poppins', sans-serif";
-const INTER   = "'Inter', 'DM Sans', sans-serif";
+const INTER   = "'Inter', sans-serif";
 
 interface Props {
     registration: EventRegistration | null;
@@ -38,7 +38,7 @@ export default function PaymentFailure({ registration }: Props) {
                 </div>
             </section>
 
-            <div className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+            <div className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
                 <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
             <div className="relative max-w-2xl mx-auto px-4 sm:px-6 py-16">
                 {/* Failure Icon */}

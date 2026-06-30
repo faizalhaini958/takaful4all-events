@@ -57,6 +57,8 @@ export default function RegistrationIndex({ event, registrations, stats, current
     const [deleteTarget, setDeleteTarget] = useState<EventRegistration | null>(null);
     const [checkInTarget, setCheckInTarget] = useState<EventRegistration | null>(null);
     const [resendTarget, setResendTarget] = useState<EventRegistration | null>(null);
+    const [cancelTarget, setCancelTarget] = useState<EventRegistration | null>(null);
+    const [reinstateTarget, setReinstateTarget] = useState<EventRegistration | null>(null);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [viewReg, setViewReg] = useState<EventRegistration | null>(null);
     const [bulkAction, setBulkAction] = useState<string>('');
@@ -134,6 +136,26 @@ export default function RegistrationIndex({ event, registrations, stats, current
         if (!deleteTarget) return;
         router.delete(`/admin/events/${event.slug}/registrations/${deleteTarget.id}`, {
             onFinish: () => setDeleteTarget(null),
+        });
+    }
+
+    function confirmCancel() {
+        if (!cancelTarget) return;
+        router.patch(`/admin/events/${event.slug}/registrations/${cancelTarget.id}/status`, { status: 'cancelled' }, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => setViewReg(null),
+            onFinish: () => setCancelTarget(null),
+        });
+    }
+
+    function confirmReinstate() {
+        if (!reinstateTarget) return;
+        router.patch(`/admin/events/${event.slug}/registrations/${reinstateTarget.id}/status`, { status: 'confirmed' }, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => setViewReg(null),
+            onFinish: () => setReinstateTarget(null),
         });
     }
 
@@ -291,7 +313,7 @@ export default function RegistrationIndex({ event, registrations, stats, current
                 </div>
 
                 {/* Table */}
-                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
@@ -415,6 +437,8 @@ export default function RegistrationIndex({ event, registrations, stats, current
                 onClose={() => setViewReg(null)}
                 onCheckIn={(reg) => setCheckInTarget(reg)}
                 onResend={(reg) => setResendTarget(reg)}
+                onCancel={(reg) => { setViewReg(null); setCancelTarget(reg); }}
+                onReinstate={(reg) => { setViewReg(null); setReinstateTarget(reg); }}
             />
 
             {/* Delete confirmation */}
@@ -468,6 +492,41 @@ export default function RegistrationIndex({ event, registrations, stats, current
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            {/* Cancel confirmation */}
+            <Dialog open={!!cancelTarget} onOpenChange={open => !open && setCancelTarget(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Cancel Registration</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to cancel registration "{cancelTarget?.reference_no}" for {cancelTarget?.name}?
+                            {Number(cancelTarget?.total_amount) > 0 && ' This will also restore product stock.'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setCancelTarget(null)}>Keep</Button>
+                        <Button variant="destructive" onClick={confirmCancel}>
+                            <XCircle className="w-3.5 h-3.5 mr-1.5" /> Cancel Registration
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            {/* Reinstate confirmation */}
+            <Dialog open={!!reinstateTarget} onOpenChange={open => !open && setReinstateTarget(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Reinstate Registration</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to reinstate registration "{reinstateTarget?.reference_no}" for {reinstateTarget?.name}?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setReinstateTarget(null)}>Cancel</Button>
+                        <Button onClick={confirmReinstate}>
+                            Reinstate
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AdminLayout>
     );
 }
@@ -480,12 +539,16 @@ function RegistrationDetailModal({
     onClose,
     onCheckIn,
     onResend,
+    onCancel,
+    onReinstate,
 }: {
     event: Event;
     registration: EventRegistration | null;
     onClose: () => void;
     onCheckIn: (reg: EventRegistration) => void;
     onResend: (reg: EventRegistration) => void;
+    onCancel: (reg: EventRegistration) => void;
+    onReinstate: (reg: EventRegistration) => void;
 }) {
     if (!reg) return null;
 
@@ -531,7 +594,7 @@ function RegistrationDetailModal({
                     {/* Attendee Info */}
                     <div>
                         <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest mb-3">Attendee Information</h4>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <InfoField icon={<Users className="w-3.5 h-3.5" />} label="Full Name" value={reg.name} />
                             <InfoField icon={<Mail className="w-3.5 h-3.5" />} label="Email" value={reg.email} />
                             {reg.phone && <InfoField icon={<Phone className="w-3.5 h-3.5" />} label="Phone" value={reg.phone} />}
@@ -660,7 +723,7 @@ function RegistrationDetailModal({
                     {/* Payment & Details */}
                     <div>
                         <h4 className="text-[11px] font-bold uppercase text-primary tracking-widest mb-3">Payment & Details</h4>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs text-muted-foreground mb-1">Payment Status</p>
                                 <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${paymentPill.class}`}>
@@ -721,12 +784,12 @@ function RegistrationDetailModal({
                             </Button>
                         )}
                         {['pending', 'awaiting_payment', 'confirmed', 'waitlisted'].includes(reg.status) && (
-                            <Button size="sm" variant="destructive" onClick={() => updateStatus('cancelled')}>
+                            <Button size="sm" variant="destructive" onClick={() => onCancel(reg)}>
                                 <XCircle className="w-3.5 h-3.5 mr-1.5" /> Cancel
                             </Button>
                         )}
                         {reg.status === 'cancelled' && (
-                            <Button size="sm" variant="outline" onClick={() => updateStatus('confirmed')}>
+                            <Button size="sm" variant="outline" onClick={() => onReinstate(reg)}>
                                 Reinstate
                             </Button>
                         )}

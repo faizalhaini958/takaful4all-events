@@ -33,6 +33,7 @@ export default function EventEdit({ event, tickets }: Props) {
         gdrive_link:      event.gdrive_link ?? '',
         is_published:     event.is_published ? '1' : '0',
         media_id:         event.media_id ? String(event.media_id) : 'none',
+        mobile_media_id:  event.mobile_media_id ? String(event.mobile_media_id) : 'none',
         rsvp_enabled:     event.rsvp_enabled ?? false,
         rsvp_deadline:    toDatetimeLocal(event.rsvp_deadline ?? null),
         max_attendees:    event.max_attendees ? String(event.max_attendees) : '',
@@ -56,6 +57,7 @@ export default function EventEdit({ event, tickets }: Props) {
         transform((data) => ({
             ...data,
             media_id: data.media_id && data.media_id !== 'none' ? data.media_id : null,
+            mobile_media_id: data.mobile_media_id && data.mobile_media_id !== 'none' ? data.mobile_media_id : null,
             meta_json: {
                 faqs: data.faqs,
                 sponsors: data.sponsors,
@@ -105,6 +107,7 @@ export default function EventEdit({ event, tickets }: Props) {
                     onSubmit={submit}
                     submitLabel="Update Event"
                     currentMedia={event.media}
+                    currentMobileMedia={event.mobile_media}
                     eventSlug={event.slug}
                     ticketNames={tickets?.map(t => t.name) ?? []}
                 />

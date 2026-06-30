@@ -175,7 +175,7 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
                                             <TableCell className="font-medium">
                                                 <div className="flex items-center gap-2">
                                                     {ticket.color && (
-                                                        <div className="w-4 h-4 rounded-full flex-shrink-0 border border-gray-200" style={{ backgroundColor: ticket.color }} />
+                                                        <div className="w-4 h-4 rounded-full flex-shrink-0 border border-gray-200 dark:border-border" style={{ backgroundColor: ticket.color }} />
                                                     )}
                                                     {ticket.name}
                                                 </div>
@@ -272,7 +272,7 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
                             <Textarea id="description" value={data.description} onChange={e => setData('description', e.target.value)} rows={2} className="mt-1" />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <Label>Type</Label>
                                 <Select value={data.type} onValueChange={v => setData('type', v as 'free' | 'paid')}>
@@ -292,7 +292,7 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
                             )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="quantity">Capacity <span className="text-xs text-muted-foreground">(blank = unlimited)</span></Label>
                                 <Input id="quantity" type="number" min="1" value={data.quantity} onChange={e => setData('quantity', e.target.value)} className="mt-1" placeholder="Unlimited" />
@@ -303,7 +303,7 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="sale_start_at">Sale Starts</Label>
                                 <Input id="sale_start_at" type="datetime-local" value={data.sale_start_at} onChange={e => setData('sale_start_at', e.target.value)} className="mt-1" />
@@ -322,7 +322,7 @@ export default function TicketsIndex({ events, currentEvent, event, tickets }: P
                         {/* Eligibility Rules */}
                         <div className="rounded-lg border border-border/60 p-4 space-y-3 bg-muted/20">
                             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Eligibility Rules <span className="normal-case font-normal">(optional)</span></p>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="min_age">Min Age</Label>
                                     <Input id="min_age" type="number" min={1} max={120}

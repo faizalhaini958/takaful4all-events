@@ -250,7 +250,7 @@ export default function EventZones({ event, zones }: Props) {
                                 </div>
 
                                 {/* Colors */}
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="zone_color">Zone Colour *</Label>
                                         <div className="flex items-center gap-2 mt-1">
@@ -360,7 +360,7 @@ export default function EventZones({ event, zones }: Props) {
                                     {errors.image && <p className="text-sm text-destructive mt-1">{errors.image}</p>}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="zone_capacity">Capacity</Label>
                                         <Input

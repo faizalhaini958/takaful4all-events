@@ -207,7 +207,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
 
                 {/* Summary stats */}
                 {tickets.length > 0 && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-2.5">
                         <div className="rounded-xl border border-border/60 p-3.5">
                             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Total Tickets</p>
                             <p className="text-2xl font-bold tabular-nums text-foreground">{tickets.length}</p>
@@ -232,7 +232,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                 )}
 
                 {/* Tickets table */}
-                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
@@ -426,7 +426,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                             </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <Label>Type</Label>
                                 <Select value={data.type} onValueChange={v => setData('type', v as 'free' | 'paid')}>
@@ -454,7 +454,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                                     <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">Early Bird Pricing</span>
                                     <span className="text-xs text-muted-foreground">(optional)</span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="early_bird_price">Early Bird Price ({data.currency})</Label>
                                         <Input
@@ -498,7 +498,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                             </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="quantity">Capacity <span className="text-xs text-muted-foreground">(blank = unlimited)</span></Label>
                                 <Input id="quantity" type="number" min="1" value={data.quantity} onChange={e => setData('quantity', e.target.value)} className="mt-1" placeholder="Unlimited" />
@@ -509,7 +509,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="sale_start_at">Sale Starts</Label>
                                 <Input id="sale_start_at" type="datetime-local" value={data.sale_start_at} onChange={e => setData('sale_start_at', e.target.value)} className="mt-1" />
@@ -528,7 +528,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                         {/* Eligibility Rules */}
                         <div className="rounded-lg border border-border/60 p-4 space-y-3 bg-muted/20">
                             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Eligibility Rules <span className="normal-case font-normal">(optional)</span></p>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="min_age">Min Age</Label>
                                     <Input

@@ -5,11 +5,11 @@ import { Link, Head } from '@inertiajs/react';
 import { CheckCircle2, Clock, XCircle, UserCheck, AlertCircle, Calendar, MapPin, Ticket, Mail, Hash, Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect } from 'react';
-import { type EventRegistration } from '@/types';
+import { type EventRegistration, type EventRegistrationAttendee } from '@/types';
 import { useAnalytics } from '@/hooks/use-analytics';
 
 const POPPINS = "'Poppins', sans-serif";
-const INTER   = "'Inter', 'DM Sans', sans-serif";
+const INTER   = "'Inter', sans-serif";
 
 const PAGE_HEADER: Record<string, { iconBg: string; iconColor: string; Icon: React.ElementType; title: string; subtitle: string }> = {
     confirmed:         { iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', Icon: CheckCircle2, title: 'Registration Successful!',       subtitle: 'Your registration has been confirmed. We look forward to seeing you!' },
@@ -47,15 +47,15 @@ export default function RegistrationConfirmation({ registration }: Props) {
             </Head>
 
             {/* ── Hero ── */}
-            <section className="bg-white">
+            <section className="bg-white dark:bg-background">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
                     <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full ${header.iconBg} mb-4 sm:mb-5`}>
                         <Icon className={`w-8 h-8 sm:w-10 sm:h-10 ${header.iconColor}`} />
                     </div>
-                    <h1 style={{ fontFamily: POPPINS, fontSize: '2rem', fontWeight: 800, letterSpacing: '0.02em', color: '#111827' }}>
+                    <h1 style={{ fontFamily: POPPINS, fontSize: '2rem', fontWeight: 800, letterSpacing: '0.02em', color: '#111827' }} className="dark:text-foreground">
                         {header.title}
                     </h1>
-                    <p className="mt-2" style={{ color: '#6b7280', fontFamily: INTER, fontSize: '1rem' }}>
+                    <p className="mt-2 dark:text-muted-foreground" style={{ color: '#6b7280', fontFamily: INTER, fontSize: '1rem' }}>
                         {header.subtitle}
                     </p>
                 </div>
@@ -165,7 +165,7 @@ export default function RegistrationConfirmation({ registration }: Props) {
                         <div className="border-t pt-5">
                             <div className="flex flex-col items-center gap-3">
                                 <p className="text-sm text-muted-foreground">Your booking QR code</p>
-                                <div className="p-3 bg-white rounded-lg border shadow-sm">
+                                <div className="p-3 bg-white dark:bg-card rounded-lg border shadow-sm">
                                     <QRCodeSVG
                                         value={`${window.location.origin}/events/${event.slug}/register/confirmation/${registration.reference_no}`}
                                         size={148}
@@ -177,6 +177,22 @@ export default function RegistrationConfirmation({ registration }: Props) {
                                 </p>
                             </div>
                         </div>
+                        )}
+
+                        {/* Ticket Downloads — shown for confirmed/attended */}
+                        {(registration.status === 'confirmed' || registration.status === 'attended') && registration.attendees && registration.attendees.length > 0 && (
+                            <div className="border-t pt-4 space-y-2">
+                                {registration.attendees.map((attendee: EventRegistrationAttendee) => (
+                                    <a
+                                        key={attendee.id}
+                                        href={`/tickets/${registration.reference_no}/${attendee.attendee_no}/download`}
+                                        className="flex items-center justify-center gap-2 w-full p-3 rounded-lg border border-brand text-brand hover:bg-brand/5 transition-colors font-medium text-sm"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        Download Ticket {registration.attendees && registration.attendees.length > 1 ? `#${attendee.attendee_no}` : ''} ({attendee.name})
+                                    </a>
+                                ))}
+                            </div>
                         )}
 
                         {/* Invoice Download */}

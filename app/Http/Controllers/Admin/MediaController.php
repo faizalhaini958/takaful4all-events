@@ -18,10 +18,16 @@ class MediaController extends Controller
 {
     public function __construct(private MediaService $mediaService) {}
 
-    public function index(): Response
+    public function index(Request $request): Response|JsonResponse
     {
+        $media = Media::latest()->paginate(24)->withQueryString();
+
+        if ($request->expectsJson()) {
+            return response()->json(['media' => $media]);
+        }
+
         return Inertia::render('Admin/Media/Index', [
-            'media' => Media::latest()->paginate(24)->withQueryString(),
+            'media' => $media,
         ]);
     }
 

@@ -85,14 +85,14 @@ export default function ImageUpload({ value, currentMedia, onChange, onClear }: 
                             <button
                                 type="button"
                                 onClick={() => inputRef.current?.click()}
-                                className="bg-white text-gray-900 font-semibold text-xs px-3 py-1.5 rounded-lg shadow hover:bg-gray-50 transition-colors"
+                                className="bg-white dark:bg-card text-gray-900 dark:text-foreground font-semibold text-xs px-3 py-1.5 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-muted transition-colors"
                             >
                                 Change
                             </button>
                             <button
                                 type="button"
                                 onClick={clear}
-                                className="bg-white text-red-600 font-semibold text-xs px-3 py-1.5 rounded-lg shadow hover:bg-red-50 transition-colors flex items-center gap-1"
+                                className="bg-white dark:bg-card text-red-600 font-semibold text-xs px-3 py-1.5 rounded-lg shadow hover:bg-red-50 dark:hover:bg-red-950 transition-colors flex items-center gap-1"
                             >
                                 <X className="w-3.5 h-3.5" /> Remove
                             </button>
@@ -109,7 +109,7 @@ export default function ImageUpload({ value, currentMedia, onChange, onClear }: 
                     className={`relative cursor-pointer rounded-xl border-2 border-dashed transition-colors flex flex-col items-center justify-center gap-3 py-10 ${
                         dragOver
                             ? 'border-brand bg-brand-light/30'
-                            : 'border-gray-300 hover:border-brand bg-gray-50 hover:bg-brand-light/10'
+                            : 'border-gray-300 dark:border-border hover:border-brand dark:hover:border-brand bg-gray-50 dark:bg-muted/50 hover:bg-brand-light/10'
                     }`}
                 >
                     {uploading ? (
@@ -120,10 +120,10 @@ export default function ImageUpload({ value, currentMedia, onChange, onClear }: 
                                 <ImageIcon className="w-6 h-6 text-brand" />
                             </div>
                             <div className="text-center">
-                                <p className="text-sm font-semibold text-gray-700">
+                                <p className="text-sm font-semibold text-gray-700 dark:text-foreground">
                                     <span className="text-brand">Click to upload</span> or drag &amp; drop
                                 </p>
-                                <p className="text-xs text-gray-400 mt-0.5">PNG, JPG, WebP — max 5 MB</p>
+                                <p className="text-xs text-gray-400 dark:text-muted-foreground mt-0.5">PNG, JPG, WebP — max 5 MB</p>
                             </div>
                         </>
                     )}

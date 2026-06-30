@@ -8,7 +8,7 @@ import { useState } from 'react';
 import RegisterModal from '@/Components/RegisterModal';
 
 const POPPINS = "'Poppins', sans-serif";
-const INTER   = "'Inter', 'DM Sans', sans-serif";
+const INTER   = "'Inter', sans-serif";
 
 interface Props {
     registration: EventRegistration | null;
@@ -43,7 +43,7 @@ export default function PaymentSuccess({ registration }: Props) {
                 </div>
             </section>
 
-            <div className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+            <div className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
                 <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
             <div className="relative max-w-2xl mx-auto px-4 sm:px-6 py-16">
                 {/* Success Icon */}
@@ -91,7 +91,7 @@ export default function PaymentSuccess({ registration }: Props) {
                             </div>
 
                             {/* Details */}
-                            <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <p className="text-muted-foreground">Name</p>
                                     <p className="font-medium">{registration.name}</p>
@@ -164,7 +164,7 @@ export default function PaymentSuccess({ registration }: Props) {
                                                         )}
                                                         <span className="text-gray-400 ml-1">× {p.quantity}</span>
                                                     </span>
-                                                    <span className="font-medium text-gray-900">
+                                                    <span className="font-medium text-gray-900 dark:text-foreground">
                                                         RM {(Number(p.unit_price) * p.quantity).toFixed(2)}
                                                     </span>
                                                 </div>

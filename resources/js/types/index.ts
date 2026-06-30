@@ -125,8 +125,10 @@ export interface Event {
     registration_url: string | null;
     gdrive_link: string | null;
     media_id: number | null;
+    mobile_media_id: number | null;
     venue_map_media_id: number | null;
     media: Media | null;
+    mobile_media: Media | null;
     venue_map: Media | null;
     is_published: boolean;
     rsvp_enabled: boolean;

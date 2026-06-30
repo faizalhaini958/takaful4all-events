@@ -13,7 +13,7 @@ class EventController extends Controller
     {
         $status = request('status', 'all');
 
-        $query = Event::with('media')
+        $query = Event::with(['media', 'mobileMedia'])
             ->where('is_published', true)
             ->orderByDesc('start_at');
 
@@ -40,7 +40,8 @@ class EventController extends Controller
     public function show(string $slug): Response
     {
         $event = Event::where('slug', $slug)
-            ->with(['media', 'venueMap', 'zones', 'tickets.zone'])
+            ->where('is_published', true)
+            ->with(['media', 'mobileMedia', 'venueMap', 'zones', 'tickets.zone'])
             ->firstOrFail();
 
         // Append RSVP computed attributes for the frontend
@@ -58,6 +59,6 @@ class EventController extends Controller
             'event'   => $event,
             'related' => $related,
             'ogUrl'   => route('events.show', $slug),
-        ]);
+        ])->withViewData('heroImage', $event->media?->url);
     }
 }

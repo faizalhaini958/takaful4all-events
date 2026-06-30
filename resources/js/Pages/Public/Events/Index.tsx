@@ -7,7 +7,7 @@ import { type Banner, type Event, type PaginatedData } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
 
 const POPPINS = "'Poppins', sans-serif";
-const INTER   = "'Inter', 'DM Sans', sans-serif";
+const INTER   = "'Inter', sans-serif";
 
 interface Props {
     events: PaginatedData<Event>;
@@ -55,6 +55,31 @@ export default function EventsIndex({ events, currentStatus, banners, canonicalU
                 <meta name="twitter:title" content="Events | Takaful4All Events" />
                 <meta name="twitter:description" content="Browse all upcoming and past events by Takaful4All — conferences, webinars, workshops and more." />
                 {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+                    '@context': 'https://schema.org',
+                    '@type': 'ItemList',
+                    itemListElement: events.data.map((event, i) => ({
+                        '@type': 'ListItem',
+                        position: i + 1,
+                        item: {
+                            '@type': 'Event',
+                            name: event.title,
+                            url: `${window.location.origin}/events/${event.slug}`,
+                            startDate: event.start_at,
+                            ...(event.end_at ? { endDate: event.end_at } : {}),
+                            ...(event.media?.url ? { image: event.media.url } : {}),
+                            location: event.venue ? {
+                                '@type': 'Place',
+                                name: event.venue,
+                                address: {
+                                    '@type': 'PostalAddress',
+                                    addressLocality: event.city ?? '',
+                                    addressCountry: event.country ?? 'MY',
+                                },
+                            } : undefined,
+                        },
+                    })),
+                }) }} />
             </Head>
 
             {/* ── HERO ── */}
@@ -77,8 +102,7 @@ export default function EventsIndex({ events, currentStatus, banners, canonicalU
 
             {/* ── CONTENT ── */}
             <section
-                className="relative z-10 -mt-10 py-14 rounded-t-3xl rounded-b-3xl overflow-hidden"
-                style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}
+                className="relative z-10 -mt-10 py-14 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background"
             >
                 {/* Subtle dot-grid depth */}
                 <div className="absolute inset-0 pointer-events-none"
@@ -108,7 +132,7 @@ export default function EventsIndex({ events, currentStatus, banners, canonicalU
                         {/* ── Events section label ── */}
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-[3px] h-7 rounded-full" style={{ background: 'linear-gradient(180deg, #18C8FF, #009FBB)' }} />
-                            <span style={{ fontFamily: POPPINS, fontSize: '1.15rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#071B2A' }}>
+                            <span style={{ fontFamily: POPPINS, fontSize: '1.15rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }} className="text-[#071B2A] dark:text-foreground">
                                 {currentStatus === 'upcoming' ? 'Upcoming Events' : currentStatus === 'past' ? 'Past Events' : 'All Events'}
                             </span>
                         </div>
@@ -120,18 +144,18 @@ export default function EventsIndex({ events, currentStatus, banners, canonicalU
                                     return (
                                         <button key={f.value}
                                             onClick={() => handleFilter(f.value)}
-                                            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
+                                            className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${!isActive ? 'bg-white/70 dark:bg-card text-[#071B2A]/60 dark:text-muted-foreground border border-white/90 dark:border-border' : ''}`}
                                             style={isActive
                                                 ? { background: 'linear-gradient(90deg, #009FBB, #18C8FF)', color: '#fff', border: '1.5px solid transparent', boxShadow: '0 2px 10px rgba(0,159,187,0.28)', fontFamily: INTER }
-                                                : { backgroundColor: 'rgba(255,255,255,0.7)', color: 'rgba(7,27,42,0.6)', border: '1.5px solid rgba(255,255,255,0.9)', fontFamily: INTER }
+                                                : { fontFamily: INTER }
                                             }>
                                             {t(f.label)}
                                         </button>
                                     );
                                 })}
                             </div>
-                            <p className="text-sm font-medium" style={{ color: 'rgba(7,27,42,0.45)', fontFamily: INTER, whiteSpace: 'nowrap' }}>
-                                <span className="font-bold" style={{ color: '#071B2A' }}>{events.total}</span>
+                            <p className="text-sm font-medium dark:text-muted-foreground" style={{ fontFamily: INTER, whiteSpace: 'nowrap' }}>
+                                <span className="font-bold text-[#071B2A] dark:text-foreground">{events.total}</span>
                                 {' '}event{events.total !== 1 ? 's' : ''} found
                             </p>
                         </div>
@@ -140,8 +164,8 @@ export default function EventsIndex({ events, currentStatus, banners, canonicalU
                             {CATEGORY_LINKS.map(({ key, label, Icon }) => (
                                 <Link key={key}
                                     href={`/events?category=${key}`}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
-                                    style={{ backgroundColor: 'rgba(255,255,255,0.6)', color: 'rgba(7,27,42,0.65)', border: '1.5px solid rgba(255,255,255,0.9)', fontFamily: INTER }}>
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/60 dark:bg-card text-[#071B2A]/65 dark:text-muted-foreground border border-white/90 dark:border-border"
+                                    style={{ fontFamily: INTER }}>
                                     <Icon className="w-3.5 h-3.5" style={{ color: '#009FBB' }} strokeWidth={2} />
                                     {label}
                                 </Link>
@@ -162,10 +186,10 @@ export default function EventsIndex({ events, currentStatus, banners, canonicalU
                                 style={{ background: 'rgba(0,159,187,0.10)', border: '1px solid rgba(0,159,187,0.2)' }}>
                                 <CalendarDays className="w-8 h-8" style={{ color: '#009FBB' }} strokeWidth={1.5} />
                             </div>
-                            <p className="text-base font-semibold" style={{ color: '#071B2A', fontFamily: POPPINS }}>
+                            <p className="text-base font-semibold text-[#071B2A] dark:text-foreground" style={{ fontFamily: POPPINS }}>
                                 {t('events.no_events')}
                             </p>
-                            <p className="text-sm" style={{ color: 'rgba(7,27,42,0.45)', fontFamily: INTER }}>
+                            <p className="text-sm dark:text-muted-foreground" style={{ fontFamily: INTER }}>
                                 {t('events.try_filter')}
                             </p>
                         </div>
@@ -178,12 +202,10 @@ export default function EventsIndex({ events, currentStatus, banners, canonicalU
                                 <Link
                                     key={i}
                                     href={link.url ?? '#'}
-                                    className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${!link.active && link.url ? 'bg-white dark:bg-card text-[#071B2A]/65 dark:text-muted-foreground border border-[#ddeef6] dark:border-border' : !link.active ? 'bg-transparent text-[#b8d5e2] dark:text-muted-foreground/40 border border-[#ddeef6] dark:border-border cursor-not-allowed' : ''}`}
                                     style={link.active
                                         ? { background: 'linear-gradient(90deg, #009FBB, #18C8FF)', color: '#fff', border: '1.5px solid transparent', boxShadow: '0 2px 10px rgba(0,159,187,0.28)', fontFamily: INTER }
-                                        : link.url
-                                            ? { backgroundColor: '#fff', color: 'rgba(7,27,42,0.65)', border: '1.5px solid #ddeef6', fontFamily: INTER }
-                                            : { backgroundColor: 'transparent', color: '#b8d5e2', border: '1.5px solid #ddeef6', cursor: 'not-allowed', fontFamily: INTER }
+                                        : { fontFamily: INTER }
                                     }
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                     preserveScroll

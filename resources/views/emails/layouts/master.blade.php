@@ -121,6 +121,10 @@
             border-top: 1px solid #eef1f5;
             margin: 24px 0;
         }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
         /* Attendee badge */
         .attendee-badge {
             display: inline-block;
@@ -173,6 +177,9 @@
             <p style="margin-top: 6px;">
                 Questions? Contact us at
                 <a href="mailto:{{ $contactEmail ?? 'info@takaful4all.org' }}">{{ $contactEmail ?? 'info@takaful4all.org' }}</a>
+                @if(!empty($contactPhone))
+                    or <a href="tel:{{ $contactPhone }}">{{ $contactPhone }}</a>
+                @endif
             </p>
             <p style="margin-top: 6px; color: #bbb; font-size: 11px;">
                 You are receiving this email because you registered for an event.

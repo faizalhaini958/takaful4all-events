@@ -180,7 +180,7 @@ export default function MenusIndex({ menus }: Props) {
                     {/* Right: active menu items */}
                     <div>
                         {activeMenu ? (
-                            <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                            <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-x-auto">
                                 {/* Items header */}
                                 <div className="flex items-center justify-between px-4 py-3 bg-muted/40 border-b border-border/60">
                                     <div className="flex items-center gap-2">
@@ -376,7 +376,7 @@ export default function MenusIndex({ menus }: Props) {
                             </div>
                             <InputError message={itemForm.errors.url} />
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="space-y-1.5">
                                 <Label htmlFor="item-target">Target</Label>
                                 <Select value={itemForm.data.target} onValueChange={v => itemForm.setData('target', v)}>

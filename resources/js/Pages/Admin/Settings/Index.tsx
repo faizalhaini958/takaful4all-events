@@ -1457,7 +1457,7 @@ function ShippingSettingsTab({ shippingZones }: { shippingZones: ShippingZone[] 
                             <p className="text-sm mt-1">Create a shipping zone to set delivery rates for event products.</p>
                         </div>
                     ) : (
-                        <div className="rounded-xl border border-border/60 overflow-hidden">
+                        <div className="rounded-xl border border-border/60 overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/40 hover:bg-muted/40">

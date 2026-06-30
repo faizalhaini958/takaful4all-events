@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,6 +33,20 @@ class Post extends Model
         'is_published' => 'boolean',
         'meta_json'    => 'array',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Post $post) {
+            if ($post->is_published && !$post->published_at) {
+                $post->published_at = now();
+            }
+        });
+    }
+
+    protected function serializeDate(DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d\TH:i:s');
+    }
 
     public function getSlugOptions(): SlugOptions
     {

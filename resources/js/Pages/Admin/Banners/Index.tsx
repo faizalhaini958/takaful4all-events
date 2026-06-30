@@ -197,7 +197,7 @@ function BannerFormDialog({
                         {errors.link_url && <p className="text-sm text-red-600 mt-1">{errors.link_url}</p>}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <Label htmlFor="sort_order">Sort Order</Label>
                             <Input

@@ -110,40 +110,40 @@ export default function ActivityLog({ logs, stats, modelTypes, currentSearch, cu
             <div className="space-y-4">
                 {/* Header */}
                 <div>
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5 flex-wrap">
+                    <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5 flex-wrap">
                         <Link href="/admin" className="hover:text-foreground transition-colors">Dashboard</Link>
                         <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                         <span className="text-foreground font-medium">Activity Log</span>
                     </div>
-                    <h1 className="text-2xl font-bold text-foreground">Activity Log</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-foreground">Activity Log</h1>
                     <p className="text-sm text-muted-foreground mt-0.5">Track all admin actions across the system</p>
                 </div>
 
                 {/* Stats cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <div className="rounded-xl border border-border/60 bg-card p-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Today</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                    <div className="rounded-xl border border-border/60 bg-card p-3 sm:p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Today</span>
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
                                 <CalendarDays className="w-3.5 h-3.5 text-emerald-600" />
                             </div>
                         </div>
-                        <p className="text-3xl font-bold tabular-nums text-foreground">{stats.today}</p>
+                        <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground">{stats.today}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">actions today</p>
                     </div>
-                    <div className="rounded-xl border border-border/60 bg-card p-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This Week</span>
+                    <div className="rounded-xl border border-border/60 bg-card p-3 sm:p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This Week</span>
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
                                 <Clock className="w-3.5 h-3.5 text-primary" />
                             </div>
                         </div>
-                        <p className="text-3xl font-bold tabular-nums text-foreground">{stats.week}</p>
+                        <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground">{stats.week}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">last 7 days</p>
                     </div>
-                    <div className="rounded-xl border border-border/60 bg-card p-4 shadow-sm col-span-2 sm:col-span-1">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Most Active</span>
+                    <div className="rounded-xl border border-border/60 bg-card p-3 sm:p-4 shadow-sm col-span-2 sm:col-span-1">
+                        <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Most Active</span>
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10">
                                 <User className="w-3.5 h-3.5 text-amber-600" />
                             </div>
@@ -156,9 +156,9 @@ export default function ActivityLog({ logs, stats, modelTypes, currentSearch, cu
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5">
                     <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="relative flex-1 min-w-[180px] max-w-xs">
+                        <div className="relative flex-1 min-w-0">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                             <Input
                                 placeholder="Search description or staff..."
@@ -167,54 +167,57 @@ export default function ActivityLog({ logs, stats, modelTypes, currentSearch, cu
                                 className="pl-9"
                             />
                         </div>
-                        <Button type="submit" variant="secondary" size="sm">Search</Button>
+                        <Button type="submit" variant="secondary" size="sm" className="shrink-0">Search</Button>
                     </form>
 
-                    <Select
-                        value={type || 'all'}
-                        onValueChange={v => { const next = v === 'all' ? '' : v; setType(next); navigate({ type: next }); }}
-                    >
-                        <SelectTrigger className="w-40 h-9 text-xs">
-                            <SelectValue placeholder="All types" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All types</SelectItem>
-                            {Object.entries(modelTypes).map(([key, val]) => (
-                                <SelectItem key={key} value={key}>{val.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Select
+                            value={type || 'all'}
+                            onValueChange={v => { const next = v === 'all' ? '' : v; setType(next); navigate({ type: next }); }}
+                        >
+                            <SelectTrigger className="flex-1 sm:w-36 h-9 text-xs">
+                                <SelectValue placeholder="All types" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All types</SelectItem>
+                                {Object.entries(modelTypes).map(([key, val]) => (
+                                    <SelectItem key={key} value={key}>{val.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
 
-                    <Input
-                        type="date"
-                        value={dateFrom}
-                        onChange={e => { setDateFrom(e.target.value); navigate({ date_from: e.target.value }); }}
-                        className="w-36 h-9 text-xs"
-                    />
-                    <span className="text-xs text-muted-foreground">to</span>
-                    <Input
-                        type="date"
-                        value={dateTo}
-                        onChange={e => { setDateTo(e.target.value); navigate({ date_to: e.target.value }); }}
-                        className="w-36 h-9 text-xs"
-                    />
+                        <Input
+                            type="date"
+                            value={dateFrom}
+                            onChange={e => { setDateFrom(e.target.value); navigate({ date_from: e.target.value }); }}
+                            className="flex-1 sm:w-32 h-9 text-xs"
+                        />
+                        <span className="text-xs text-muted-foreground shrink-0">to</span>
+                        <Input
+                            type="date"
+                            value={dateTo}
+                            onChange={e => { setDateTo(e.target.value); navigate({ date_to: e.target.value }); }}
+                            className="flex-1 sm:w-32 h-9 text-xs"
+                        />
+                    </div>
 
-                    {hasFilters && (
-                        <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={clearFilters}>
-                            Clear
-                        </Button>
-                    )}
-
-                    <a href={buildExportUrl()} className="ml-auto">
-                        <Button variant="outline" size="sm" className="gap-1.5">
-                            <Download className="w-4 h-4" />
-                            Export CSV
-                        </Button>
-                    </a>
+                    <div className="flex items-center gap-2">
+                        {hasFilters && (
+                            <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={clearFilters}>
+                                Clear
+                            </Button>
+                        )}
+                        <a href={buildExportUrl()} className="sm:ml-auto">
+                            <Button variant="outline" size="sm" className="gap-1.5">
+                                <Download className="w-4 h-4" />
+                                <span className="hidden sm:inline">Export CSV</span>
+                            </Button>
+                        </a>
+                    </div>
                 </div>
 
                 {/* Table */}
-                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
@@ -302,12 +305,14 @@ export default function ActivityLog({ logs, stats, modelTypes, currentSearch, cu
 
                 {/* Pagination */}
                 {logs.total > 0 && (
-                    <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-                        <span className="text-sm text-muted-foreground">
-                            Showing <span className="font-medium text-foreground">{logs.from ?? 0}</span> to <span className="font-medium text-foreground">{logs.to ?? 0}</span> of <span className="font-medium text-foreground">{logs.total}</span>
+                    <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm gap-2">
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                            <span className="hidden sm:inline">Showing </span>
+                            <span className="font-medium text-foreground">{logs.from ?? 0}</span>–<span className="font-medium text-foreground">{logs.to ?? 0}</span>
+                            <span className="hidden sm:inline"> of <span className="font-medium text-foreground">{logs.total}</span></span>
                         </span>
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <span className="hidden sm:inline text-sm text-muted-foreground">
                                 Page <span className="font-medium text-foreground">{logs.current_page}</span> of <span className="font-medium text-foreground">{logs.last_page}</span>
                             </span>
                             <div className="flex items-center gap-1">

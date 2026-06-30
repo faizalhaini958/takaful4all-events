@@ -30,6 +30,7 @@ export interface EventFormData {
     gdrive_link: string;
     is_published: string;
     media_id: string;
+    mobile_media_id: string;
     rsvp_enabled: boolean;
     rsvp_deadline: string;
     max_attendees: string;
@@ -50,6 +51,7 @@ interface Props {
     onSubmit: (e: React.FormEvent) => void;
     submitLabel: string;
     currentMedia?: Media | null;
+    currentMobileMedia?: Media | null;
     /** For the "View on site" link in edit mode */
     eventSlug?: string;
     /** Ticket names for ticket-scoped field configuration (edit mode only) */
@@ -111,6 +113,7 @@ export default function EventForm({
     onSubmit,
     submitLabel,
     currentMedia,
+    currentMobileMedia,
     eventSlug,
     ticketNames,
 }: Props) {
@@ -231,8 +234,9 @@ export default function EventForm({
                             <div>
                                 <Label htmlFor="slug">Slug *</Label>
                                 <div className="mt-1 flex rounded-xl overflow-hidden border border-border/60 focus-within:ring-2 focus-within:ring-ring bg-background">
-                                    <span className="px-3 flex items-center text-xs text-muted-foreground bg-muted border-r border-border/60 whitespace-nowrap font-mono">
-                                        /events/
+                                    <span className="px-2.5 sm:px-3 flex items-center text-xs text-muted-foreground bg-muted border-r border-border/60 whitespace-nowrap font-mono">
+                                        <span className="hidden sm:inline">/events/</span>
+                                        <span className="sm:hidden">/e/</span>
                                     </span>
                                     <input
                                         id="slug"
@@ -329,7 +333,7 @@ export default function EventForm({
                                     className="mt-1"
                                 />
                             </div>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
                                     <Label htmlFor="city">City</Label>
                                     <Input
@@ -420,10 +424,10 @@ export default function EventForm({
                                         <div className={`flex items-start gap-3 rounded-lg p-3 border ${
                                             data.registration_fields.length === 0
                                                 ? 'bg-primary/5 border-primary/20'
-                                                : 'bg-amber-50 border-amber-200'
+                                                : 'bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800'
                                         }`}>
                                             {data.registration_fields.length > 0 && (
-                                                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                                                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                                             )}
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium">
@@ -461,7 +465,7 @@ export default function EventForm({
 
                                     {/* Field builder */}
                                     {fieldsDirty && (
-                                        <div className="flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-700">
+                                        <div className="flex items-center gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 px-3 py-2 text-sm text-blue-700 dark:text-blue-300">
                                             <Save className="w-3.5 h-3.5 flex-shrink-0" />
                                             Fields updated — <strong>remember to save</strong> to apply changes to the public page.
                                         </div>
@@ -828,7 +832,7 @@ export default function EventForm({
 
                             {/* ── Status — always visible, prominent ── */}
                             <Select value={data.is_published} onValueChange={v => setData('is_published', v)}>
-                                <SelectTrigger className={`font-semibold ${data.is_published === '1' ? 'border-green-400 bg-green-50 text-green-800' : 'border-amber-300 bg-amber-50 text-amber-800'}`}>
+                                <SelectTrigger className={`font-semibold ${data.is_published === '1' ? 'border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-300' : 'border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300'}`}>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -913,6 +917,27 @@ export default function EventForm({
                                 onClear={() => setData('media_id', 'none')}
                             />
                             {errors.media_id && <p className="text-sm text-destructive mt-2">{errors.media_id}</p>}
+                        </CardContent>
+                    </Card>
+
+                    {/* Mobile Banner (optional) */}
+                    <Card className="rounded-xl border-border/60 bg-muted/20 shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Image className="w-4 h-4 text-primary" /> Mobile Banner <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-xs text-muted-foreground mb-3">
+                                Upload a portrait or square image for phones. Recommended 600×800px. Falls back to the main banner if not set.
+                            </p>
+                            <ImageUpload
+                                value={data.mobile_media_id}
+                                currentMedia={currentMobileMedia ?? null}
+                                onChange={(id) => setData('mobile_media_id', id)}
+                                onClear={() => setData('mobile_media_id', 'none')}
+                            />
+                            {errors.mobile_media_id && <p className="text-sm text-destructive mt-2">{errors.mobile_media_id}</p>}
                         </CardContent>
                     </Card>
 
@@ -1040,7 +1065,7 @@ export default function EventForm({
                   truly centred regardless of how many buttons are in left or right.
                   To add more buttons later: drop them inside the left or right <div>.
                 */}
-                <div className="grid grid-cols-3 items-center gap-2 max-w-screen-xl mx-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 items-center gap-2 max-w-screen-xl mx-auto">
 
                     {/* Left group — destructive / secondary actions */}
                     <div className="flex items-center gap-2 justify-start">
@@ -1048,12 +1073,12 @@ export default function EventForm({
                             variant="outline"
                             size="sm"
                             asChild
-                            className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-400"
+                            className="border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-700 dark:hover:text-red-300 hover:border-red-400 dark:hover:border-red-700 text-xs px-2.5 sm:px-3"
                         >
                             <Link href="/admin/events">Cancel</Link>
                         </Button>
                         <Select value={data.is_published} onValueChange={v => setData('is_published', v)}>
-                            <SelectTrigger className={`h-9 w-[130px] text-xs font-semibold lg:hidden ${data.is_published === '1' ? 'border-green-400 bg-green-50 text-green-800' : 'border-amber-300 bg-amber-50 text-amber-800'}`}>
+                            <SelectTrigger className={`h-9 w-[100px] sm:w-[130px] text-xs font-semibold lg:hidden ${data.is_published === '1' ? 'border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-300' : 'border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300'}`}>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -1063,8 +1088,8 @@ export default function EventForm({
                         </Select>
                     </div>
 
-                    {/* Centre — utility */}
-                    <div className="flex items-center justify-center">
+                    {/* Centre — utility (hidden on mobile) */}
+                    <div className="hidden sm:flex items-center justify-center">
                         <button
                             type="button"
                             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -1076,11 +1101,11 @@ export default function EventForm({
 
                     {/* Right group — primary action(s) */}
                     <div className="flex items-center gap-2 justify-end">
-                        <Button type="submit" disabled={processing} className="shadow-sm">
+                        <Button type="submit" disabled={processing} className="shadow-sm text-xs sm:text-sm px-3 sm:px-4">
                             {processing ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</>
+                                <><Loader2 className="mr-1.5 sm:mr-2 h-4 w-4 animate-spin" /> Saving…</>
                             ) : (
-                                <><Save className="mr-2 h-4 w-4" /> {submitLabel}</>
+                                <><Save className="mr-1.5 sm:mr-2 h-4 w-4" /> {submitLabel}</>
                             )}
                         </Button>
                     </div>

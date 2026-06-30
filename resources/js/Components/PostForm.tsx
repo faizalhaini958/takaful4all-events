@@ -167,7 +167,7 @@ export default function PostForm({
 
                             <div>
                                 <Label htmlFor="slug">Slug *</Label>
-                                <div className="mt-1 flex rounded-md overflow-hidden border border-input focus-within:ring-2 focus-within:ring-ring bg-white">
+                                <div className="mt-1 flex rounded-md overflow-hidden border border-input focus-within:ring-2 focus-within:ring-ring bg-white dark:bg-card">
                                     <span className="px-3 flex items-center text-xs text-muted-foreground bg-muted border-r border-input whitespace-nowrap">
                                         /posts/
                                     </span>
@@ -175,7 +175,7 @@ export default function PostForm({
                                         id="slug"
                                         value={data.slug}
                                         onChange={e => setData('slug', e.target.value)}
-                                        className="flex-1 px-3 py-2 text-sm bg-white outline-none"
+                                        className="flex-1 px-3 py-2 text-sm bg-white dark:bg-card outline-none"
                                     />
                                 </div>
                                 {errors.slug && <p className="text-sm text-red-600 mt-1">{errors.slug}</p>}

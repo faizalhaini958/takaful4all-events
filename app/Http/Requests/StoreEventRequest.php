@@ -30,6 +30,7 @@ class StoreEventRequest extends FormRequest
             'registration_url' => 'nullable|url|max:500',
             'gdrive_link'      => 'nullable|url|max:500',
             'media_id'         => 'nullable|exists:media,id',
+            'mobile_media_id'  => 'nullable|exists:media,id',
             'is_published'     => 'required|boolean',
             'rsvp_enabled'     => 'nullable|boolean',
             'rsvp_deadline'    => 'nullable|date',

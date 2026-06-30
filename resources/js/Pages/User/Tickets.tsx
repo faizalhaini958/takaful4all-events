@@ -107,7 +107,7 @@ export default function Tickets({ registrations, filters }: Props) {
                             className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 ${
                                 status === tab.value
                                     ? 'bg-brand text-white shadow-sm shadow-brand/30'
-                                    : 'bg-white text-gray-600 border border-gray-200 hover:border-brand/50 hover:text-brand'
+                                    : 'bg-white dark:bg-card text-gray-600 dark:text-muted-foreground border border-gray-200 dark:border-border hover:border-brand/50 hover:text-brand'
                             }`}
                         >
                             {tab.label}
@@ -117,25 +117,25 @@ export default function Tickets({ registrations, filters }: Props) {
 
                 {/* ── Search bar ── */}
                 <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search by event name or reference number..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                        className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+                        className="w-full pl-11 pr-4 py-3 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl text-sm dark:text-foreground focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
                     />
                 </div>
 
                 {/* ── Ticket cards or empty state ── */}
                 {registrations.data.length === 0 ? (
-                    <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 py-16 flex flex-col items-center text-center">
+                    <div className="bg-white dark:bg-card rounded-2xl border-2 border-dashed border-gray-200 dark:border-border py-16 flex flex-col items-center text-center">
                         <div className="w-16 h-16 rounded-full bg-brand/10 flex items-center justify-center mb-4">
                             <Ticket className="w-8 h-8 text-brand" />
                         </div>
                         <h3 className="font-semibold text-brand-navy text-lg">No tickets found</h3>
-                        <p className="text-sm text-gray-500 mt-1 max-w-xs">
+                        <p className="text-sm text-gray-500 dark:text-muted-foreground mt-1 max-w-xs">
                             {status ? 'Try a different filter or search.' : 'Register for an event to get your first ticket.'}
                         </p>
                         <Link
@@ -151,7 +151,7 @@ export default function Tickets({ registrations, filters }: Props) {
                             /* ── Ticket card — boarding-pass style ── */
                             <div
                                 key={reg.id}
-                                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                                className="bg-white dark:bg-card rounded-2xl border border-gray-100 dark:border-border shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
                                 <div className="flex flex-col sm:flex-row">
 
@@ -184,12 +184,12 @@ export default function Tickets({ registrations, filters }: Props) {
                                             <h3 className="font-bold text-brand-navy text-base leading-snug">
                                                 {reg.event?.title ?? 'Event'}
                                             </h3>
-                                            <span className={`flex-shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full ${STATUS_COLOR[reg.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                                            <span className={`flex-shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full ${STATUS_COLOR[reg.status] ?? 'bg-gray-100 dark:bg-muted text-gray-600 dark:text-muted-foreground'}`}>
                                                 {getRegistrationStatusLabel(reg.status, reg.payment_status)}
                                             </span>
                                         </div>
 
-                                        <div className="mt-2.5 space-y-1.5 text-sm text-gray-500">
+                                        <div className="mt-2.5 space-y-1.5 text-sm text-gray-500 dark:text-muted-foreground">
                                             {reg.event?.start_at && (
                                                 <div className="flex items-center gap-2">
                                                     <Calendar className="w-3.5 h-3.5 text-brand flex-shrink-0" />
@@ -239,12 +239,12 @@ export default function Tickets({ registrations, filters }: Props) {
                                     </div>
 
                                     {/* Right: price + actions — perforated divider style */}
-                                    <div className="border-t sm:border-t-0 sm:border-l border-dashed border-gray-200 flex sm:flex-col items-center justify-between sm:justify-center gap-3 sm:gap-4 px-5 py-4 sm:w-36 sm:flex-shrink-0">
+                                    <div className="border-t sm:border-t-0 sm:border-l border-dashed border-gray-200 dark:border-border flex sm:flex-col items-center justify-between sm:justify-center gap-3 sm:gap-4 px-5 py-4 sm:w-36 sm:flex-shrink-0">
                                         <div className="text-center">
                                             <p className="text-lg font-bold text-brand-navy">
                                                 {Number(reg.total_amount) > 0 ? `RM ${Number(reg.total_amount).toFixed(2)}` : 'Free'}
                                             </p>
-                                            <p className="text-[11px] text-gray-400 font-mono">{reg.reference_no}</p>
+                                            <p className="text-[11px] text-gray-400 dark:text-muted-foreground font-mono">{reg.reference_no}</p>
                                         </div>
 
                                         {(reg.status === 'confirmed' || reg.status === 'attended') ? (
@@ -282,8 +282,8 @@ export default function Tickets({ registrations, filters }: Props) {
                                             link.active
                                                 ? 'bg-brand text-white'
                                                 : link.url
-                                                    ? 'bg-white border border-gray-200 text-gray-600 hover:border-brand/50 hover:text-brand'
-                                                    : 'text-gray-300 cursor-not-allowed'
+                                                    ? 'bg-white dark:bg-card border border-gray-200 dark:border-border text-gray-600 dark:text-muted-foreground hover:border-brand/50 hover:text-brand'
+                                                    : 'text-gray-300 dark:text-muted-foreground/30 cursor-not-allowed'
                                         }`}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                     />

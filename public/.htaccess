@@ -5,6 +5,61 @@
 
     RewriteEngine On
 
+    # Allow Google verification file
+    RewriteRule ^googled25ffea8a19d9d23\.html$ - [L]
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# ── Gzip compression ───────────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript application/json
+    AddOutputFilterByType DEFLATE application/xml application/rss+xml image/svg+xml
+    AddOutputFilterByType DEFLATE font/ttf font/otf font/opentype application/font-woff
+</IfModule>
+
+# ── Cache-Control headers ──────────────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # Build assets — hashed filenames, safe to cache aggressively
+    <FilesMatch "\.(js|css|woff2?|ttf|svg)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+        ExpiresDefault "access plus 1 year"
+    </FilesMatch>
+
+    # Images — cache 1 month
+    <FilesMatch "\.(ico|jpg|jpeg|png|gif|webp|avif)$">
+        Header set Cache-Control "public, max-age=2592000"
+        ExpiresDefault "access plus 1 month"
+    </FilesMatch>
+
+    # HTML — no cache (Laravel handles dynamic content)
+    <FilesMatch "\.(html|php)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+        ExpiresDefault "access"
+    </FilesMatch>
+</IfModule>
+
+    RewriteEngine On
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

@@ -310,20 +310,20 @@ export default function RichEditor({ value, onChange, placeholder = 'Write somet
                         <>
                             {/* Backdrop to close on outside click */}
                             <div className="fixed inset-0 z-10" onMouseDown={() => setImgPopover(false)} />
-                            <div className="absolute left-0 top-full mt-1 z-20 w-44 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
+                            <div className="absolute left-0 top-full mt-1 z-20 w-44 rounded-lg border border-gray-200 dark:border-border bg-white dark:bg-card shadow-lg overflow-hidden">
                                 <button
                                     type="button"
                                     onMouseDown={e => { e.preventDefault(); fileInputRef.current?.click(); }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-700 hover:bg-brand-light/40 transition-colors"
+                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-700 dark:text-foreground hover:bg-brand-light/40 transition-colors"
                                 >
                                     <ImageIcon className="w-4 h-4 text-brand flex-shrink-0" />
                                     Upload image
                                 </button>
-                                <div className="h-px bg-gray-100" />
+                                <div className="h-px bg-gray-100 dark:bg-border" />
                                 <button
                                     type="button"
                                     onMouseDown={e => { e.preventDefault(); insertImageByUrl(); }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-700 hover:bg-brand-light/40 transition-colors"
+                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-700 dark:text-foreground hover:bg-brand-light/40 transition-colors"
                                 >
                                     <Link2 className="w-4 h-4 text-brand flex-shrink-0" />
                                     Insert by URL

@@ -1,5 +1,5 @@
 import { Link, usePage, Head } from '@inertiajs/react';
-import { useState, useCallback, type PropsWithChildren } from 'react';
+import { useState, useCallback, useEffect, type PropsWithChildren } from 'react';
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 import { Facebook, Linkedin, Instagram, Youtube, Menu, X, UserCircle } from 'lucide-react';
 import { type MenuItem, type SharedProps } from '@/types';
@@ -25,6 +25,8 @@ export default function PublicLayout({ children }: PropsWithChildren) {
     const [loginOpen, setLoginOpen] = useState(false);
     const [registerOpen, setRegisterOpen] = useState(false);
     const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+
+    const activeRecaptchaKey = recaptchaSiteKey;
 
     const switchToLogin = useCallback(() => {
         setRegisterOpen(false);
@@ -59,7 +61,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
             <link rel="alternate" hrefLang="ms" href={currentUrl} />
             <link rel="alternate" hrefLang="x-default" href={currentUrl} />
         </Head>
-        <div className="min-h-screen flex flex-col bg-white text-gray-900">
+        <div className="min-h-screen flex flex-col bg-background text-foreground">
             {/* ── Navbar ── */}
             <header className="sticky top-0 z-50 border-b border-white/5 backdrop-blur-md" style={{ backgroundColor: 'rgba(7,27,42,0.92)' }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
@@ -119,7 +121,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
 
             {/* Drawer panel */}
             <div
-                className={`md:hidden fixed top-0 right-0 z-50 h-full w-72 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                className={`md:hidden fixed top-0 right-0 z-50 h-full w-[min(80vw,288px)] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : 'translate-x-full'}`}
                 style={{ backgroundColor: '#071B2A' }}
             >
                 {/* Drawer header */}
@@ -285,9 +287,9 @@ export default function PublicLayout({ children }: PropsWithChildren) {
         </>
     );
 
-    if (!recaptchaSiteKey) return layout;
+    if (!recaptchaSiteKey || auth?.user) return layout;
     return (
-        <GoogleReCaptchaProvider reCaptchaKey={recaptchaSiteKey} scriptProps={{ defer: true }}>
+        <GoogleReCaptchaProvider reCaptchaKey={activeRecaptchaKey} scriptProps={{ defer: true }}>
             {layout}
         </GoogleReCaptchaProvider>
     );

@@ -4,7 +4,7 @@ import { type Page } from '@/types';
 import { BookOpen, Users, Lightbulb, Phone, Mail, MapPin, type LucideIcon } from 'lucide-react';
 
 const POPPINS = "'Poppins', sans-serif";
-const INTER   = "'Inter', 'DM Sans', sans-serif";
+const INTER   = "'Inter', sans-serif";
 
 interface Props {
     page: Page;
@@ -94,10 +94,10 @@ export default function PageShow({ page, canonicalUrl }: Props) {
 
             {/* ── About content ── */}
             {isAbout && (
-                <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+                <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
                     <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                     <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20">
-                        <div className="prose prose-lg max-w-none text-gray-600 text-center mb-12">
+                        <div className="prose prose-lg max-w-none text-gray-600 dark:text-foreground text-center mb-12">
                             <p>
                                 Conferences and events play a vital role in promoting the growth and development of the takaful industry.
                                 By showcasing innovative products, services, and technologies, these events inspire industry players to
@@ -108,19 +108,19 @@ export default function PageShow({ page, canonicalUrl }: Props) {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                             {AIMS.map(({ Icon, title, desc }) => (
-                                <div key={title} className="bg-white/60 rounded-2xl p-6 text-center hover:shadow-md transition-shadow" style={{ border: '1px solid #c8dfe8' }}>
+                                <div key={title} className="bg-white/60 dark:bg-card/60 rounded-2xl p-6 text-center hover:shadow-md transition-shadow" style={{ border: '1px solid #c8dfe8' }}>
                                     <div className="flex justify-center mb-4">
                                         <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #e6f6fb 0%, #d0eef8 100%)', border: '1px solid #b8d5e2' }}>
                                             <Icon className="w-7 h-7" style={{ color: '#009FBB' }} strokeWidth={1.5} />
                                         </div>
                                     </div>
-                                    <h3 style={{ fontFamily: POPPINS, color: '#071B2A', fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.5rem' }}>{title}</h3>
-                                    <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+                                    <h3 style={{ fontFamily: POPPINS, color: '#071B2A', fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.5rem' }} className="dark:text-foreground">{title}</h3>
+                                    <p className="text-sm text-gray-500 dark:text-muted-foreground leading-relaxed">{desc}</p>
                                 </div>
                             ))}
                         </div>
 
-                        <p className="text-center text-gray-500 italic pt-8" style={{ borderTop: '1px solid #c8dfe8' }}>
+                        <p className="text-center text-gray-500 dark:text-muted-foreground italic pt-8 border-t border-[#c8dfe8] dark:border-border">
                             These gatherings play a crucial role in fostering collaboration, innovation, and progress within the takaful sector.
                         </p>
                     </div>
@@ -129,21 +129,21 @@ export default function PageShow({ page, canonicalUrl }: Props) {
 
             {/* ── Contact content ── */}
             {isContact && (
-                <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+                <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
                 <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                 <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20 space-y-14">
 
                     {/* Contact cards */}
                     <div>
-                        <h2 className="text-xl font-bold text-brand-navy uppercase tracking-widest mb-6 text-center">Contact Us</h2>
+                        <h2 className="text-xl font-bold text-brand-navy dark:text-foreground uppercase tracking-widest mb-6 text-center">Contact Us</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {CONTACTS.map(c => (
-                                <div key={c.category} className="bg-white/60 rounded-2xl p-6 hover:shadow-md transition-shadow" style={{ border: '1px solid #c8dfe8' }}>
+                                <div key={c.category} className="bg-white/60 dark:bg-card/60 rounded-2xl p-6 hover:shadow-md transition-shadow" style={{ border: '1px solid #c8dfe8' }}>
                                     <span className="inline-block text-xs font-semibold uppercase tracking-wider text-brand bg-brand/10 rounded-full px-3 py-1 mb-4">
                                         {c.category}
                                     </span>
-                                    <p className="font-bold text-brand-navy text-lg mb-3">{c.name}</p>
-                                    <div className="space-y-2 text-sm text-gray-500">
+                                    <p className="font-bold text-brand-navy dark:text-foreground text-lg mb-3">{c.name}</p>
+                                    <div className="space-y-2 text-sm text-gray-500 dark:text-muted-foreground">
                                         <a href={`tel:${c.phoneRaw}`} className="flex items-center gap-2 hover:text-brand transition-colors">
                                             <Phone className="w-4 h-4 text-brand shrink-0" strokeWidth={1.5} />
                                             {c.phone}
@@ -163,11 +163,11 @@ export default function PageShow({ page, canonicalUrl }: Props) {
 
                         {/* Google Map */}
                         <div>
-                            <h2 className="text-xl font-bold text-brand-navy uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <h2 className="text-xl font-bold text-brand-navy dark:text-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
                                 <MapPin className="w-5 h-5 text-brand" strokeWidth={1.5} />
                                 Our Location
                             </h2>
-                            <p className="text-sm text-gray-500 mb-4">Malaysian Takaful Association, Kuala Lumpur</p>
+                            <p className="text-sm text-gray-500 dark:text-muted-foreground mb-4">Malaysian Takaful Association, Kuala Lumpur</p>
                             <div className="rounded-2xl overflow-hidden shadow-md border border-brand-light">
                                 <iframe
                                     title="Malaysian Takaful Association"
@@ -184,9 +184,9 @@ export default function PageShow({ page, canonicalUrl }: Props) {
 
                         {/* Send Message form */}
                         <div>
-                            <h2 className="text-xl font-bold text-brand-navy uppercase tracking-widest mb-6">
+                            <h2 className="text-xl font-bold text-brand-navy dark:text-foreground uppercase tracking-widest mb-6">
                                 Have Questions?
-                                <span className="block text-sm font-normal text-gray-400 normal-case tracking-normal mt-1">Send us a message and we'll get back to you.</span>
+                                <span className="block text-sm font-normal text-gray-400 dark:text-muted-foreground normal-case tracking-normal mt-1">Send us a message and we'll get back to you.</span>
                             </h2>
                             <form
                                 onSubmit={e => { e.preventDefault(); }}
@@ -241,16 +241,16 @@ export default function PageShow({ page, canonicalUrl }: Props) {
 
             {/* ── Generic page content ── */}
             {!isAbout && !isContact && (
-                <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+                <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
                     <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                     <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20">
                         {page.content_html ? (
                             <article
-                                className="prose prose-lg max-w-none text-gray-700"
+                                className="prose prose-lg max-w-none text-gray-700 dark:text-foreground"
                                 dangerouslySetInnerHTML={{ __html: page.content_html }}
                             />
                         ) : (
-                            <p className="text-gray-500">No content available.</p>
+                            <p className="text-gray-500 dark:text-muted-foreground">No content available.</p>
                         )}
                     </div>
                 </section>

@@ -36,8 +36,8 @@ export default function OrderDetail({ order }: Props) {
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
-                        <p className="text-sm font-mono text-gray-400">{order.reference_no}</p>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">Order Details</h1>
+                        <p className="text-sm font-mono text-gray-400 dark:text-muted-foreground">{order.reference_no}</p>
                     </div>
                 </div>
 
@@ -50,8 +50,8 @@ export default function OrderDetail({ order }: Props) {
                                 <CardTitle className="text-lg">Event</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
-                                <h3 className="font-semibold text-gray-900 text-lg">{order.event?.title ?? 'Event'}</h3>
-                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                                <h3 className="font-semibold text-gray-900 dark:text-foreground text-lg">{order.event?.title ?? 'Event'}</h3>
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-muted-foreground">
                                     <span className="flex items-center gap-1.5">
                                         <Calendar className="w-4 h-4" />
                                         {order.event?.start_at
@@ -76,37 +76,37 @@ export default function OrderDetail({ order }: Props) {
                                 <CardTitle className="text-lg">Registration Details</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <dl className="grid grid-cols-2 gap-4 text-sm">
+                                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                     <div>
-                                        <dt className="text-gray-500">Name</dt>
-                                        <dd className="font-medium text-gray-900 mt-0.5">{order.name}</dd>
+                                        <dt className="text-gray-500 dark:text-muted-foreground">Name</dt>
+                                        <dd className="font-medium text-gray-900 dark:text-foreground mt-0.5">{order.name}</dd>
                                     </div>
                                     <div>
-                                        <dt className="text-gray-500">Email</dt>
-                                        <dd className="font-medium text-gray-900 mt-0.5">{order.email}</dd>
+                                        <dt className="text-gray-500 dark:text-muted-foreground">Email</dt>
+                                        <dd className="font-medium text-gray-900 dark:text-foreground mt-0.5">{order.email}</dd>
                                     </div>
                                     {order.phone && (
                                         <div>
-                                            <dt className="text-gray-500">Phone</dt>
-                                            <dd className="font-medium text-gray-900 mt-0.5">{order.phone}</dd>
+                                            <dt className="text-gray-500 dark:text-muted-foreground">Phone</dt>
+                                            <dd className="font-medium text-gray-900 dark:text-foreground mt-0.5">{order.phone}</dd>
                                         </div>
                                     )}
                                     {order.company && (
                                         <div>
-                                            <dt className="text-gray-500">Company</dt>
-                                            <dd className="font-medium text-gray-900 mt-0.5">{order.company}</dd>
+                                            <dt className="text-gray-500 dark:text-muted-foreground">Company</dt>
+                                            <dd className="font-medium text-gray-900 dark:text-foreground mt-0.5">{order.company}</dd>
                                         </div>
                                     )}
                                     {order.job_title && (
                                         <div>
-                                            <dt className="text-gray-500">Job Title</dt>
-                                            <dd className="font-medium text-gray-900 mt-0.5">{order.job_title}</dd>
+                                            <dt className="text-gray-500 dark:text-muted-foreground">Job Title</dt>
+                                            <dd className="font-medium text-gray-900 dark:text-foreground mt-0.5">{order.job_title}</dd>
                                         </div>
                                     )}
                                     {order.dietary_requirements && (
                                         <div>
-                                            <dt className="text-gray-500">Dietary Requirements</dt>
-                                            <dd className="font-medium text-gray-900 mt-0.5">{order.dietary_requirements}</dd>
+                                            <dt className="text-gray-500 dark:text-muted-foreground">Dietary Requirements</dt>
+                                            <dd className="font-medium text-gray-900 dark:text-foreground mt-0.5">{order.dietary_requirements}</dd>
                                         </div>
                                     )}
                                 </dl>
@@ -137,9 +137,9 @@ export default function OrderDetail({ order }: Props) {
                                             return (
                                                 <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                                     <div className="flex-1">
-                                                        <p className="font-medium text-gray-900">{p.product?.name ?? 'Product'}</p>
+                                                        <p className="font-medium text-gray-900 dark:text-foreground">{p.product?.name ?? 'Product'}</p>
                                                         {variants.length > 0 && (
-                                                            <div className="text-xs text-gray-500 mt-1">
+                                                            <div className="text-xs text-gray-500 dark:text-muted-foreground mt-1">
                                                                 {variants.length === 1 ? (
                                                                     <p>{variants[0]}</p>
                                                                 ) : (
@@ -156,7 +156,7 @@ export default function OrderDetail({ order }: Props) {
                                                     </div>
                                                     <div className="text-right ml-4 flex-shrink-0">
                                                         <p className="font-medium">RM {Number(p.unit_price).toFixed(2)} × {p.quantity}</p>
-                                                        <p className="text-sm text-gray-500">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</p>
+                                                        <p className="text-sm text-gray-500 dark:text-muted-foreground">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</p>
                                                     </div>
                                                 </div>
                                             );
@@ -177,13 +177,13 @@ export default function OrderDetail({ order }: Props) {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-gray-500">Status</span>
+                                    <span className="text-gray-500 dark:text-muted-foreground">Status</span>
                                     <Badge variant={STATUS_VARIANT[order.status] ?? 'secondary'}>
                                         {order.status}
                                     </Badge>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-gray-500">Payment</span>
+                                    <span className="text-gray-500 dark:text-muted-foreground">Payment</span>
                                     <Badge variant={PAYMENT_VARIANT[order.payment_status] ?? 'outline'}>
                                         {order.payment_status}
                                     </Badge>
@@ -191,20 +191,20 @@ export default function OrderDetail({ order }: Props) {
 
                                 <div className="border-t pt-4 space-y-2">
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Ticket ({order.ticket?.name})</span>
+                                        <span className="text-gray-500 dark:text-muted-foreground">Ticket ({order.ticket?.name})</span>
                                         <span>RM {Number(order.subtotal).toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Qty</span>
+                                        <span className="text-gray-500 dark:text-muted-foreground">Qty</span>
                                         <span>× {order.quantity}</span>
                                     </div>
                                     {Number(order.products_total) > 0 && (
                                         <div className="flex justify-between text-sm">
-                                            <span className="text-gray-500">Products</span>
+                                            <span className="text-gray-500 dark:text-muted-foreground">Products</span>
                                             <span>RM {Number(order.products_total).toFixed(2)}</span>
                                         </div>
                                     )}
-                                    <div className="border-t pt-2 flex justify-between font-semibold text-gray-900">
+                                    <div className="border-t pt-2 flex justify-between font-semibold text-gray-900 dark:text-foreground">
                                         <span>Total</span>
                                         <span>RM {Number(order.total_amount).toFixed(2)}</span>
                                     </div>
@@ -212,18 +212,18 @@ export default function OrderDetail({ order }: Props) {
 
                                 {order.payment_method && (
                                     <div className="text-sm">
-                                        <span className="text-gray-500">Payment Method: </span>
+                                        <span className="text-gray-500 dark:text-muted-foreground">Payment Method: </span>
                                         <span className="font-medium">{order.payment_method}</span>
                                     </div>
                                 )}
                                 {order.payment_reference && (
                                     <div className="text-sm">
-                                        <span className="text-gray-500">Payment Ref: </span>
+                                        <span className="text-gray-500 dark:text-muted-foreground">Payment Ref: </span>
                                         <span className="font-mono text-xs">{order.payment_reference}</span>
                                     </div>
                                 )}
 
-                                <div className="text-sm text-gray-400">
+                                <div className="text-sm text-gray-400 dark:text-muted-foreground">
                                     Ordered on {new Date(order.created_at).toLocaleDateString('en-MY', {
                                         day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
                                     })}
@@ -247,7 +247,7 @@ export default function OrderDetail({ order }: Props) {
                                     <CardTitle className="text-sm">Notes</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-sm text-gray-600">{order.notes}</p>
+                                    <p className="text-sm text-gray-600 dark:text-muted-foreground">{order.notes}</p>
                                 </CardContent>
                             </Card>
                         )}

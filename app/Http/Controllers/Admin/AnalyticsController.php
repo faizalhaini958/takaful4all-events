@@ -8,9 +8,12 @@ use App\Models\AnalyticsEvent;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\PageView;
+use App\Models\Setting;
 use App\Models\VisitorSession;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -209,5 +212,63 @@ class AnalyticsController extends Controller
             ->limit(10)
             ->get()
             ->toArray();
+    }
+
+    /**
+     * Export analytics data as PDF report.
+     */
+    public function exportPdf(Request $request): \Illuminate\Http\Response
+    {
+        $days = (int) $request->query('days', 30);
+        $days = in_array($days, [7, 14, 30, 90]) ? $days : 30;
+        $from = now()->subDays($days)->startOfDay();
+        $to   = now()->endOfDay();
+
+        $dompdfPublicPath = $this->resolveDompdfPublicPath();
+        Config::set('dompdf.public_path', $dompdfPublicPath);
+
+        $pdf = Pdf::setOption('chroot', $dompdfPublicPath)
+            ->setPaper('a4', 'portrait')
+            ->loadView('reports.analytics', [
+                'days'             => $days,
+                'from'             => $from,
+                'to'               => $to,
+                'settings'         => Setting::getGroup('invoicing'),
+                'overview'         => $this->getOverview($from, $to),
+                'topPages'         => $this->getTopPages($from, $to),
+                'deviceBreakdown'  => $this->getDeviceBreakdown($from, $to),
+                'browserBreakdown' => $this->getBrowserBreakdown($from, $to),
+                'topReferrers'     => $this->getTopReferrers($from, $to),
+                'utmSummary'       => $this->getUtmSummary($from, $to),
+                'visitorsOverTime' => $this->getVisitorsOverTime($from, $to),
+                'topEvents'        => $this->getTopEvents($from, $to),
+            ]);
+
+        $filename = 'analytics-report-' . now()->format('Ymd-His') . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Resolve a real public path for DomPDF (shared hosting safe).
+     */
+    private function resolveDompdfPublicPath(): string
+    {
+        $candidates = [
+            env('APP_PUBLIC_PATH'),
+            public_path(),
+            dirname(base_path()) . '/public_html',
+            base_path('../public_html'),
+            storage_path('app/public'),
+            base_path('public'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (!empty($candidate) && is_dir($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return base_path();
     }
 }

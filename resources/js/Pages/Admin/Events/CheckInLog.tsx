@@ -62,7 +62,7 @@ export default function CheckInLog({ event, logs, stats, currentSearch, currentD
             <div className="space-y-4">
                 {/* Header */}
                 <div>
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5 flex-wrap">
+                    <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5 flex-wrap">
                         <Link href="/admin" className="hover:text-foreground transition-colors">Dashboard</Link>
                         <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                         <Link href="/admin/events" className="hover:text-foreground transition-colors">Events</Link>
@@ -71,46 +71,48 @@ export default function CheckInLog({ event, logs, stats, currentSearch, currentD
                         <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                         <span className="text-foreground font-medium">Check-in Log</span>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-2xl font-bold text-foreground">Check-in Log</h1>
+                            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Check-in Log</h1>
                             <p className="text-sm text-muted-foreground truncate">{event.title}</p>
                         </div>
-                        <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                            <Link href={`/admin/events/${event.slug}/check-in`}>
-                                <ScanLine className="w-4 h-4" />
-                                Scanner
-                            </Link>
-                        </Button>
+                        <div className="self-end sm:self-auto">
+                            <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                                <Link href={`/admin/events/${event.slug}/check-in`}>
+                                    <ScanLine className="w-4 h-4" />
+                                    Scanner
+                                </Link>
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-border/60 bg-card p-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total Check-ins</span>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                                <UserCheck className="w-4 h-4 text-primary" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                    <div className="rounded-xl border border-border/60 bg-card p-3 sm:p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total Check-ins</span>
+                            <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-primary/10">
+                                <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                             </div>
                         </div>
-                        <p className="text-3xl font-bold tabular-nums text-foreground">{stats.total}</p>
+                        <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground">{stats.total}</p>
                     </div>
-                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Today</span>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10">
-                                <CalendarDays className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 sm:p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Today</span>
+                            <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-emerald-500/10">
+                                <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400" />
                             </div>
                         </div>
-                        <p className="text-3xl font-bold tabular-nums text-foreground">{stats.today}</p>
+                        <p className="text-2xl sm:text-3xl font-bold tabular-nums text-foreground">{stats.today}</p>
                     </div>
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5">
                     <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="relative flex-1 min-w-[200px] max-w-sm">
+                        <div className="relative flex-1 min-w-0">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                             <Input
                                 placeholder="Search attendee, staff or reference..."
@@ -119,33 +121,33 @@ export default function CheckInLog({ event, logs, stats, currentSearch, currentD
                                 className="pl-9"
                             />
                         </div>
-                        <Button type="submit" variant="secondary" size="sm">Search</Button>
+                        <Button type="submit" variant="secondary" size="sm" className="shrink-0">Search</Button>
                     </form>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
                         <Input
                             type="date"
                             value={dateFrom}
                             onChange={e => { setDateFrom(e.target.value); applyFilters({ date_from: e.target.value }); }}
-                            className="w-36 h-9 text-xs"
+                            className="w-auto min-w-[120px] sm:w-32 h-9 text-xs"
                         />
-                        <span className="text-xs text-muted-foreground">to</span>
+                        <span className="text-xs text-muted-foreground shrink-0">to</span>
                         <Input
                             type="date"
                             value={dateTo}
                             onChange={e => { setDateTo(e.target.value); applyFilters({ date_to: e.target.value }); }}
-                            className="w-36 h-9 text-xs"
+                            className="w-auto min-w-[120px] sm:w-32 h-9 text-xs"
                         />
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground ml-auto">
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground sm:ml-auto">
                         <Users className="w-4 h-4" />
                         <span>{logs.total} log{logs.total !== 1 ? 's' : ''}</span>
                     </div>
                 </div>
 
                 {/* Table */}
-                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
@@ -226,12 +228,14 @@ export default function CheckInLog({ event, logs, stats, currentSearch, currentD
 
                 {/* Pagination */}
                 {logs.total > 0 && (
-                    <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-                        <span className="text-sm text-muted-foreground">
-                            Showing <span className="font-medium text-foreground">{logs.from ?? 0}</span> to <span className="font-medium text-foreground">{logs.to ?? 0}</span> of <span className="font-medium text-foreground">{logs.total}</span>
+                    <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm gap-2">
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                            <span className="hidden sm:inline">Showing </span>
+                            <span className="font-medium text-foreground">{logs.from ?? 0}</span>–<span className="font-medium text-foreground">{logs.to ?? 0}</span>
+                            <span className="hidden sm:inline"> of <span className="font-medium text-foreground">{logs.total}</span></span>
                         </span>
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <span className="hidden sm:inline text-sm text-muted-foreground">
                                 Page <span className="font-medium text-foreground">{logs.current_page}</span> of <span className="font-medium text-foreground">{logs.last_page}</span>
                             </span>
                             <div className="flex items-center gap-1">

@@ -13,12 +13,6 @@ class MediaService
 {
     public function upload(UploadedFile $file, ?string $folder = null): Media
     {
-        // Always use .jpg extension since we convert everything to JPEG
-        $filename  = Str::uuid() . '.jpg';
-        $directory = $folder ?? ('media/' . now()->format('Y/m'));
-        $path      = $directory . '/' . $filename;
-
-        // Process with Intervention Image (resize if wider than 1920px)
         $manager = new ImageManager(new Driver());
         $image   = $manager->read($file->getRealPath());
 
@@ -29,9 +23,22 @@ class MediaService
         $width  = $image->width();
         $height = $image->height();
 
-        Storage::disk('public')->put($path, $image->toJpeg(85));
+        // Preserve original format (WebP stays WebP, PNG stays PNG, etc.)
+        $sourceMime = $file->getMimeType();
+        $format     = $this->resolveFormat($sourceMime);
 
-        // Generate 400×225 thumbnail for listing pages
+        $directory = $folder ?? ('media/' . now()->format('Y/m'));
+        $filename  = Str::uuid() . '.' . $format['extension'];
+        $path      = $directory . '/' . $filename;
+
+        Storage::disk('public')->put(
+            $path,
+            $format['quality'] !== null
+                ? $image->{$format['method']}($format['quality'])
+                : $image->{$format['method']}()
+        );
+
+        // Generate 400×225 thumbnail (always JPEG for universal browser support)
         $thumbnailPath = null;
         if ($image->width() >= 400) {
             $thumbnail     = $manager->read($file->getRealPath());
@@ -41,7 +48,6 @@ class MediaService
             Storage::disk('public')->put($thumbnailPath, $thumbnail->toJpeg(80));
         }
 
-        // Store relative URL path instead of absolute URL
         $url = '/storage/' . $path;
 
         return Media::create([
@@ -49,12 +55,24 @@ class MediaService
             'path'           => $path,
             'thumbnail_path' => $thumbnailPath,
             'url'            => $url,
-            'mime'           => 'image/jpeg',
+            'mime'           => $sourceMime,
             'size'           => Storage::disk('public')->size($path),
             'width'          => $width,
             'height'         => $height,
             'title'          => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
         ]);
+    }
+
+    /**
+     * Map a MIME type to encoding method, file extension, and quality.
+     */
+    private function resolveFormat(string $mime): array
+    {
+        return match ($mime) {
+            'image/webp' => ['method' => 'toWebp', 'extension' => 'webp', 'quality' => 80],
+            'image/png'  => ['method' => 'toPng',  'extension' => 'png',  'quality' => null],
+            default      => ['method' => 'toJpeg', 'extension' => 'jpg',  'quality' => 85],
+        };
     }
 
     public function delete(Media $media): void

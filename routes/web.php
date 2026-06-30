@@ -24,16 +24,19 @@ use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\BroadcastController as AdminBroadcastController;
 use App\Http\Controllers\Admin\ShippingZoneController as AdminShippingZoneController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\ParticipantsController as AdminParticipantsController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
+use App\Http\Controllers\Admin\PromoCodeController as AdminPromoCodeController;
 use App\Http\Controllers\ChipInWebhookController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PromoCodeController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
@@ -60,6 +63,9 @@ Route::get('/storage/{path}', function (string $path) {
 Route::post('/locale/{lang}', [LocaleController::class, 'switch'])->name('locale.switch');
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
+// Promo code validation (AJAX from registration form)
+Route::post('/validate-promo-code', [PromoCodeController::class, 'validate'])->name('promo-code.validate');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
@@ -89,6 +95,11 @@ Route::get('/invoices/{invoiceNumber}/download', [InvoiceController::class, 'dow
 Route::get('/registrations/{registration}/tickets/{attendee_no}/download', [AdminTicketController::class, 'download'])
     ->middleware('auth')
     ->name('tickets.download')
+    ->where('attendee_no', '[0-9]+');
+
+// Ticket download (public — via reference number, available on confirmation page)
+Route::get('/tickets/{reference}/{attendee_no}/download', [AdminTicketController::class, 'downloadByReference'])
+    ->name('tickets.public.download')
     ->where('attendee_no', '[0-9]+');
 
 // ─── User Dashboard Routes ────────────────────────────────────────────────────
@@ -133,10 +144,18 @@ Route::prefix('admin')
         Route::get('analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('analytics/realtime', [AdminAnalyticsController::class, 'realtime'])->name('analytics.realtime');
         Route::get('analytics/events/{slug}', [AdminAnalyticsController::class, 'event'])->name('analytics.event');
+        Route::get('analytics/export-pdf', [AdminAnalyticsController::class, 'exportPdf'])->name('analytics.export-pdf');
 
         // Users
         Route::resource('users', AdminUserController::class)
             ->except(['show']);
+
+        // Broadcast
+        Route::get('broadcast', [AdminBroadcastController::class, 'create'])->name('broadcast.create');
+        Route::post('broadcast', [AdminBroadcastController::class, 'store'])->name('broadcast.store');
+        Route::get('broadcast/search-users', [AdminBroadcastController::class, 'search'])->name('broadcast.search');
+        Route::get('broadcast/sent', [AdminBroadcastController::class, 'index'])->name('broadcast.sent');
+        Route::get('broadcast/sent/{id}', [AdminBroadcastController::class, 'show'])->name('broadcast.sent.show');
 
         // Banners
         Route::get('banners', [AdminBannerController::class, 'index'])->name('banners.index');
@@ -268,6 +287,13 @@ Route::prefix('admin')
         // Activity Log
         Route::get('activity-log', [AdminActivityLogController::class, 'index'])->name('activity-log.index');
         Route::get('activity-log/export', [AdminActivityLogController::class, 'export'])->name('activity-log.export');
+
+        // Promo Codes
+        Route::get('promo-codes', [AdminPromoCodeController::class, 'index'])->name('promo-codes.index');
+        Route::get('promo-codes/{promoCode}', [AdminPromoCodeController::class, 'show'])->name('promo-codes.show');
+        Route::post('promo-codes', [AdminPromoCodeController::class, 'store'])->name('promo-codes.store');
+        Route::put('promo-codes/{promoCode}', [AdminPromoCodeController::class, 'update'])->name('promo-codes.update');
+        Route::delete('promo-codes/{promoCode}', [AdminPromoCodeController::class, 'destroy'])->name('promo-codes.destroy');
 
         // Profile
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');

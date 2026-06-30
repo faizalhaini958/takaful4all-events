@@ -87,10 +87,10 @@ export default function VideoModal({ post, onClose }: Props) {
                 </div>
 
                 {/* Title & description */}
-                <div className="bg-white rounded-b-xl px-5 py-4">
-                    <h2 className="text-base font-bold text-gray-900 leading-snug">{post.title}</h2>
+                <div className="bg-white dark:bg-card rounded-b-xl px-5 py-4">
+                    <h2 className="text-base font-bold text-gray-900 dark:text-foreground leading-snug">{post.title}</h2>
                     {post.excerpt && (
-                        <p className="mt-1.5 text-sm text-gray-500 leading-relaxed">{post.excerpt}</p>
+                        <p className="mt-1.5 text-sm text-gray-500 dark:text-muted-foreground leading-relaxed">{post.excerpt}</p>
                     )}
                 </div>
             </div>

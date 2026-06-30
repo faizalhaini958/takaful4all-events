@@ -332,7 +332,7 @@ export default function Dashboard({ upcomingRegistrations, recentOrders }: Props
                         <div className="mx-4 mb-4 mt-2 rounded-xl p-4" style={{ background: 'linear-gradient(135deg,#002244 0%,#009FBB 100%)' }}>
                             <p className="text-white font-bold text-sm">Discover more events</p>
                             <p className="text-white/60 text-xs mt-0.5">Meetups, conferences & workshops</p>
-                            <Link href="/events" className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold bg-white text-brand-navy px-3 py-1.5 rounded-lg hover:bg-brand-light transition-colors">
+                            <Link href="/events" className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold bg-white dark:bg-card text-brand-navy dark:text-foreground px-3 py-1.5 rounded-lg hover:bg-brand-light dark:hover:bg-muted transition-colors">
                                 Browse <ArrowRight className="w-3 h-3" />
                             </Link>
                         </div>

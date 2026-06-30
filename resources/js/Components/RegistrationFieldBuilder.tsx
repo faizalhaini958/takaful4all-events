@@ -131,7 +131,7 @@ function FieldCard({ field, index, total, prevIsLocked, allKeys, ticketNames, on
                 </span>
 
                 {/* Required / Optional pill */}
-                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${field.required ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-400 border border-gray-200'}`}>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${field.required ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400' : 'bg-gray-50 dark:bg-muted text-gray-400 dark:text-muted-foreground border border-gray-200 dark:border-border'}`}>
                     {field.required ? 'Required' : 'Optional'}
                 </span>
 

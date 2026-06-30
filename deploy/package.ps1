@@ -71,8 +71,9 @@ try {
   Copy-Item (Join-Path $ProjectRoot "composer.json") (Join-Path $StageApp "composer.json") -Force
   Copy-Item (Join-Path $ProjectRoot "composer.lock") (Join-Path $StageApp "composer.lock") -Force
 
-  $AppZip = Join-Path $DistDir "takaful_app.zip"
-  Compress-Archive -Path (Join-Path $StageApp "*") -DestinationPath $AppZip -CompressionLevel Optimal
+$AppZip = Join-Path $DistDir "takaful_app.zip"
+      Add-Type -AssemblyName System.IO.Compression.FileSystem
+      [System.IO.Compression.ZipFile]::CreateFromDirectory($StageApp, $AppZip, 'Optimal', $false)
 
   Write-Host "Preparing public package..." -ForegroundColor Yellow
 
@@ -95,7 +96,7 @@ try {
   Copy-Item $PublicIndexServer (Join-Path $StagePublic "index_server.php") -Force
 
   $PublicZip = Join-Path $DistDir "takaful_public.zip"
-  Compress-Archive -Path (Join-Path $StagePublic "*") -DestinationPath $PublicZip -CompressionLevel Optimal
+      [System.IO.Compression.ZipFile]::CreateFromDirectory($StagePublic, $PublicZip, 'Optimal', $false)
 
   Write-Host "Preparing media package (if exists)..." -ForegroundColor Yellow
 
@@ -103,7 +104,7 @@ try {
   if (Test-Path $MediaSource) {
     Copy-Item $MediaSource (Join-Path $StageMedia "media") -Recurse -Force
     $MediaZip = Join-Path $DistDir "takaful_media.zip"
-    Compress-Archive -Path (Join-Path $StageMedia "media") -DestinationPath $MediaZip -CompressionLevel Optimal
+      [System.IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $StageMedia "media"), $MediaZip, 'Optimal', $false)
   }
 
   Write-Host ""

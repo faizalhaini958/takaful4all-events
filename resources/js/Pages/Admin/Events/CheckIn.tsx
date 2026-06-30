@@ -3,6 +3,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
+import { Switch } from '@/Components/ui/switch';
 import { Link } from '@inertiajs/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, QrCode, Search, CheckCircle2, XCircle, AlertCircle, UserCheck, Camera, Keyboard, Video, VideoOff, FileText } from 'lucide-react';
@@ -96,6 +97,10 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
     const [cameraError, setCameraError] = useState<string | null>(null);
     const [cardFlash, setCardFlash] = useState<'success' | 'error' | null>(null);
     const [scanLog, setScanLog] = useState<ScanLogEntry[]>([]);
+    const [autoConfirm, setAutoConfirm] = useState(false);
+    const [scannerDetected, setScannerDetected] = useState(false);
+    const lastKeyTime = useRef(0);
+    const fastKeyCount = useRef(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const scannerContainerId = 'qr-reader';
@@ -155,6 +160,63 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
         return { reference: raw.toUpperCase(), attendeeNo: null };
     }, []);
 
+    // ── Camera scanner management ──
+
+    const stopCamera = useCallback(async () => {
+        const scanner = scannerRef.current;
+        if (scanner) {
+            try {
+                const state = scanner.getState();
+                if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+                    await scanner.stop();
+                }
+            } catch {
+                // ignore stop errors
+            }
+            try {
+                scanner.clear();
+            } catch {
+                // ignore clear errors
+            }
+            scannerRef.current = null;
+        }
+        setCameraActive(false);
+        setCameraPaused(false);
+    }, []);
+
+    // Pause the scanner (keep camera running, stop decoding) after a QR is found
+    const pauseScanner = useCallback(() => {
+        const scanner = scannerRef.current;
+        if (scanner) {
+            try {
+                const state = scanner.getState();
+                if (state === Html5QrcodeScannerState.SCANNING) {
+                    scanner.pause(true); // true = pause rendering too
+                }
+            } catch {
+                // ignore
+            }
+        }
+        setCameraPaused(true);
+    }, []);
+
+    // Resume decoding after cancel/check-in
+    const resumeScanner = useCallback(() => {
+        const scanner = scannerRef.current;
+        if (scanner) {
+            try {
+                const state = scanner.getState();
+                if (state === Html5QrcodeScannerState.PAUSED) {
+                    scanner.resume();
+                }
+            } catch {
+                // ignore
+            }
+        }
+        setCameraPaused(false);
+        lookupInProgress.current = false;
+    }, []);
+
     const doLookup = useCallback(async (ref: string, attendeeNoArg: number | null = null) => {
         if (!ref.trim() || lookupInProgress.current) return;
 
@@ -165,12 +227,14 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
         setReference(ref);
         setAttendeeNo(attendeeNoArg);
 
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+
         try {
             const res = await fetch(`/admin/events/${event.slug}/check-in/lookup`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                    'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ reference: ref.trim(), attendee_no: attendeeNoArg }),
@@ -179,14 +243,63 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
             const data = await res.json();
 
             if (data.found) {
-                setResult(data.registration);
-                if (data.registration.checked_in_at) {
+                const reg = data.registration;
+                setResult(reg);
+
+                if (reg.checked_in_at) {
                     playBeep('warning');
                     flash('error');
                     setScannerFlash('error');
                     setTimeout(() => setScannerFlash(null), 1200);
-                    setMessage({ type: 'warning', text: `Already checked in at ${new Date(data.registration.checked_in_at).toLocaleTimeString()}` });
-                    setScanLog(prev => [{ id: crypto.randomUUID(), name: data.registration.name, reference: data.registration.reference_no, ticket: data.registration.ticket, status: 'already_in' as const, time: new Date() }, ...prev].slice(0, 10));
+                    setMessage({ type: 'warning', text: `Already checked in at ${new Date(reg.checked_in_at).toLocaleTimeString()}` });
+                    setScanLog(prev => [{ id: crypto.randomUUID(), name: reg.name, reference: reg.reference_no, ticket: reg.ticket, status: 'already_in' as const, time: new Date() }, ...prev].slice(0, 10));
+                } else if (autoConfirm) {
+                    try {
+                        const confirmRes = await fetch(`/admin/events/${event.slug}/check-in/confirm`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ reference: reg.reference_no, attendee_no: reg.attendee_no }),
+                        });
+
+                        const confirmData = await confirmRes.json();
+
+                        if (confirmData.success) {
+                            playBeep('success');
+                            flash('success');
+                            setScannerFlash('success');
+                            setTimeout(() => setScannerFlash(null), 1200);
+                            setMessage({ type: 'success', text: confirmData.message });
+                            setResult({ ...reg, checked_in_at: new Date().toISOString(), status: 'attended' });
+                            setCheckedInCount(c => c + 1);
+                            setScanLog(prev => [{ id: crypto.randomUUID(), name: reg.name, reference: reg.reference_no, ticket: reg.ticket, status: 'checked_in' as const, time: new Date() }, ...prev].slice(0, 10));
+                            // Auto-clear and resume
+                            setTimeout(() => {
+                                setReference('');
+                                setResult(null);
+                                setMessage(null);
+                                resumeScanner();
+                                if (scanMode === 'manual') {
+                                    setTimeout(() => inputRef.current?.focus(), 50);
+                                }
+                            }, 1500);
+                        } else {
+                            playBeep('error');
+                            flash('error');
+                            setScannerFlash('error');
+                            setTimeout(() => setScannerFlash(null), 1200);
+                            setMessage({ type: 'error', text: confirmData.message });
+                        }
+                    } catch {
+                        playBeep('error');
+                        flash('error');
+                        setScannerFlash('error');
+                        setTimeout(() => setScannerFlash(null), 1200);
+                        setMessage({ type: 'error', text: 'Auto-confirm failed. Try manual confirm below.' });
+                    }
                 } else {
                     playBeep('success');
                     flash('success');
@@ -207,7 +320,7 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
             setLoading(false);
             lookupInProgress.current = false;
         }
-    }, [event.slug]);
+    }, [event.slug, autoConfirm, scanMode, resumeScanner]);
 
     async function handleLookup(e?: React.FormEvent) {
         e?.preventDefault();
@@ -267,66 +380,23 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
 
     function handleInputChange(value: string) {
         setReference(value);
+
+        // Detect scanner input: characters arriving < 60ms apart = scanner
+        const now = Date.now();
+        if (lastKeyTime.current > 0 && now - lastKeyTime.current < 60) {
+            fastKeyCount.current++;
+            if (fastKeyCount.current >= 3 && !scannerDetected) {
+                setScannerDetected(true);
+            }
+        } else if (now - lastKeyTime.current > 800) {
+            fastKeyCount.current = 0;
+            setScannerDetected(false);
+        }
+        lastKeyTime.current = now;
+
         const parsed = parseInput(value);
         setAttendeeNo(parsed.attendeeNo);
     }
-
-    // ── Camera scanner management ──
-
-    const stopCamera = useCallback(async () => {
-        const scanner = scannerRef.current;
-        if (scanner) {
-            try {
-                const state = scanner.getState();
-                if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
-                    await scanner.stop();
-                }
-            } catch {
-                // ignore stop errors
-            }
-            try {
-                scanner.clear();
-            } catch {
-                // ignore clear errors
-            }
-            scannerRef.current = null;
-        }
-        setCameraActive(false);
-        setCameraPaused(false);
-    }, []);
-
-    // Pause the scanner (keep camera running, stop decoding) after a QR is found
-    const pauseScanner = useCallback(() => {
-        const scanner = scannerRef.current;
-        if (scanner) {
-            try {
-                const state = scanner.getState();
-                if (state === Html5QrcodeScannerState.SCANNING) {
-                    scanner.pause(true); // true = pause rendering too
-                }
-            } catch {
-                // ignore
-            }
-        }
-        setCameraPaused(true);
-    }, []);
-
-    // Resume decoding after cancel/check-in
-    const resumeScanner = useCallback(() => {
-        const scanner = scannerRef.current;
-        if (scanner) {
-            try {
-                const state = scanner.getState();
-                if (state === Html5QrcodeScannerState.PAUSED) {
-                    scanner.resume();
-                }
-            } catch {
-                // ignore
-            }
-        }
-        setCameraPaused(false);
-        lookupInProgress.current = false;
-    }, []);
 
     // Cancel current scan result and resume camera
     const cancelScan = useCallback(() => {
@@ -457,10 +527,10 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
 
     return (
         <AdminLayout>
-            <div className="max-w-2xl mx-auto space-y-6">
+            <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
                 {/* Header */}
                 <div>
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5 flex-wrap">
+                    <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5 flex-wrap">
                         <Link href="/admin" className="hover:text-foreground transition-colors">Dashboard</Link>
                         <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                         <Link href="/admin/events" className="hover:text-foreground transition-colors">Events</Link>
@@ -469,24 +539,26 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                         <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                         <span className="text-foreground font-medium">Check‑In</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex-1">
-                            <h1 className="text-2xl font-bold text-foreground">Event Check-In</h1>
-                            <p className="text-sm text-muted-foreground">{event.title}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                        <div className="flex-1 min-w-0">
+                            <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">Event Check-In</h1>
+                            <p className="text-sm text-muted-foreground truncate">{event.title}</p>
                         </div>
-                        <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                            <Link href={`/admin/events/${event.slug}/check-in/log`}>
-                                <FileText className="w-4 h-4" />
-                                View Log
-                            </Link>
-                        </Button>
-                        <div className="text-right">
-                            <Badge variant="secondary" className="text-sm">
-                                <UserCheck className="w-4 h-4 mr-1" /> {checkedInCount} checked in
-                            </Badge>
-                            {event.max_attendees && (
-                                <p className="text-xs text-muted-foreground mt-1">{event.max_attendees} capacity</p>
-                            )}
+                        <div className="flex items-center gap-2 self-end sm:self-auto">
+                            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" asChild>
+                                <Link href={`/admin/events/${event.slug}/check-in/log`}>
+                                    <FileText className="w-4 h-4" />
+                                    <span className="hidden sm:inline">View Log</span>
+                                </Link>
+                            </Button>
+                            <div className="text-right shrink-0">
+                                <Badge variant="secondary" className="text-sm whitespace-nowrap">
+                                    <UserCheck className="w-4 h-4 mr-1" /> {checkedInCount} in
+                                </Badge>
+                                {event.max_attendees && (
+                                    <p className="text-xs text-muted-foreground mt-1">{event.max_attendees} capacity</p>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -515,8 +587,9 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                         onClick={() => handleModeSwitch('manual')}
                         className="flex-1"
                     >
-                        <Keyboard className="w-4 h-4 mr-1.5" />
-                        USB / Bluetooth Scanner
+                        <Keyboard className="w-4 h-4 mr-1 sm:mr-1.5" />
+                        <span className="hidden sm:inline">USB / Bluetooth Scanner</span>
+                        <span className="sm:hidden">USB / BT</span>
                     </Button>
                     <Button
                         variant={scanMode === 'camera' ? 'default' : 'outline'}
@@ -524,9 +597,19 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                         onClick={() => handleModeSwitch('camera')}
                         className="flex-1"
                     >
-                        <Camera className="w-4 h-4 mr-1.5" />
-                        Camera Scanner
+                        <Camera className="w-4 h-4 mr-1 sm:mr-1.5" />
+                        <span className="hidden sm:inline">Camera Scanner</span>
+                        <span className="sm:hidden">Camera</span>
                     </Button>
+                </div>
+
+                {/* Auto-confirm toggle */}
+                <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-3 rounded-xl border border-border/60 bg-card">
+                    <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground">Auto-Confirm</p>
+                        <p className="text-xs text-muted-foreground hidden sm:block">Skip manual confirm — check in immediately after scan</p>
+                    </div>
+                    <Switch checked={autoConfirm} onCheckedChange={setAutoConfirm} />
                 </div>
 
                 {/* Manual / USB / Bluetooth Scanner */}
@@ -538,16 +621,29 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <form onSubmit={handleLookup} className="flex gap-2">
+                            {/* Device status indicator */}
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg mb-3 text-xs font-medium transition-colors ${
+                                scannerDetected
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-muted/50 text-muted-foreground border border-border/50'
+                            }`}>
+                                <div className={`w-2 h-2 rounded-full ${scannerDetected ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'}`} />
+                                {scannerDetected ? (
+                                    <span>Scanner device detected — input received from barcode scanner</span>
+                                ) : (
+                                    <span>Waiting for scanner input or manual entry…</span>
+                                )}
+                            </div>
+                            <form onSubmit={handleLookup} className="flex flex-col sm:flex-row gap-2">
                                 <Input
                                     ref={inputRef}
                                     value={reference}
                                     onChange={e => handleInputChange(e.target.value)}
-                                    placeholder="Scan QR code or type reference number (e.g. EVT-20260410-ABCD)"
+                                    placeholder="Scan QR or type reference (e.g. EVT-20260410-ABCD)"
                                     className="flex-1 text-lg"
                                     autoFocus
                                 />
-                                <Button type="submit" disabled={loading || !reference.trim()}>
+                                <Button type="submit" disabled={loading || !reference.trim()} className="sm:w-auto">
                                     <Search className="w-4 h-4 mr-1" /> Look Up
                                 </Button>
                             </form>
@@ -567,6 +663,33 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            {/* Camera status indicator */}
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                                cameraError
+                                    ? 'bg-red-50 text-red-700 border border-red-200'
+                                    : cameraActive && !cameraPaused
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : cameraPaused
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    : 'bg-muted/50 text-muted-foreground border border-border/50'
+                            }`}>
+                                <div className={`w-2 h-2 rounded-full ${
+                                    cameraError ? 'bg-red-500' :
+                                    cameraActive && !cameraPaused ? 'bg-emerald-500 animate-pulse' :
+                                    cameraPaused ? 'bg-amber-500' :
+                                    'bg-muted-foreground/30'
+                                }`} />
+                                {cameraError ? (
+                                    <span>Camera error — see details below</span>
+                                ) : cameraPaused ? (
+                                    <span>QR detected — scanning paused</span>
+                                ) : cameraActive ? (
+                                    <span>Camera active — scanning for QR codes</span>
+                                ) : (
+                                    <span>Camera inactive — press Start to begin scanning</span>
+                                )}
+                            </div>
+
                             {!cameraActive && !cameraError && (
                                 <div className="text-center py-8">
                                     <Video className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
@@ -593,7 +716,7 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                             <div className="relative">
                                 <div
                                     id={scannerContainerId}
-                                    style={{ minHeight: cameraActive ? '300px' : '0', display: cameraActive ? 'block' : 'none' }}
+                                    style={{ minHeight: cameraActive ? '250px' : '0', display: cameraActive ? 'block' : 'none' }}
                                     className={`rounded-lg overflow-hidden transition-all duration-300 ${
                                         scannerFlash === 'success'
                                             ? 'ring-4 ring-emerald-400 ring-offset-2'
@@ -605,9 +728,9 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                                 {/* Paused overlay */}
                                 {cameraPaused && (
                                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg pointer-events-none">
-                                        <div className="bg-white/90 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                                        <div className="bg-white/90 dark:bg-card/90 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
                                             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            <span className="text-sm font-semibold text-gray-800">QR Detected — Paused</span>
+                                            <span className="text-sm font-semibold text-gray-800 dark:text-foreground">QR Detected — Paused</span>
                                         </div>
                                     </div>
                                 )}
@@ -647,14 +770,14 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                 {/* Result */}
                 {result && (
                     <Card className={`transition-all duration-300 ${cardFlash === 'success' ? 'ring-2 ring-emerald-400' : cardFlash === 'error' ? 'ring-2 ring-red-400' : ''}`}>
-                        <CardContent className="p-6 space-y-4">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <h3 className="text-xl font-bold">{result.name}</h3>
-                                    <p className="text-sm text-muted-foreground">{result.email}</p>
+                        <CardContent className="p-4 sm:p-6 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                                <div className="min-w-0">
+                                    <h3 className="text-lg sm:text-xl font-bold truncate">{result.name}</h3>
+                                    <p className="text-sm text-muted-foreground truncate">{result.email}</p>
                                     {result.phone && <p className="text-sm text-muted-foreground">{result.phone}</p>}
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 flex-shrink-0">
                                     <Badge {...registrationStatusBadge(result.status as any)}>
                                         {result.status}
                                     </Badge>
@@ -664,10 +787,10 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 text-sm border-t pt-4">
-                                <div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm border-t pt-4">
+                                <div className="min-w-0">
                                     <p className="text-muted-foreground">Reference</p>
-                                    <p className="font-mono font-medium">{result.reference_no}</p>
+                                    <p className="font-mono font-medium text-xs sm:text-sm truncate">{result.reference_no}</p>
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground">Ticket</p>
@@ -714,7 +837,7 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                                 return (
                                     <div className="border-t pt-4 space-y-3 text-sm">
                                         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Registration Details</p>
-                                        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                                             {regular.map(([key, value]) => (
                                                 <div key={key}>
                                                     <p className="text-xs text-muted-foreground">{formatLabel(key)}</p>
@@ -791,7 +914,7 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                         <CardContent className="p-0 pb-2">
                             <div className="divide-y max-h-56 overflow-y-auto">
                                 {scanLog.map(entry => (
-                                    <div key={entry.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                                    <div key={entry.id} className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 text-sm">
                                         <div className={`w-2 h-2 rounded-full flex-shrink-0 ${entry.status === 'checked_in' ? 'bg-emerald-500' :
                                                 entry.status === 'already_in' ? 'bg-amber-400' :
                                                     'bg-red-400'
@@ -801,7 +924,7 @@ export default function EventCheckIn({ event, checked_in_count }: Props) {
                                             <p className="text-xs text-muted-foreground font-mono">{entry.reference}</p>
                                         </div>
                                         {entry.ticket && (
-                                            <span className="text-xs bg-muted px-2 py-0.5 rounded flex-shrink-0">{entry.ticket}</span>
+                                            <span className="hidden sm:inline text-xs bg-muted px-2 py-0.5 rounded flex-shrink-0">{entry.ticket}</span>
                                         )}
                                         <div className="text-right flex-shrink-0">
                                             <p className={`text-xs font-medium ${entry.status === 'checked_in' ? 'text-emerald-600' :

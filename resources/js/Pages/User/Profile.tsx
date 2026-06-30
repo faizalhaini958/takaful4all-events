@@ -80,21 +80,21 @@ export default function Profile() {
                 </div>
 
                 {/* ── Details card ── */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-50">
-                        <h3 className="text-sm font-bold text-brand-navy uppercase tracking-wide">Account Details</h3>
+                <div className="bg-white dark:bg-card rounded-2xl border border-gray-100 dark:border-border shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-50 dark:border-border">
+                        <h3 className="text-sm font-bold text-brand-navy dark:text-foreground uppercase tracking-wide">Account Details</h3>
                     </div>
-                    <div className="divide-y divide-gray-50">
+                    <div className="divide-y divide-gray-50 dark:divide-border">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4 gap-1">
-                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Full Name</span>
-                            <span className="text-sm font-semibold text-gray-800">{user.name}</span>
+                            <span className="text-xs font-semibold text-gray-400 dark:text-muted-foreground uppercase tracking-wide">Full Name</span>
+                            <span className="text-sm font-semibold text-gray-800 dark:text-foreground truncate">{user.name}</span>
                         </div>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4 gap-1">
-                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Email Address</span>
-                            <span className="text-sm font-semibold text-gray-800 break-all">{user.email}</span>
+                            <span className="text-xs font-semibold text-gray-400 dark:text-muted-foreground uppercase tracking-wide">Email Address</span>
+                            <span className="text-sm font-semibold text-gray-800 dark:text-foreground break-all">{user.email}</span>
                         </div>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4 gap-1">
-                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Email Status</span>
+                            <span className="text-xs font-semibold text-gray-400 dark:text-muted-foreground uppercase tracking-wide">Email Status</span>
                             {user.email_verified_at ? (
                                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full w-fit">
                                     <BadgeCheck className="w-3.5 h-3.5" /> Verified
@@ -105,33 +105,33 @@ export default function Profile() {
                         </div>
                         {memberSince && (
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4 gap-1">
-                                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Member Since</span>
-                                <span className="text-sm font-semibold text-gray-800">{memberSince}</span>
+                                <span className="text-xs font-semibold text-gray-400 dark:text-muted-foreground uppercase tracking-wide">Member Since</span>
+                                <span className="text-sm font-semibold text-gray-800 dark:text-foreground">{memberSince}</span>
                             </div>
                         )}
                     </div>
                 </div>
 
                 {/* ── Quick links ── */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Link href={route('user.tickets')}
-                        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:border-brand/30 hover:shadow-md transition-all group">
+                        className="bg-white dark:bg-card rounded-2xl border border-gray-100 dark:border-border shadow-sm p-5 flex items-center gap-4 hover:border-brand/30 hover:shadow-md transition-all group">
                         <div className="w-11 h-11 rounded-xl bg-brand/10 flex items-center justify-center flex-shrink-0 group-hover:bg-brand/15 transition-colors">
                             <Ticket className="w-5 h-5 text-brand" />
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-brand-navy">My Tickets</p>
-                            <p className="text-xs text-gray-400">View all registrations</p>
+                            <p className="text-sm font-bold text-brand-navy dark:text-foreground">My Tickets</p>
+                            <p className="text-xs text-gray-400 dark:text-muted-foreground">View all registrations</p>
                         </div>
                     </Link>
                     <Link href={route('user.orders')}
-                        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:border-brand/30 hover:shadow-md transition-all group">
+                        className="bg-white dark:bg-card rounded-2xl border border-gray-100 dark:border-border shadow-sm p-5 flex items-center gap-4 hover:border-brand/30 hover:shadow-md transition-all group">
                         <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0 group-hover:bg-purple-100 transition-colors">
                             <ShoppingBag className="w-5 h-5 text-purple-500" />
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-brand-navy">My Orders</p>
-                            <p className="text-xs text-gray-400">Purchase history</p>
+                            <p className="text-sm font-bold text-brand-navy dark:text-foreground">My Orders</p>
+                            <p className="text-xs text-gray-400 dark:text-muted-foreground">Purchase history</p>
                         </div>
                     </Link>
                 </div>

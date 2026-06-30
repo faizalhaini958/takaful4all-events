@@ -67,22 +67,34 @@ export default function EventCard({ event }: Props) {
         >
             {/* Background image — blurred fill */}
             {event.media && (
-                <img
-                    src={event.media.url}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-md opacity-60"
-                />
+                <picture>
+                    {event.mobile_media?.url && <source media="(max-width: 767px)" srcSet={event.mobile_media.url} />}
+                    <img
+                        src={event.media.url}
+                        alt=""
+                        aria-hidden="true"
+                        width={400}
+                        height={533}
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover scale-110 blur-md opacity-60"
+                    />
+                </picture>
             )}
 
             {/* Foreground image — full, unclipped */}
             {event.media ? (
-                <img
-                    src={event.media.url}
-                    alt={event.media.alt ?? event.title}
-                    loading="lazy"
-                    className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                />
+                <picture>
+                    {event.mobile_media?.url && <source media="(max-width: 767px)" srcSet={event.mobile_media.url} />}
+                    <img
+                        src={event.media.url}
+                        alt={event.media.alt ?? event.title}
+                        loading="lazy"
+                        width={400}
+                        height={533}
+                        decoding="async"
+                        className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                    />
+                </picture>
             ) : (
                 <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-3"
                     style={{ background: 'linear-gradient(145deg, #0d3352 0%, #071B2A 100%)' }}>

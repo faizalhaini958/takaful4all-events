@@ -164,7 +164,7 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
                 </div>
 
                 {/* Orders Table */}
-                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
@@ -351,7 +351,7 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
 
                                 {/* Pricing */}
                                 <div className="rounded-lg border border-border/40 overflow-hidden">
-                                    <div className="grid grid-cols-3 text-center divide-x divide-border/40">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 text-center divide-x divide-border/40">
                                         <div className="p-3">
                                             <p className="text-xs text-muted-foreground">Qty</p>
                                             <p className="text-lg font-bold tabular-nums">{selectedOrder.quantity}</p>
@@ -372,7 +372,7 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
                                 {/* Buyer */}
                                 <div>
                                     <p className="text-[11px] font-bold uppercase text-primary tracking-widest mb-2">Buyer</p>
-                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                                         <div className="flex items-start gap-2">
                                             <User className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                                             <div>
@@ -393,7 +393,7 @@ export default function OrdersIndex({ orders, stats, events, products, currentSe
                                 </div>
 
                                 {/* Event & Date */}
-                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                                     {selectedOrder.registration?.event && (
                                         <div className="flex items-start gap-2">
                                             <CalendarDays className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />

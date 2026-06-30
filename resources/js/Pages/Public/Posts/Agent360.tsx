@@ -1,13 +1,11 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import PostCard from '@/Components/PostCard';
-import VideoModal from '@/Components/VideoModal';
 import { Link, Head } from '@inertiajs/react';
-import { useState } from 'react';
 import { Video } from 'lucide-react';
 import { type Post, type PaginatedData } from '@/types';
 
 const POPPINS = "'Poppins', sans-serif";
-const INTER   = "'Inter', 'DM Sans', sans-serif";
+const INTER   = "'Inter', sans-serif";
 
 interface Props {
     posts: PaginatedData<Post>;
@@ -15,8 +13,6 @@ interface Props {
 }
 
 export default function Agent360Index({ posts, canonicalUrl }: Props) {
-    const [activePost, setActivePost] = useState<Post | null>(null);
-
     return (
         <PublicLayout>
             <Head>
@@ -32,7 +28,6 @@ export default function Agent360Index({ posts, canonicalUrl }: Props) {
                 <meta name="twitter:title" content="Agent360 Webinars | Takaful4All Events" />
                 <meta name="twitter:description" content="Exclusive webinars tailored for takaful agents. Watch on-demand sessions from Takaful4All's Agent360 series." />
             </Head>
-            <VideoModal post={activePost} onClose={() => setActivePost(null)} />
 
             {/* ── Hero ── */}
             <section className="relative -mt-16 overflow-hidden" style={{ background: '#071B2A' }}>
@@ -51,14 +46,14 @@ export default function Agent360Index({ posts, canonicalUrl }: Props) {
             </section>
 
             {/* ── Content ── */}
-            <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #EBF5FA 0%, #ddeef6 100%)' }}>
+            <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
                 {/* Dot grid */}
                 <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20">
                     {posts.data.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {posts.data.map(post => (
-                                <PostCard key={post.id} post={post} onClick={() => setActivePost(post)} />
+                                <PostCard key={post.id} post={post} />
                             ))}
                         </div>
                     ) : (

@@ -129,7 +129,7 @@ function BannerFormDialog({
                         {errors.image && <p className="text-sm text-red-600 mt-1">{errors.image}</p>}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <Label htmlFor="button_text">Button Text <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
                             <Input
@@ -155,7 +155,7 @@ function BannerFormDialog({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <Label htmlFor="sort_order">Sort Order</Label>
                             <Input
