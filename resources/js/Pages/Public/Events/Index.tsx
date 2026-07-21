@@ -12,8 +12,11 @@ const INTER   = "'Inter', sans-serif";
 interface Props {
     events: PaginatedData<Event>;
     currentStatus: string;
+    currentCategory: string | null;
     banners: Banner[];
     canonicalUrl: string;
+    metaTitle: string;
+    metaDescription: string;
 }
 
 const STATUS_FILTERS = [
@@ -31,29 +34,51 @@ const CATEGORY_LINKS = [
     { key: 'exhibition',    label: 'Exhibition',    Icon: Globe2 },
 ];
 
-export default function EventsIndex({ events, currentStatus, banners, canonicalUrl }: Props) {
+function getCategoryLabel(key: string | null): string {
+    if (!key) return '';
+    return CATEGORY_LINKS.find(c => c.key === key)?.label ?? key;
+}
+
+export default function EventsIndex({ events, currentStatus, currentCategory, banners, canonicalUrl, metaTitle, metaDescription }: Props) {
     const { t } = useTranslation();
     const ogImage = banners[0]?.image_url ?? null;
+    const categoryLabel = getCategoryLabel(currentCategory);
 
     const handleFilter = (status: string) => {
-        router.get('/events', status !== 'all' ? { status } : {}, { preserveScroll: false });
+        const params: Record<string, string> = {};
+        if (status !== 'all') params.status = status;
+        if (currentCategory) params.category = currentCategory;
+        router.get('/events', Object.keys(params).length > 0 ? params : {}, { preserveScroll: false });
     };
+
+    const heroTitle = categoryLabel ? `${categoryLabel} Events` : 'Browse Events';
+    const heroSubtitle = categoryLabel
+        ? `Explore ${categoryLabel.toLowerCase()} events from the Malaysian Takaful Association.`
+        : 'Explore takaful conferences, workshops, sports events and more — all in one place.';
+
+    const sectionTitle = (() => {
+        const statusPart = currentStatus === 'upcoming' ? 'Upcoming' : currentStatus === 'past' ? 'Past' : 'All';
+        if (categoryLabel) return `${statusPart} ${categoryLabel} Events`;
+        if (currentStatus === 'upcoming') return 'Upcoming Events';
+        if (currentStatus === 'past') return 'Past Events';
+        return 'All Events';
+    })();
 
     return (
         <PublicLayout>
             <Head>
-                <title>Events | Takaful4All Events</title>
-                <meta name="description" content="Browse all upcoming and past events by Takaful4All — conferences, webinars, workshops and more." />
+                <title>{metaTitle}</title>
+                <meta name="description" content={metaDescription} />
                 <link rel="canonical" href={canonicalUrl} />
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content={canonicalUrl} />
-                <meta property="og:title" content="Events | Takaful4All Events" />
-                <meta property="og:description" content="Browse all upcoming and past events by Takaful4All — conferences, webinars, workshops and more." />
+                <meta property="og:title" content={metaTitle} />
+                <meta property="og:description" content={metaDescription} />
                 <meta property="og:site_name" content="Takaful4All Events" />
                 {ogImage ? <meta property="og:image" content={ogImage} /> : null}
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content="Events | Takaful4All Events" />
-                <meta name="twitter:description" content="Browse all upcoming and past events by Takaful4All — conferences, webinars, workshops and more." />
+                <meta name="twitter:title" content={metaTitle} />
+                <meta name="twitter:description" content={metaDescription} />
                 {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
                     '@context': 'https://schema.org',
@@ -92,10 +117,10 @@ export default function EventsIndex({ events, currentStatus, banners, canonicalU
                     style={{ background: 'radial-gradient(ellipse at center, #18C8FF 0%, transparent 70%)' }} />
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
                     <h1 style={{ color: '#fff', fontFamily: POPPINS, fontSize: '2.25rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-                        Browse Events
+                        {heroTitle}
                     </h1>
                     <p className="mt-3" style={{ color: 'rgba(255,255,255,0.6)', fontFamily: INTER, fontSize: '1.125rem' }}>
-                        Explore takaful conferences, workshops, sports events and more — all in one place.
+                        {heroSubtitle}
                     </p>
                 </div>
             </section>
@@ -133,7 +158,7 @@ export default function EventsIndex({ events, currentStatus, banners, canonicalU
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-[3px] h-7 rounded-full" style={{ background: 'linear-gradient(180deg, #18C8FF, #009FBB)' }} />
                             <span style={{ fontFamily: POPPINS, fontSize: '1.15rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }} className="text-[#071B2A] dark:text-foreground">
-                                {currentStatus === 'upcoming' ? 'Upcoming Events' : currentStatus === 'past' ? 'Past Events' : 'All Events'}
+                                {sectionTitle}
                             </span>
                         </div>
                         {/* Status filters */}
@@ -163,7 +188,7 @@ export default function EventsIndex({ events, currentStatus, banners, canonicalU
                         <div className="flex flex-wrap gap-2">
                             {CATEGORY_LINKS.map(({ key, label, Icon }) => (
                                 <Link key={key}
-                                    href={`/events?category=${key}`}
+                                    href={`/events?category=${key}${currentStatus !== 'all' ? `&status=${currentStatus}` : ''}`}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/60 dark:bg-card text-[#071B2A]/65 dark:text-muted-foreground border border-white/90 dark:border-border"
                                     style={{ fontFamily: INTER }}>
                                     <Icon className="w-3.5 h-3.5" style={{ color: '#009FBB' }} strokeWidth={2} />

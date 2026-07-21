@@ -27,7 +27,8 @@ export default defineConfig({
                         if (id.includes('@tiptap')) return 'vendor-tiptap';
                         if (id.includes('embla-carousel')) return 'vendor-embla';
                         if (id.includes('react-google-recaptcha')) return 'vendor-recaptcha';
-                        if (id.includes('lucide-react') || id.includes('@radix-ui') || id.includes('@headlessui')) return 'vendor-ui';
+                        if (id.includes('lucide-react')) return 'vendor-lucide';
+                        if (id.includes('@radix-ui') || id.includes('@headlessui')) return 'vendor-ui';
                         if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler') || id.includes('@inertiajs')) return 'vendor-framework';
                     }
                 },

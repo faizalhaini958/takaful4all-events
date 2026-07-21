@@ -1,13 +1,16 @@
 import { Link, usePage, Head } from '@inertiajs/react';
-import { useState, useCallback, useEffect, type PropsWithChildren } from 'react';
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
+import { useState, useCallback, lazy, Suspense, type PropsWithChildren } from 'react';
 import { Facebook, Linkedin, Instagram, Youtube, Menu, X, UserCircle } from 'lucide-react';
 import { type MenuItem, type SharedProps } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
-import LoginModal from '@/Components/LoginModal';
-import RegisterModal from '@/Components/RegisterModal';
-import ForgotPasswordModal from '@/Components/ForgotPasswordModal';
 import LanguageSwitcher from '@/Components/LanguageSwitcher';
+
+const LoginModal = lazy(() => import('@/Components/LoginModal'));
+const RegisterModal = lazy(() => import('@/Components/RegisterModal'));
+const ForgotPasswordModal = lazy(() => import('@/Components/ForgotPasswordModal'));
+const GoogleReCaptchaProvider = lazy(() =>
+    import('react-google-recaptcha-v3').then(m => ({ default: m.GoogleReCaptchaProvider }))
+);
 
 const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? '';
 
@@ -25,8 +28,14 @@ export default function PublicLayout({ children }: PropsWithChildren) {
     const [loginOpen, setLoginOpen] = useState(false);
     const [registerOpen, setRegisterOpen] = useState(false);
     const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+    const [authTouched, setAuthTouched] = useState(false);
 
     const activeRecaptchaKey = recaptchaSiteKey;
+
+    const openLogin = useCallback(() => {
+        setAuthTouched(true);
+        setLoginOpen(true);
+    }, []);
 
     const switchToLogin = useCallback(() => {
         setRegisterOpen(false);
@@ -77,7 +86,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                         ))}
                         <LanguageSwitcher />
                         {auth?.user ? (
-                            ['admin', 'editor', 'checkin_staff'].includes(auth.user.role) ? (
+                            ['admin', 'checkin_staff'].includes(auth.user.role) ? (
                                 <Link href="/admin" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[#071B2A] text-xs font-bold" style={{ background: 'linear-gradient(135deg, #18C8FF, #8BE9E0)' }}>
                                     <UserCircle className="w-4 h-4" />
                                     {t('nav.management')}
@@ -90,7 +99,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                             )
                         ) : (
                             <button
-                                onClick={() => setLoginOpen(true)}
+                                onClick={openLogin}
                                 className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-[#071B2A] text-xs font-bold cursor-pointer transition-opacity hover:opacity-90"
                                 style={{ background: 'linear-gradient(135deg, #18C8FF, #8BE9E0)' }}
                             >
@@ -154,7 +163,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                             <LanguageSwitcher />
                         </div>
                         {auth?.user ? (
-                            ['admin', 'editor', 'checkin_staff'].includes(auth.user.role) ? (
+                            ['admin', 'checkin_staff'].includes(auth.user.role) ? (
                                 <Link
                                     href="/admin"
                                     onClick={() => setMobileOpen(false)}
@@ -178,7 +187,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                             <button
                                 onClick={() => {
                                     setMobileOpen(false);
-                                    setLoginOpen(true);
+                                    openLogin();
                                 }}
                                 className="flex items-center justify-center gap-2 py-3 px-3 rounded-md text-sm font-bold text-[#071B2A] w-full cursor-pointer"
                                 style={{ background: 'linear-gradient(135deg, #18C8FF, #8BE9E0)' }}
@@ -190,26 +199,49 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                 </nav>
             </div>
 
-            {/* ── Auth Modals ── */}
-            {!auth?.user && (
-                <>
-                    <LoginModal
-                        open={loginOpen}
-                        onOpenChange={setLoginOpen}
-                        onSwitchToRegister={switchToRegister}
-                        onSwitchToForgotPassword={switchToForgotPassword}
-                    />
-                    <RegisterModal
-                        open={registerOpen}
-                        onOpenChange={setRegisterOpen}
-                        onSwitchToLogin={switchToLogin}
-                    />
-                    <ForgotPasswordModal
-                        open={forgotPasswordOpen}
-                        onOpenChange={setForgotPasswordOpen}
-                        onSwitchToLogin={switchToLogin}
-                    />
-                </>
+            {/* ── Auth Modals (lazy — only mount after user touches login) ── */}
+            {!auth?.user && authTouched && (
+                <Suspense fallback={null}>
+                    {recaptchaSiteKey ? (
+                        <GoogleReCaptchaProvider reCaptchaKey={activeRecaptchaKey} scriptProps={{ defer: true }}>
+                            <LoginModal
+                                open={loginOpen}
+                                onOpenChange={setLoginOpen}
+                                onSwitchToRegister={switchToRegister}
+                                onSwitchToForgotPassword={switchToForgotPassword}
+                            />
+                            <RegisterModal
+                                open={registerOpen}
+                                onOpenChange={setRegisterOpen}
+                                onSwitchToLogin={switchToLogin}
+                            />
+                            <ForgotPasswordModal
+                                open={forgotPasswordOpen}
+                                onOpenChange={setForgotPasswordOpen}
+                                onSwitchToLogin={switchToLogin}
+                            />
+                        </GoogleReCaptchaProvider>
+                    ) : (
+                        <>
+                            <LoginModal
+                                open={loginOpen}
+                                onOpenChange={setLoginOpen}
+                                onSwitchToRegister={switchToRegister}
+                                onSwitchToForgotPassword={switchToForgotPassword}
+                            />
+                            <RegisterModal
+                                open={registerOpen}
+                                onOpenChange={setRegisterOpen}
+                                onSwitchToLogin={switchToLogin}
+                            />
+                            <ForgotPasswordModal
+                                open={forgotPasswordOpen}
+                                onOpenChange={setForgotPasswordOpen}
+                                onSwitchToLogin={switchToLogin}
+                            />
+                        </>
+                    )}
+                </Suspense>
             )}
 
             {/* ── Page content ── */}
@@ -287,10 +319,5 @@ export default function PublicLayout({ children }: PropsWithChildren) {
         </>
     );
 
-    if (!recaptchaSiteKey || auth?.user) return layout;
-    return (
-        <GoogleReCaptchaProvider reCaptchaKey={activeRecaptchaKey} scriptProps={{ defer: true }}>
-            {layout}
-        </GoogleReCaptchaProvider>
-    );
+    return layout;
 }

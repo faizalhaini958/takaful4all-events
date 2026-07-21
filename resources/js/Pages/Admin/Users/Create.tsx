@@ -9,11 +9,7 @@ export default function UserCreate() {
         name: '',
         email: '',
         password: '',
-        role: 'public' as 'admin' | 'editor' | 'checkin_staff' | 'company' | 'public',
-        company_name: '',
-        company_registration_no: '',
-        company_address: '',
-        company_phone: '',
+        role: 'public' as 'admin' | 'checkin_staff' | 'public',
     });
 
     const submit: FormEventHandler = e => {

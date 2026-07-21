@@ -41,9 +41,7 @@ interface PaginatedUsers {
 interface Stats {
     total_users: number;
     total_admin: number;
-    total_editor: number;
     total_checkin_staff: number;
-    total_company: number;
     total_public: number;
     total_event_registrants: number;
 }

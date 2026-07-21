@@ -345,7 +345,7 @@ export interface PaginatedData<T> {
 
 // ─── Auth / User ──────────────────────────────────────────────────────────────
 
-export type UserRole = 'admin' | 'editor' | 'checkin_staff' | 'company' | 'public';
+export type UserRole = 'admin' | 'checkin_staff' | 'public';
 
 export interface AuthUser {
     id: number;
@@ -448,6 +448,69 @@ export interface DashboardStats {
     media: number;
 }
 
+export interface TrendPoint {
+    date: string;
+    count: number;
+}
+
+export interface RevenuePoint {
+    date: string;
+    amount: number;
+}
+
+export interface CategoryBreakdown {
+    event_category: string;
+    count: number;
+}
+
+export interface StatusBreakdown {
+    status: string;
+    count: number;
+}
+
+export interface RecentRegistration {
+    id: number;
+    name: string;
+    email: string;
+    event: { title: string; slug: string } | null;
+    status: RegistrationStatus;
+    total_amount: number;
+    created_at: string;
+}
+
+export interface MetricComparison {
+    current: number;
+    previous: number;
+    delta: number;
+    change_pct: number | null;
+}
+
+export interface MonthOverMonth {
+    events: MetricComparison;
+    registrations: MetricComparison;
+    revenue: MetricComparison;
+}
+
+export interface AnalyticsSnapshot {
+    today_visits: number;
+    today_page_views: number;
+    active_visitors: number;
+    top_pages: { url: string; views: number }[];
+    daily_visitors: { date: string; sessions: number }[];
+}
+
+export interface DashboardData {
+    stats: DashboardStats;
+    monthOverMonth: MonthOverMonth;
+    registrationTrend: TrendPoint[];
+    revenueTrend: RevenuePoint[];
+    eventCategoryBreakdown: CategoryBreakdown[];
+    registrationStatusBreakdown: StatusBreakdown[];
+    recentRegistrations: RecentRegistration[];
+    recentEvents: (Event & { registrations_count?: number })[];
+    analyticsSnapshot: AnalyticsSnapshot;
+}
+
 // ─── Shared Inertia page props ────────────────────────────────────────────────
 
 export interface SharedProps extends Record<string, unknown> {
@@ -463,6 +526,51 @@ export interface SharedProps extends Record<string, unknown> {
     locale: string;
     availableLocales: Array<{ code: string; name: string }>;
     currentUrl: string;
+    unreadNotificationsCount: number;
+}
+
+// ─── Messaging ────────────────────────────────────────────────────────────────
+
+export interface Conversation {
+    id: number;
+    user_id: number;
+    event_id: number | null;
+    subject: string;
+    status: 'open' | 'closed';
+    last_message_at: string | null;
+    user?: AuthUser;
+    event?: Event | null;
+    messages?: Message[];
+    latest_message?: Message | null;
+    unread_count?: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Message {
+    id: number;
+    conversation_id: number;
+    sender_id: number;
+    body: string;
+    is_read: boolean;
+    sender?: AuthUser;
+    created_ago?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface DatabaseNotification {
+    id: string;
+    type: string;
+    data: {
+        title: string;
+        body: string;
+        action_url: string;
+        icon: string;
+    };
+    read_at: string | null;
+    created_at: string;
+    created_ago: string;
 }
 
 // ─── PageProps (used by Breeze-generated pages) ───────────────────────────────

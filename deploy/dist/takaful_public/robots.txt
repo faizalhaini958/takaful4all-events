@@ -1,2 +1,25 @@
 User-agent: *
-Disallow:
+
+# Allow public pages
+Allow: /
+Allow: /events
+Allow: /events/*/
+Allow: /webinars
+Allow: /agent360
+Allow: /content
+Allow: /about
+Allow: /contact
+
+# Block private / transactional pages
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /payment/
+Disallow: /register
+Disallow: /events/*/register/confirmation/
+Disallow: /storage/
+Disallow: /track
+Disallow: /locale/
+Disallow: /invoices/
+Disallow: /registrations/
+
+Sitemap: https://events-v2.takaful4all.org/sitemap.xml

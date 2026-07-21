@@ -1,0 +1,1 @@
+import{r,v as o}from"./vendor-framework-KIkiYcsT.js";function i(){return{track:r.useCallback((t,a,e,n)=>{typeof window<"u"&&window.location.pathname.startsWith("/admin")||o.post("/track",{event_type:t,event_category:a,event_label:e??null,event_data:n??null}).catch(()=>{})},[])}}export{i as u};

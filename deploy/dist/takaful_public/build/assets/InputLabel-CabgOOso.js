@@ -1,0 +1,1 @@
+import{j as n}from"./vendor-framework-KIkiYcsT.js";function a({value:t,className:e="",children:r,...o}){return n.jsx("label",{...o,className:"block text-sm font-medium text-gray-700 dark:text-foreground "+e,children:t||r})}export{a as I};

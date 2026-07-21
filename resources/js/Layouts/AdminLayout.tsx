@@ -33,9 +33,12 @@ import {
     UsersRound,
     Layers,
     Cog,
+    MessageSquare,
+    Bell,
 } from 'lucide-react';
 import { type SharedProps } from '@/types';
 import { ModeToggle } from '@/Components/ModeToggle';
+import NotificationBell from '@/Components/NotificationBell';
 import {
     Sidebar,
     SidebarContent,
@@ -110,7 +113,9 @@ const NAV_SECTIONS: NavSection[] = [
         icon: UsersRound,
         items: [
             { href: '/admin/users',     label: 'Users',     icon: Users },
-            { href: '/admin/broadcast', label: 'Mail', icon: Mail },
+            { href: '/admin/messages',  label: 'Messages',  icon: MessageSquare },
+            { href: '/admin/broadcast', label: 'Mail',    icon: Mail },
+            { href: '/admin/notify',    label: 'Notify',  icon: Bell },
         ],
     },
     {
@@ -382,6 +387,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                     <div className="flex-1" />
 
                     <div className="flex items-center gap-1">
+                        <NotificationBell />
                         <ModeToggle />
 
                         <DropdownMenu>

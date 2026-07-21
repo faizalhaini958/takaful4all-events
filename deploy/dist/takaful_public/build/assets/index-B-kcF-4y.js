@@ -1,0 +1,1 @@
+function t(o,r){return!o.ticket_scope||o.ticket_scope.length===0||!r?!0:o.ticket_scope.includes(r)}function s(o,r,n){return t(o,r)?r&&o.options_override&&o.options_override[r]?o.options_override[r].options_en:n==="ms"?o.options_ms??[]:o.options_en??[]:[]}export{t as f,s as r};

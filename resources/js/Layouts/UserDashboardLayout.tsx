@@ -6,16 +6,19 @@ import {
     User,
     Ticket,
     ShoppingBag,
+    MessageSquare,
     LogOut,
     Globe,
     ChevronRight,
 } from 'lucide-react';
 import { Head } from '@inertiajs/react';
+import NotificationBell from '@/Components/NotificationBell';
 
 const navItems = [
     { name: 'Overview',   href: '/dashboard',          icon: LayoutDashboard },
     { name: 'My Tickets', href: '/dashboard/tickets',  icon: Ticket          },
     { name: 'Orders',     href: '/dashboard/orders',   icon: ShoppingBag     },
+    { name: 'Messages',   href: '/dashboard/messages', icon: MessageSquare   },
     { name: 'Profile',    href: '/dashboard/profile',  icon: User            },
 ];
 
@@ -59,7 +62,8 @@ export default function UserDashboardLayout({ title, children }: PropsWithChildr
                     </div>
 
                     {/* Content zone — browse events right */}
-                    <div className="flex flex-1 items-center justify-end px-6 lg:px-10 min-w-0">
+                    <div className="flex flex-1 items-center justify-end px-6 lg:px-10 min-w-0 gap-3">
+                        <NotificationBell />
                         <Link
                             href="/events"
                             target="_blank"
@@ -67,6 +71,15 @@ export default function UserDashboardLayout({ title, children }: PropsWithChildr
                         >
                             <Globe className="w-4 h-4" />
                             <span className="hidden sm:inline">Browse Events</span>
+                        </Link>
+                        <Link
+                            href={route('logout')}
+                            method="post"
+                            as="button"
+                            className="flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 dark:text-muted-foreground dark:hover:text-red-400 transition-all duration-150"
+                            title="Sign out"
+                        >
+                            <LogOut className="w-4 h-4" />
                         </Link>
                     </div>
                 </header>

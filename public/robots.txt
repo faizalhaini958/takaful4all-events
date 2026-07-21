@@ -14,7 +14,7 @@ Allow: /contact
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /payment/
-Disallow: /events/*/register
+Disallow: /register
 Disallow: /events/*/register/confirmation/
 Disallow: /storage/
 Disallow: /track

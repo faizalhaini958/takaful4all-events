@@ -8,11 +8,7 @@ interface UserData {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'editor' | 'checkin_staff' | 'company' | 'public';
-    company_name: string | null;
-    company_registration_no: string | null;
-    company_address: string | null;
-    company_phone: string | null;
+    role: 'admin' | 'checkin_staff' | 'public';
 }
 
 interface Props {
@@ -25,10 +21,6 @@ export default function UserEdit({ user }: Props) {
         email: user.email,
         password: '',
         role: user.role,
-        company_name: user.company_name ?? '',
-        company_registration_no: user.company_registration_no ?? '',
-        company_address: user.company_address ?? '',
-        company_phone: user.company_phone ?? '',
     });
 
     const submit: FormEventHandler = e => {

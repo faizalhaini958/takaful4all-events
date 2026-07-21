@@ -11,40 +11,28 @@ import InputError from '@/Components/InputError';
 import { Link, router, useForm } from '@inertiajs/react';
 import { useState, type FormEventHandler } from 'react';
 import { type PaginatedData } from '@/types';
-import { Users, Search, Plus, MoreHorizontal, Pencil, Trash2, Shield, Building2, UserCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Users, Search, Plus, MoreHorizontal, Pencil, Trash2, Shield, UserCircle, ScanLine, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface UserRow {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'editor' | 'company' | 'public';
-    company_name: string | null;
-    company_registration_no: string | null;
-    company_address: string | null;
-    company_phone: string | null;
+    role: 'admin' | 'checkin_staff' | 'public';
     created_at: string;
 }
 
-type UserRole = 'admin' | 'editor' | 'company' | 'public';
+type UserRole = 'admin' | 'checkin_staff' | 'public';
 
 const EMPTY_FORM: {
     name: string;
     email: string;
     password: string;
     role: UserRole;
-    company_name: string;
-    company_registration_no: string;
-    company_address: string;
-    company_phone: string;
 } = {
     name: '',
     email: '',
     password: '',
     role: 'public',
-    company_name: '',
-    company_registration_no: '',
-    company_address: '',
-    company_phone: '',
 };
 
 interface Props {
@@ -56,10 +44,9 @@ interface Props {
 }
 
 const ROLE_PILL: Record<string, { class: string; icon: typeof Shield }> = {
-    admin:   { class: 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30',       icon: Shield },
-    editor:  { class: 'bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/30', icon: Pencil },
-    company: { class: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',     icon: Building2 },
-    public:  { class: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30',             icon: UserCircle },
+    admin:         { class: 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30',       icon: Shield },
+    checkin_staff: { class: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30', icon: ScanLine },
+    public:        { class: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30',       icon: UserCircle },
 };
 
 export default function UsersIndex({ users, filters }: Props) {
@@ -84,10 +71,6 @@ export default function UsersIndex({ users, filters }: Props) {
             email: user.email,
             password: '',
             role: user.role,
-            company_name: user.company_name ?? '',
-            company_registration_no: user.company_registration_no ?? '',
-            company_address: user.company_address ?? '',
-            company_phone: user.company_phone ?? '',
         });
         form.clearErrors();
         setFormOpen(true);
@@ -153,8 +136,8 @@ export default function UsersIndex({ users, filters }: Props) {
                 </div>
 
                 {/* Role Summary Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {(['admin', 'editor', 'company', 'public'] as const).map(role => {
+                <div className="grid grid-cols-3 gap-3">
+                    {(['admin', 'checkin_staff', 'public'] as const).map(role => {
                         const pill = ROLE_PILL[role];
                         const Icon = pill.icon;
                         const isActive = filters.role === role;
@@ -204,8 +187,7 @@ export default function UsersIndex({ users, filters }: Props) {
                         <SelectContent>
                             <SelectItem value="all">All Roles</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="editor">Editor</SelectItem>
-                            <SelectItem value="company">Company</SelectItem>
+                            <SelectItem value="checkin_staff">Check-In Staff</SelectItem>
                             <SelectItem value="public">Public</SelectItem>
                         </SelectContent>
                     </Select>
@@ -224,7 +206,6 @@ export default function UsersIndex({ users, filters }: Props) {
                             <TableRow className="border-b border-border/60 bg-muted/40 hover:bg-muted/40">
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">User</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Role</TableHead>
-                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Company</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Joined</TableHead>
                                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12"></TableHead>
                             </TableRow>
@@ -249,16 +230,6 @@ export default function UsersIndex({ users, filters }: Props) {
                                             <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${pill.class}`}>
                                                 {user.role}
                                             </span>
-                                        </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground hidden md:table-cell">
-                                            {user.company_name ? (
-                                                <span className="flex items-center gap-1.5">
-                                                    <Building2 className="w-3.5 h-3.5 shrink-0 text-muted-foreground/60" />
-                                                    {user.company_name}
-                                                </span>
-                                            ) : (
-                                                <span className="text-muted-foreground/40">—</span>
-                                            )}
                                         </TableCell>
                                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap hidden md:table-cell">
                                             {new Date(user.created_at).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -289,7 +260,7 @@ export default function UsersIndex({ users, filters }: Props) {
                             })}
                             {users.data.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-16 text-muted-foreground">
+                                    <TableCell colSpan={4} className="text-center py-16 text-muted-foreground">
                                         <Users className="w-12 h-12 mx-auto mb-3 opacity-15" />
                                         <p className="font-medium">{hasActiveFilters ? 'No users match the current filters.' : 'No users found.'}</p>
                                         {hasActiveFilters && (
@@ -403,8 +374,7 @@ export default function UsersIndex({ users, filters }: Props) {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="admin">Admin</SelectItem>
-                                            <SelectItem value="editor">Editor</SelectItem>
-                                            <SelectItem value="company">Company</SelectItem>
+                                            <SelectItem value="checkin_staff">Check-In Staff</SelectItem>
                                             <SelectItem value="public">Public</SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -412,62 +382,6 @@ export default function UsersIndex({ users, filters }: Props) {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Company Details — only when role is company */}
-                        {form.data.role === 'company' && (
-                            <>
-                                <Separator />
-                                <div>
-                                    <p className="text-[11px] font-bold uppercase text-primary tracking-widest mb-3">Company Details</p>
-                                    <div className="space-y-3">
-                                        <div className="space-y-1.5">
-                                            <Label htmlFor="modal-company_name">Company Name</Label>
-                                            <Input
-                                                id="modal-company_name"
-                                                value={form.data.company_name}
-                                                onChange={e => form.setData('company_name', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={form.errors.company_name} />
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <Label htmlFor="modal-company_registration_no">Registration Number</Label>
-                                            <Input
-                                                id="modal-company_registration_no"
-                                                value={form.data.company_registration_no}
-                                                onChange={e => form.setData('company_registration_no', e.target.value)}
-                                                placeholder="e.g. 202001012345"
-                                            />
-                                            <InputError message={form.errors.company_registration_no} />
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <Label htmlFor="modal-company_address">Address</Label>
-                                            <textarea
-                                                id="modal-company_address"
-                                                value={form.data.company_address}
-                                                onChange={e => form.setData('company_address', e.target.value)}
-                                                rows={3}
-                                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            />
-                                            <InputError message={form.errors.company_address} />
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <Label htmlFor="modal-company_phone">Phone</Label>
-                                            <Input
-                                                id="modal-company_phone"
-                                                value={form.data.company_phone}
-                                                onChange={e => form.setData('company_phone', e.target.value)}
-                                                placeholder="e.g. 03-1234 5678"
-                                            />
-                                            <InputError message={form.errors.company_phone} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
 
                         <DialogFooter className="gap-2 sm:gap-0 pt-2">
                             <Button type="button" variant="outline" onClick={closeForm}>Cancel</Button>

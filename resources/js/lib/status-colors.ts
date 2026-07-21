@@ -96,13 +96,12 @@ export function eventStatusBadgeVariant(status: EventStatus): BadgeVariant {
 
 // ─── User Roles ──────────────────────────────────────────────────────────────
 
-type UserRole = 'admin' | 'editor' | 'company' | 'public';
+type UserRole = 'admin' | 'checkin_staff' | 'public';
 
 const ROLE_BADGE_MAP: Record<UserRole, { variant: BadgeVariant; className?: string }> = {
-    admin:   { variant: 'default',     className: 'bg-violet-600 hover:bg-violet-600 text-white' },
-    editor:  { variant: 'default',     className: 'bg-sky-600 hover:bg-sky-600 text-white' },
-    company: { variant: 'default',     className: 'bg-amber-600 hover:bg-amber-600 text-white' },
-    public:  { variant: 'secondary' },
+    admin:         { variant: 'default',     className: 'bg-violet-600 hover:bg-violet-600 text-white' },
+    checkin_staff: { variant: 'default',     className: 'bg-emerald-600 hover:bg-emerald-600 text-white' },
+    public:        { variant: 'secondary' },
 };
 
 export function roleBadgeVariant(role: UserRole): BadgeVariant {

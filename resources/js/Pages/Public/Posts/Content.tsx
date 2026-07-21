@@ -15,32 +15,48 @@ const TABS = [
     { key: 'podcast',  label: 'Podcasts' },
 ];
 
+const TYPE_LABELS: Record<string, string> = {
+    webinar:  'Webinars',
+    agent360: 'Agent360 Sessions',
+    podcast:  'Podcasts',
+};
+
 interface Props {
-    posts:        PaginatedData<Post>;
-    activeType:   string;
-    banners:      ContentBanner[];
-    canonicalUrl: string;
+    posts:           PaginatedData<Post>;
+    activeType:      string;
+    banners:         ContentBanner[];
+    canonicalUrl:    string;
+    metaTitle:       string;
+    metaDescription: string;
 }
 
-export default function ContentIndex({ posts, activeType, banners, canonicalUrl }: Props) {
+export default function ContentIndex({ posts, activeType, banners, canonicalUrl, metaTitle, metaDescription }: Props) {
     function switchTab(type: string) {
         router.get('/content', type === 'all' ? {} : { type }, { preserveScroll: false });
     }
 
+    const heroTitle = activeType !== 'all' && TYPE_LABELS[activeType]
+        ? TYPE_LABELS[activeType]
+        : 'Watch & Learn';
+
+    const heroSubtitle = activeType !== 'all' && TYPE_LABELS[activeType]
+        ? `On-demand ${TYPE_LABELS[activeType].toLowerCase()} curated for takaful professionals.`
+        : 'On-demand webinars, Agent360 sessions and podcasts curated for takaful professionals.';
+
     return (
         <PublicLayout>
             <Head>
-                <title>Content | Takaful4All Events</title>
-                <meta name="description" content="Watch on-demand webinars, Agent360 sessions and podcasts from Takaful4All." />
+                <title>{metaTitle}</title>
+                <meta name="description" content={metaDescription} />
                 <link rel="canonical" href={canonicalUrl} />
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content={canonicalUrl} />
-                <meta property="og:title" content="Content | Takaful4All Events" />
-                <meta property="og:description" content="Watch on-demand webinars, Agent360 sessions and podcasts from Takaful4All." />
+                <meta property="og:title" content={metaTitle} />
+                <meta property="og:description" content={metaDescription} />
                 <meta property="og:site_name" content="Takaful4All Events" />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content="Content | Takaful4All Events" />
-                <meta name="twitter:description" content="Watch on-demand webinars, Agent360 sessions and podcasts from Takaful4All." />
+                <meta name="twitter:title" content={metaTitle} />
+                <meta name="twitter:description" content={metaDescription} />
             </Head>
             {/* ── Hero ── */}
             <section className="relative -mt-16 overflow-hidden" style={{ background: '#071B2A' }}>
@@ -50,10 +66,10 @@ export default function ContentIndex({ posts, activeType, banners, canonicalUrl 
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #18C8FF 0%, transparent 70%)' }} />
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
                     <h1 style={{ fontFamily: POPPINS, color: 'white', fontSize: '2.25rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-                        Watch &amp; Learn
+                        {heroTitle}
                     </h1>
                     <p style={{ color: 'rgba(255,255,255,0.6)', fontFamily: INTER, fontSize: '1.075rem', maxWidth: '480px', margin: '0 auto', textAlign: 'center' }}>
-                        On-demand webinars, Agent360 sessions and podcasts curated for takaful professionals.
+                        {heroSubtitle}
                     </p>
                 </div>
             </section>
