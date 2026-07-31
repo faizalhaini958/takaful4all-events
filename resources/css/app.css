@@ -46,77 +46,77 @@
 
 @layer base {
   :root {
-    /* Brand: teal #009FBB = 191 100% 37% | navy #003366 = 210 100% 20% */
+    /* Brand: royal #1B4F91 = 214 70% 34% | teal #1C7C93 = 192 68% 34% | navy #16324A = 208 54% 19% */
     --background: 0 0% 100%;
-    --foreground: 210 100% 15%;
+    --foreground: 208 54% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 210 100% 15%;
+    --card-foreground: 208 54% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 100% 15%;
-    --primary: 210 100% 20%;        /* brand-navy */
+    --popover-foreground: 208 54% 15%;
+    --primary: 214 70% 34%;         /* royal blue */
     --primary-foreground: 0 0% 100%;
-    --secondary: 188 88% 94%;       /* very light brand-light */
-    --secondary-foreground: 210 100% 20%;
+    --secondary: 197 67% 95%;       /* brand-light cyan wash */
+    --secondary-foreground: 208 54% 19%;
     --muted: 210 20% 96%;
     --muted-foreground: 210 20% 46%;
-    --accent: 191 100% 92%;         /* light teal tint */
-    --accent-foreground: 210 100% 20%;
+    --accent: 192 68% 92%;          /* light teal tint */
+    --accent-foreground: 208 54% 19%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 210 20% 88%;
     --input: 210 20% 88%;
-    --ring: 191 100% 37%;           /* brand teal */
-    --chart-1: 191 100% 37%;
-    --chart-2: 210 100% 20%;
+    --ring: 192 68% 34%;            /* teal accent */
+    --chart-1: 192 68% 34%;
+    --chart-2: 208 54% 19%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    /* Sidebar — always brand navy */
-    --sidebar-background: 210 100% 20%;     /* brand-navy */
-    --sidebar-foreground: 188 88% 92%;      /* near brand-light */
-    --sidebar-primary: 191 100% 37%;        /* brand teal */
+    /* Sidebar — navy */
+    --sidebar-background: 208 54% 19%;
+    --sidebar-foreground: 197 67% 94%;
+    --sidebar-primary: 192 68% 34%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 100% 26%;         /* slightly lighter navy */
+    --sidebar-accent: 208 54% 25%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 210 100% 16%;
-    --sidebar-ring: 191 100% 37%;
+    --sidebar-border: 208 54% 14%;
+    --sidebar-ring: 192 68% 34%;
   }
 
   .dark {
     --background: 222 47% 8%;
-    --foreground: 188 88% 92%;
+    --foreground: 197 67% 94%;
     --card: 222 47% 11%;
-    --card-foreground: 188 88% 92%;
+    --card-foreground: 197 67% 94%;
     --popover: 222 47% 11%;
-    --popover-foreground: 188 88% 92%;
-    --primary: 191 100% 37%;        /* brand teal */
+    --popover-foreground: 197 67% 94%;
+    --primary: 192 68% 34%;         /* teal accent */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 100% 16%;
-    --secondary-foreground: 188 88% 92%;
+    --secondary: 208 54% 14%;
+    --secondary-foreground: 197 67% 94%;
     --muted: 210 50% 15%;
     --muted-foreground: 210 20% 60%;
-    --accent: 210 100% 20%;
-    --accent-foreground: 188 88% 92%;
+    --accent: 208 54% 19%;
+    --accent-foreground: 197 67% 94%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 210 50% 18%;
     --input: 210 50% 18%;
-    --ring: 191 100% 37%;
-    --chart-1: 191 100% 50%;
-    --chart-2: 188 88% 70%;
+    --ring: 192 68% 34%;
+    --chart-1: 192 68% 50%;
+    --chart-2: 197 67% 70%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
     /* Sidebar — deeper navy in dark */
-    --sidebar-background: 210 100% 13%;     /* brand-navy-dark */
-    --sidebar-foreground: 188 88% 92%;
-    --sidebar-primary: 191 100% 37%;
+    --sidebar-background: 208 54% 11%;
+    --sidebar-foreground: 197 67% 94%;
+    --sidebar-primary: 192 68% 34%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 100% 17%;
+    --sidebar-accent: 208 54% 17%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 210 100% 10%;
-    --sidebar-ring: 191 100% 37%;
+    --sidebar-border: 208 54% 8%;
+    --sidebar-ring: 192 68% 34%;
   }
 }
 

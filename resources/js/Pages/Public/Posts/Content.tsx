@@ -59,11 +59,11 @@ export default function ContentIndex({ posts, activeType, banners, canonicalUrl,
                 <meta name="twitter:description" content={metaDescription} />
             </Head>
             {/* ── Hero ── */}
-            <section className="relative -mt-16 overflow-hidden" style={{ background: '#071B2A' }}>
+            <section className="relative -mt-16 overflow-hidden" style={{ background: '#16324A' }}>
                 {/* Dot grid */}
                 <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                 {/* Glow */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #18C8FF 0%, transparent 70%)' }} />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #1C7C93 0%, transparent 70%)' }} />
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
                     <h1 style={{ fontFamily: POPPINS, color: 'white', fontSize: '2.25rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
                         {heroTitle}
@@ -86,8 +86,8 @@ export default function ContentIndex({ posts, activeType, banners, canonicalUrl,
                         <div className="mb-10">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4" style={{ color: '#18C8FF' }} strokeWidth={2} />
-                                    <span style={{ fontFamily: POPPINS, fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'linear-gradient(90deg, #009FBB, #18C8FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                    <Sparkles className="w-4 h-4" style={{ color: '#1C7C93' }} strokeWidth={2} />
+                                    <span style={{ fontFamily: POPPINS, fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'linear-gradient(90deg, #1C7C93, #1C7C93)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                                         Featured Highlights
                                     </span>
                                 </div>
@@ -108,7 +108,7 @@ export default function ContentIndex({ posts, activeType, banners, canonicalUrl,
                                     onClick={() => switchTab(tab.key)}
                                     className="px-5 py-2 rounded-full text-sm font-semibold transition-all"
                                     style={isActive
-                                        ? { background: 'linear-gradient(135deg, #18C8FF 0%, #009FBB 100%)', color: 'white', border: '1px solid transparent', boxShadow: '0 2px 10px rgba(24,200,255,0.3)' }
+                                        ? { background: 'linear-gradient(135deg, #1C7C93 0%, #1C7C93 100%)', color: 'white', border: '1px solid transparent', boxShadow: '0 2px 10px rgba(28,124,147,0.3)' }
                                         : { background: 'white', border: '1px solid #b8d5e2', color: '#0f3a55' }}
                                 >
                                     {tab.label}
@@ -127,7 +127,7 @@ export default function ContentIndex({ posts, activeType, banners, canonicalUrl,
                     ) : (
                         <div className="text-center py-24 flex flex-col items-center gap-4">
                             <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(0,159,187,0.12)', border: '1px solid rgba(0,159,187,0.2)' }}>
-                                <Video className="w-9 h-9" style={{ color: '#009FBB' }} strokeWidth={1.5} />
+                                <Video className="w-9 h-9" style={{ color: '#1C7C93' }} strokeWidth={1.5} />
                             </div>
                             <p style={{ fontFamily: POPPINS, color: '#071B2A', fontWeight: 700, fontSize: '1.125rem' }}>No content found.</p>
                             <p style={{ color: '#64748b', fontFamily: INTER, fontSize: '0.875rem' }}>Check back soon for new sessions.</p>
@@ -143,7 +143,7 @@ export default function ContentIndex({ posts, activeType, banners, canonicalUrl,
                                     href={link.url ?? '#'}
                                     className="px-3 py-1.5 rounded-full text-sm font-medium transition-all border"
                                     style={link.active
-                                        ? { background: 'linear-gradient(135deg, #18C8FF 0%, #009FBB 100%)', color: 'white', border: '1px solid transparent' }
+                                        ? { background: 'linear-gradient(135deg, #1C7C93 0%, #1C7C93 100%)', color: 'white', border: '1px solid transparent' }
                                         : link.url
                                             ? { background: 'white', border: '1px solid #b8d5e2', color: '#0f3a55' }
                                             : { background: 'white', border: '1px solid #d5e8f0', color: '#94a3b8', cursor: 'not-allowed' }}

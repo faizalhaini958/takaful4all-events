@@ -63,6 +63,15 @@ export default function PublicLayout({ children }: PropsWithChildren) {
             { id: 4, url: '/contact',    label: t('nav.contact') },
           ];
 
+    const activePath = (() => {
+        try {
+            return currentUrl.includes('://') ? new URL(currentUrl).pathname : currentUrl;
+        } catch {
+            return currentUrl;
+        }
+    })();
+    const isActive = (url: string) => url === '/' ? activePath === '/' : activePath.startsWith(url);
+
     const layout = (
         <>
         <Head>
@@ -72,27 +81,43 @@ export default function PublicLayout({ children }: PropsWithChildren) {
         </Head>
         <div className="min-h-screen flex flex-col bg-background text-foreground">
             {/* ── Navbar ── */}
-            <header className="sticky top-0 z-50 border-b border-white/5 backdrop-blur-md" style={{ backgroundColor: 'rgba(7,27,42,0.92)' }}>
+            <header className="sticky top-0 z-50 border-b border-[#16324A]/10 backdrop-blur-md" style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 100%)' }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
                     {/* Logo */}
                     <Link href="/" className="flex-shrink-0">
-                        <img src="/images/logo.png" alt="Takaful4All" className="h-9 w-auto brightness-0 invert" />
+                        <img src="/images/logo.png" alt="Takaful4All" className="h-9 w-auto" />
                     </Link>
 
                     {/* Nav links — desktop */}
-                    <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-white/70">
-                        {navItems.map(item => (
-                            <Link key={item.id} href={item.url} className="hover:text-white transition-colors tracking-wide">{item.label}</Link>
-                        ))}
+                    <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+                        {navItems.map(item => {
+                            const active = isActive(item.url);
+                            return (
+                                <Link
+                                    key={item.id}
+                                    href={item.url}
+                                    className={`relative pb-1 transition-colors tracking-wide ${
+                                        active
+                                            ? 'text-[#16324A]'
+                                            : 'text-[#16324A]/60 hover:text-[#1C7C93]'
+                                    }`}
+                                >
+                                    {item.label}
+                                    {active && (
+                                        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1C7C93] rounded-full" />
+                                    )}
+                                </Link>
+                            );
+                        })}
                         <LanguageSwitcher />
                         {auth?.user ? (
                             ['admin', 'checkin_staff'].includes(auth.user.role) ? (
-                                <Link href="/admin" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[#071B2A] text-xs font-bold" style={{ background: 'linear-gradient(135deg, #18C8FF, #8BE9E0)' }}>
+                                <Link href="/admin" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[#16324A] text-xs font-bold" style={{ background: 'linear-gradient(135deg, #1C7C93, #56B8C4)' }}>
                                     <UserCircle className="w-4 h-4" />
                                     {t('nav.management')}
                                 </Link>
                             ) : (
-                                <Link href="/dashboard" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-xs font-medium border border-white/20 hover:border-[#18C8FF]/60 hover:text-[#18C8FF] transition-all">
+                                <Link href="/dashboard" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[#16324A] text-xs font-medium border border-[#16324A]/20 hover:border-[#1C7C93]/60 hover:text-[#1C7C93] transition-all">
                                     <UserCircle className="w-4 h-4" />
                                     {t('nav.my_account')}
                                 </Link>
@@ -100,8 +125,8 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                         ) : (
                             <button
                                 onClick={openLogin}
-                                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-[#071B2A] text-xs font-bold cursor-pointer transition-opacity hover:opacity-90"
-                                style={{ background: 'linear-gradient(135deg, #18C8FF, #8BE9E0)' }}
+                                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-[#16324A] text-xs font-bold cursor-pointer transition-opacity hover:opacity-90"
+                                style={{ background: 'linear-gradient(135deg, #1C7C93, #56B8C4)' }}
                             >
                                 {t('nav.login')}
                             </button>
@@ -110,7 +135,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
 
                     {/* Burger button — mobile only */}
                     <button
-                        className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                        className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-[#16324A]/70 hover:text-[#16324A] hover:bg-[#16324A]/10 transition-colors"
                         onClick={() => setMobileOpen(prev => !prev)}
                         aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
                         aria-expanded={mobileOpen}
@@ -131,14 +156,14 @@ export default function PublicLayout({ children }: PropsWithChildren) {
             {/* Drawer panel */}
             <div
                 className={`md:hidden fixed top-0 right-0 z-50 h-full w-[min(80vw,288px)] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : 'translate-x-full'}`}
-                style={{ backgroundColor: '#071B2A' }}
+style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 100%)' }}
             >
                 {/* Drawer header */}
-                <div className="flex items-center justify-between px-5 h-16 border-b border-white/10">
-                    <img src="/images/logo.png" alt="Takaful4All" className="h-8 w-auto brightness-0 invert" />
+                <div className="flex items-center justify-between px-5 h-16 border-b border-[#16324A]/10">
+                    <img src="/images/logo.png" alt="Takaful4All" className="h-8 w-auto" />
                     <button
                         onClick={() => setMobileOpen(false)}
-                        className="p-2 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                        className="p-2 rounded-md text-[#16324A]/60 hover:text-[#16324A] hover:bg-[#16324A]/10 transition-colors"
                         aria-label={t('nav.close_menu')}
                     >
                         <X className="w-5 h-5" />
@@ -147,18 +172,28 @@ export default function PublicLayout({ children }: PropsWithChildren) {
 
                 {/* Nav links */}
                 <nav className="flex flex-col gap-1 px-4 py-4">
-                    {navItems.map(item => (
-                        <Link
-                            key={item.id}
-                            href={item.url}
-                            onClick={() => setMobileOpen(false)}
-                            className="block py-3 px-3 rounded-md text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
+                    {navItems.map(item => {
+                        const active = isActive(item.url);
+                        return (
+                            <Link
+                                key={item.id}
+                                href={item.url}
+                                onClick={() => setMobileOpen(false)}
+                                className={`relative py-3 px-3 rounded-md text-sm font-medium transition-colors ${
+                                    active
+                                        ? 'text-[#16324A] bg-[#16324A]/8'
+                                        : 'text-[#16324A]/60 hover:bg-[#16324A]/8 hover:text-[#1C7C93]'
+                                }`}
+                            >
+                                {item.label}
+                                {active && (
+                                    <span className="absolute bottom-1 left-3 right-3 h-0.5 bg-[#1C7C93] rounded-full" />
+                                )}
+                            </Link>
+                        );
+                    })}
 
-                    <div className="mt-4 pt-4 border-t border-white/10">
+                    <div className="mt-4 pt-4 border-t border-[#16324A]/10">
                         <div className="py-2 px-3">
                             <LanguageSwitcher />
                         </div>
@@ -167,8 +202,8 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                 <Link
                                     href="/admin"
                                     onClick={() => setMobileOpen(false)}
-                                    className="flex items-center gap-2 py-3 px-3 rounded-md text-sm font-bold text-[#071B2A]"
-                                    style={{ background: 'linear-gradient(135deg, #18C8FF, #8BE9E0)' }}
+                                    className="flex items-center gap-2 py-3 px-3 rounded-md text-sm font-bold text-[#16324A]"
+                                    style={{ background: 'linear-gradient(135deg, #1C7C93, #56B8C4)' }}
                                 >
                                     <UserCircle className="w-5 h-5" />
                                     {t('nav.management')}
@@ -177,7 +212,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                 <Link
                                     href="/dashboard"
                                     onClick={() => setMobileOpen(false)}
-                                    className="flex items-center gap-2 py-3 px-3 rounded-md text-sm font-medium text-white border border-white/20 hover:border-[#18C8FF]/50 transition-colors"
+                                    className="flex items-center gap-2 py-3 px-3 rounded-md text-sm font-medium text-[#16324A] border border-[#16324A]/20 hover:border-[#1C7C93]/50 transition-colors"
                                 >
                                     <UserCircle className="w-5 h-5" />
                                     {t('nav.my_account')}
@@ -189,8 +224,8 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                     setMobileOpen(false);
                                     openLogin();
                                 }}
-                                className="flex items-center justify-center gap-2 py-3 px-3 rounded-md text-sm font-bold text-[#071B2A] w-full cursor-pointer"
-                                style={{ background: 'linear-gradient(135deg, #18C8FF, #8BE9E0)' }}
+                                className="flex items-center justify-center gap-2 py-3 px-3 rounded-md text-sm font-bold text-[#16324A] w-full cursor-pointer"
+                                style={{ background: 'linear-gradient(135deg, #1C7C93, #56B8C4)' }}
                             >
                                 {t('nav.login')}
                             </button>
@@ -248,7 +283,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
             <main className="flex-1">{children}</main>
 
             {/* ── Footer ── */}
-            <footer className="mt-0 text-white/60" style={{ background: 'linear-gradient(145deg, #071B2A 0%, #0a3352 50%, #071B2A 100%)', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+            <footer className="mt-0 text-white/60" style={{ backgroundColor: '#16324A', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                         {/* Brand */}
@@ -261,16 +296,16 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                             </p>
                             {/* Social media */}
                             <div className="flex items-center gap-3 mt-5">
-                                <a href="https://www.facebook.com/mtasocialmedia.mta" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center border border-white/10 text-white/40 hover:border-[#18C8FF]/50 hover:text-[#18C8FF] transition-all" aria-label="Facebook">
+                                <a href="https://www.facebook.com/mtasocialmedia.mta" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center border border-white/10 text-white/40 hover:border-[#1C7C93]/50 hover:text-[#1C7C93] transition-all" aria-label="Facebook">
                                     <Facebook className="w-4 h-4" />
                                 </a>
-                                <a href="https://my.linkedin.com/company/malaysian-takaful-association" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center border border-white/10 text-white/40 hover:border-[#18C8FF]/50 hover:text-[#18C8FF] transition-all" aria-label="LinkedIn">
+                                <a href="https://my.linkedin.com/company/malaysian-takaful-association" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center border border-white/10 text-white/40 hover:border-[#1C7C93]/50 hover:text-[#1C7C93] transition-all" aria-label="LinkedIn">
                                     <Linkedin className="w-4 h-4" />
                                 </a>
-                                <a href="https://www.instagram.com/malaysiantakafulassociation/?hl=en" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center border border-white/10 text-white/40 hover:border-[#18C8FF]/50 hover:text-[#18C8FF] transition-all" aria-label="Instagram">
+                                <a href="https://www.instagram.com/malaysiantakafulassociation/?hl=en" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center border border-white/10 text-white/40 hover:border-[#1C7C93]/50 hover:text-[#1C7C93] transition-all" aria-label="Instagram">
                                     <Instagram className="w-4 h-4" />
                                 </a>
-                                <a href="https://www.youtube.com/channel/UCCUm__PhqVIKJscy6FLdXjA" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center border border-white/10 text-white/40 hover:border-[#18C8FF]/50 hover:text-[#18C8FF] transition-all" aria-label="YouTube">
+                                <a href="https://www.youtube.com/channel/UCCUm__PhqVIKJscy6FLdXjA" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center border border-white/10 text-white/40 hover:border-[#1C7C93]/50 hover:text-[#1C7C93] transition-all" aria-label="YouTube">
                                     <Youtube className="w-4 h-4" />
                                 </a>
                             </div>

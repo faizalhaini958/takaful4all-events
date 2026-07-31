@@ -108,13 +108,13 @@ export default function EventsIndex({ events, currentStatus, currentCategory, ba
             </Head>
 
             {/* ── HERO ── */}
-            <section className="relative overflow-hidden -mt-16" style={{ background: '#071B2A' }}>
+            <section className="relative overflow-hidden -mt-16" style={{ backgroundColor: '#16324A' }}>
                 {/* Dot grid */}
                 <div className="absolute inset-0 pointer-events-none"
                     style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                 {/* Glow */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full opacity-20 pointer-events-none"
-                    style={{ background: 'radial-gradient(ellipse at center, #18C8FF 0%, transparent 70%)' }} />
+                    style={{ background: 'radial-gradient(ellipse at center, #1C7C93 0%, transparent 70%)' }} />
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
                     <h1 style={{ color: '#fff', fontFamily: POPPINS, fontSize: '2.25rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
                         {heroTitle}
@@ -140,8 +140,8 @@ export default function EventsIndex({ events, currentStatus, currentCategory, ba
                         <div className="mb-10">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4" style={{ color: '#18C8FF' }} strokeWidth={2} />
-                                    <span style={{ fontFamily: POPPINS, fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'linear-gradient(90deg, #009FBB, #18C8FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                    <Sparkles className="w-4 h-4" style={{ color: '#1C7C93' }} strokeWidth={2} />
+                                    <span style={{ fontFamily: POPPINS, fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'linear-gradient(90deg, #1C7C93, #1C7C93)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                                         Featured Highlights
                                     </span>
                                 </div>
@@ -156,7 +156,7 @@ export default function EventsIndex({ events, currentStatus, currentCategory, ba
                     <div className="mb-8">
                         {/* ── Events section label ── */}
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-[3px] h-7 rounded-full" style={{ background: 'linear-gradient(180deg, #18C8FF, #009FBB)' }} />
+                            <div className="w-[3px] h-7 rounded-full" style={{ background: 'linear-gradient(180deg, #1C7C93, #1C7C93)' }} />
                             <span style={{ fontFamily: POPPINS, fontSize: '1.15rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }} className="text-[#071B2A] dark:text-foreground">
                                 {sectionTitle}
                             </span>
@@ -171,7 +171,7 @@ export default function EventsIndex({ events, currentStatus, currentCategory, ba
                                             onClick={() => handleFilter(f.value)}
                                             className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${!isActive ? 'bg-white/70 dark:bg-card text-[#071B2A]/60 dark:text-muted-foreground border border-white/90 dark:border-border' : ''}`}
                                             style={isActive
-                                                ? { background: 'linear-gradient(90deg, #009FBB, #18C8FF)', color: '#fff', border: '1.5px solid transparent', boxShadow: '0 2px 10px rgba(0,159,187,0.28)', fontFamily: INTER }
+                                                ? { background: 'linear-gradient(90deg, #1C7C93, #1C7C93)', color: '#fff', border: '1.5px solid transparent', boxShadow: '0 2px 10px rgba(0,159,187,0.28)', fontFamily: INTER }
                                                 : { fontFamily: INTER }
                                             }>
                                             {t(f.label)}
@@ -191,7 +191,7 @@ export default function EventsIndex({ events, currentStatus, currentCategory, ba
                                     href={`/events?category=${key}${currentStatus !== 'all' ? `&status=${currentStatus}` : ''}`}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/60 dark:bg-card text-[#071B2A]/65 dark:text-muted-foreground border border-white/90 dark:border-border"
                                     style={{ fontFamily: INTER }}>
-                                    <Icon className="w-3.5 h-3.5" style={{ color: '#009FBB' }} strokeWidth={2} />
+                                    <Icon className="w-3.5 h-3.5" style={{ color: '#1C7C93' }} strokeWidth={2} />
                                     {label}
                                 </Link>
                             ))}
@@ -209,7 +209,7 @@ export default function EventsIndex({ events, currentStatus, currentCategory, ba
                         <div className="text-center py-24 flex flex-col items-center gap-4">
                             <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
                                 style={{ background: 'rgba(0,159,187,0.10)', border: '1px solid rgba(0,159,187,0.2)' }}>
-                                <CalendarDays className="w-8 h-8" style={{ color: '#009FBB' }} strokeWidth={1.5} />
+                                <CalendarDays className="w-8 h-8" style={{ color: '#1C7C93' }} strokeWidth={1.5} />
                             </div>
                             <p className="text-base font-semibold text-[#071B2A] dark:text-foreground" style={{ fontFamily: POPPINS }}>
                                 {t('events.no_events')}
@@ -229,7 +229,7 @@ export default function EventsIndex({ events, currentStatus, currentCategory, ba
                                     href={link.url ?? '#'}
                                     className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${!link.active && link.url ? 'bg-white dark:bg-card text-[#071B2A]/65 dark:text-muted-foreground border border-[#ddeef6] dark:border-border' : !link.active ? 'bg-transparent text-[#b8d5e2] dark:text-muted-foreground/40 border border-[#ddeef6] dark:border-border cursor-not-allowed' : ''}`}
                                     style={link.active
-                                        ? { background: 'linear-gradient(90deg, #009FBB, #18C8FF)', color: '#fff', border: '1.5px solid transparent', boxShadow: '0 2px 10px rgba(0,159,187,0.28)', fontFamily: INTER }
+                                        ? { background: 'linear-gradient(90deg, #1C7C93, #1C7C93)', color: '#fff', border: '1.5px solid transparent', boxShadow: '0 2px 10px rgba(0,159,187,0.28)', fontFamily: INTER }
                                         : { fontFamily: INTER }
                                     }
                                     dangerouslySetInnerHTML={{ __html: link.label }}

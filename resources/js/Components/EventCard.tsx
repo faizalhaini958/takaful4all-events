@@ -65,20 +65,24 @@ export default function EventCard({ event }: Props) {
             onClick={() => track('click', 'event_card', event.slug)}
             className="group block relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 aspect-[3/4] bg-gray-900"
         >
-            {/* Background image — blurred fill */}
+            {/* Background image — blurred fill (with heavy overlay) */}
             {event.media && (
-                <picture>
-                    {event.mobile_media?.url && <source media="(max-width: 767px)" srcSet={event.mobile_media.url} />}
-                    <img
-                        src={event.media.url}
-                        alt=""
-                        aria-hidden="true"
-                        width={400}
-                        height={533}
-                        loading="lazy"
-                        className="absolute inset-0 w-full h-full object-cover scale-110 blur-md opacity-60"
-                    />
-                </picture>
+                <>
+                    <picture>
+                        {event.mobile_media?.url && <source media="(max-width: 767px)" srcSet={event.mobile_media.url} />}
+                        <img
+                            src={event.media.url}
+                            alt=""
+                            aria-hidden="true"
+                            width={400}
+                            height={533}
+                            loading="lazy"
+                            className="absolute inset-0 w-full h-full object-cover scale-110 blur-md opacity-60"
+                        />
+                    </picture>
+                    {/* Dark overlay — image cards only */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                </>
             )}
 
             {/* Foreground image — full, unclipped */}
@@ -97,22 +101,21 @@ export default function EventCard({ event }: Props) {
                 </picture>
             ) : (
                 <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-3"
-                    style={{ background: 'linear-gradient(145deg, #0d3352 0%, #071B2A 100%)' }}>
+                    style={{ background: 'linear-gradient(135deg, #1B3A6B 0%, #17A2B0 100%)' }}>
                     {/* Subtle grid texture */}
-                    <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(24,200,255,0.06) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                    <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
                     {/* Icon container */}
                     <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center"
-                        style={{ background: 'rgba(0,159,187,0.15)', border: '1px solid rgba(0,159,187,0.25)' }}>
-                        <svg className="w-8 h-8" style={{ color: '#18C8FF', opacity: 0.8 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                        <svg className="w-8 h-8" style={{ color: 'rgba(255,255,255,0.7)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.25} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <span className="relative text-xs font-medium" style={{ color: 'rgba(255,255,255,0.35)', letterSpacing: '0.05em' }}>No Image</span>
+                    <span className="relative text-xs font-medium" style={{ color: 'rgba(255,255,255,0.55)', letterSpacing: '0.05em' }}>No Image</span>
+                    {/* Subtle text-protection overlay for gradient cards */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
                 </div>
             )}
-
-            {/* Gradient overlay — stronger at bottom */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
             {/* Top row: status badge + date */}
             <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
@@ -148,7 +151,7 @@ export default function EventCard({ event }: Props) {
                                 Free
                             </span>
                         ) : (
-                            <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(24,200,255,0.2)', color: '#18C8FF' }}>
+                            <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(28,124,147,0.25)', color: '#1C7C93' }}>
                                 From RM {Math.min(...event.tickets.map(t => t.current_price)).toLocaleString('en-MY', { minimumFractionDigits: 0 })}
                             </span>
                         )}

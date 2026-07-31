@@ -58,11 +58,11 @@ export default function PostShow({ post, canonicalUrl }: Props) {
             </Head>
 
             {/* ── Hero ── */}
-            <section className="relative -mt-16 overflow-hidden" style={{ background: '#071B2A' }}>
+            <section className="relative -mt-16 overflow-hidden" style={{ background: '#16324A' }}>
                 {/* Dot grid */}
                 <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                 {/* Glow */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #18C8FF 0%, transparent 70%)' }} />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #1C7C93 0%, transparent 70%)' }} />
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
                     <h1 style={{ fontFamily: POPPINS, color: 'white', fontSize: '2.25rem', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                         {post.title}
@@ -92,7 +92,7 @@ export default function PostShow({ post, canonicalUrl }: Props) {
                     {/* Meta bar */}
                     <div className="flex flex-wrap items-center gap-3 mb-8">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/60 dark:bg-card/60 border px-3 py-1 text-xs font-semibold text-slate-600 dark:text-foreground" style={{ borderColor: '#c8dfe8' }}>
-                            <Tag className="w-3 h-3" style={{ color: '#009FBB' }} />
+                            <Tag className="w-3 h-3" style={{ color: '#1C7C93' }} />
                             {typeLabel}
                         </span>
                         {displayDate && (
@@ -168,7 +168,7 @@ export default function PostShow({ post, canonicalUrl }: Props) {
                                 <div className="bg-white/60 dark:bg-card/60 rounded-2xl p-6 text-center hover:shadow-md transition-shadow" style={{ border: '1px solid #c8dfe8' }}>
                                     <div className="flex justify-center mb-4">
                                         <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #e6f6fb 0%, #d0eef8 100%)', border: '1px solid #b8d5e2' }}>
-                                            <User className="w-7 h-7" style={{ color: '#009FBB' }} strokeWidth={1.5} />
+                                            <User className="w-7 h-7" style={{ color: '#1C7C93' }} strokeWidth={1.5} />
                                         </div>
                                     </div>
                                     <h3 style={{ fontFamily: POPPINS, color: '#071B2A', fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.25rem' }} className="dark:text-foreground">Speaker</h3>

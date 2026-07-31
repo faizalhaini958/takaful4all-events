@@ -61,7 +61,7 @@ export default function RegistrationConfirmation({ registration }: Props) {
                 </div>
             </section>
             {/* Gradient divider */}
-            <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, transparent 0%, #009FBB 30%, #18C8FF 50%, #009FBB 70%, transparent 100%)' }} />
+            <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, transparent 0%, #1C7C93 30%, #1C7C93 50%, #1C7C93 70%, transparent 100%)' }} />
 
             <div className="bg-gray-50 min-h-screen">
             <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-16">

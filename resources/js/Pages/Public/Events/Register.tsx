@@ -487,7 +487,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                 </div>
             </div>
             {/* Gradient divider */}
-            <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, transparent 0%, #009FBB 30%, #18C8FF 50%, #009FBB 70%, transparent 100%)' }} />
+            <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, transparent 0%, #1C7C93 30%, #1C7C93 50%, #1C7C93 70%, transparent 100%)' }} />
 
             {/* Step Indicator � sticky below any nav */}
             <div ref={topRef} className="border-b dark:border-border bg-white dark:bg-card sticky top-0 z-10 shadow-sm" style={{ borderColor: '#c8dfe8' }}>

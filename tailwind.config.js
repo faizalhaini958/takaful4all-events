@@ -24,11 +24,12 @@ export default {
     		},
     		colors: {
     			brand: {
-    				light: '#C8F4F9',
-    				DEFAULT: '#009FBB',
-    				dark: '#007A92',
-    				navy: '#003366',
-    				'navy-dark': '#002244'
+    				light: '#EAF8FB',
+    				DEFAULT: '#1C7C93',
+    				dark: '#16324A',
+    				navy: '#16324A',
+    				'navy-dark': '#0F2336',
+    				royal: '#1B4F91'
     			},
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',

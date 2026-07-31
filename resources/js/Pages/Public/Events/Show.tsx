@@ -68,20 +68,20 @@ function RelatedEventsCarousel({ related, t }: { related: Event[]; t: (k: string
     };
 
     return (
-        <div className="mt-10 rounded-3xl px-6 sm:px-8 py-10" style={{ background: 'linear-gradient(145deg, #071B2A 0%, #0a3352 50%, #071B2A 100%)' }}>
+        <div className="mt-10 rounded-3xl px-6 sm:px-8 py-10" style={{ background: '#16324A' }}>
             {/* Dot grid */}
             <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
             {/* Header */}
             <div className="flex items-end justify-between mb-8">
                 <div>
-                    <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#18C8FF' }}>Upcoming</p>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#1C7C93' }}>Upcoming</p>
                     <h2 className="text-2xl font-extrabold text-white">{t('event.more_events')}</h2>
                     <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.55)' }}>Discover more exciting events curated for you.</p>
                 </div>
                 <Link
                     href="/events"
                     className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full transition-all"
-                    style={{ color: '#18C8FF', border: '1px solid rgba(24,200,255,0.3)', background: 'rgba(24,200,255,0.08)' }}>
+                    style={{ color: '#1C7C93', border: '1px solid rgba(28,124,147,0.3)', background: 'rgba(28,124,147,0.08)' }}>
                     {t('event.view_all')} <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
             </div>
@@ -134,7 +134,7 @@ function RelatedEventsCarousel({ related, t }: { related: Event[]; t: (k: string
                 <Link
                     href="/events"
                     className="sm:hidden inline-flex items-center gap-1 text-sm font-semibold"
-                    style={{ color: '#18C8FF' }}>
+                    style={{ color: '#1C7C93' }}>
                     {t('event.view_all')} <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
                 {totalPages > 1 ? (
@@ -149,7 +149,7 @@ function RelatedEventsCarousel({ related, t }: { related: Event[]; t: (k: string
                                         ? 'w-7'
                                         : 'w-2.5 hover:bg-white/40'
                                 }`}
-                                style={{ background: i === page ? '#18C8FF' : 'rgba(255,255,255,0.2)' }}
+                                style={{ background: i === page ? '#1C7C93' : 'rgba(255,255,255,0.2)' }}
                             />
                         ))}
                     </div>
