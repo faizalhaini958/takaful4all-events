@@ -531,10 +531,10 @@ export default function AnalyticsIndex({
 // â”€â”€â”€ KPI Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ACCENT = {
-    indigo:  { iconBg: 'bg-indigo-50 dark:bg-indigo-500/15',  iconText: 'text-indigo-600 dark:text-indigo-400',  bar: 'bg-indigo-500'  },
-    sky:     { iconBg: 'bg-sky-50 dark:bg-sky-500/15',        iconText: 'text-sky-600 dark:text-sky-400',          bar: 'bg-sky-500'     },
-    violet:  { iconBg: 'bg-violet-50 dark:bg-violet-500/15',  iconText: 'text-violet-600 dark:text-violet-400',   bar: 'bg-violet-500'  },
-    emerald: { iconBg: 'bg-emerald-50 dark:bg-emerald-500/15',iconText: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500' },
+    indigo:  { iconBg: 'bg-[#1B4F91]/20 dark:bg-[#1B4F91]/25',  iconText: 'text-[#1B4F91] dark:text-[#56B8C4]',    bar: 'bg-[#1B4F91]'  },
+    sky:     { iconBg: 'bg-brand/20 dark:bg-brand/25',            iconText: 'text-brand dark:text-brand-light',       bar: 'bg-brand'       },
+    violet:  { iconBg: 'bg-brand-navy/20 dark:bg-brand-navy/25',  iconText: 'text-brand-navy dark:text-brand-light',  bar: 'bg-brand-navy'  },
+    emerald: { iconBg: 'bg-[#56B8C4]/20 dark:bg-[#56B8C4]/25',   iconText: 'text-[#56B8C4] dark:text-[#56B8C4]',    bar: 'bg-[#56B8C4]'  },
 } as const;
 
 function KpiCard({ label, value, change, suffix, icon, accent, live, tip }: {

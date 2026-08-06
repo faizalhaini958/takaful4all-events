@@ -36,8 +36,8 @@ interface Props extends DashboardData {}
 
 // ── Palette (shadcn-neutral, one accent per chart type) ─────────────────
 const ACCENT = {
-    teal: '#009FBB',
-    navy: '#003366',
+    teal: '#1C7C93',
+    navy: '#16324A',
     amber: '#f59e0b',
     emerald: '#10b981',
     rose: '#f43f5e',
@@ -286,7 +286,7 @@ export default function DashboardV2(props: Props) {
         <AdminLayout>
             <div className="space-y-6">
                 {/* ── Hero — dark gradient banner (original vibe) ────── */}
-                <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#001830] via-[#003366] to-[#006e88] shadow-lg">
+                <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-brand-navy via-brand-royal to-brand shadow-lg">
                     {/* Decorative dots */}
                     <div className="absolute inset-0 opacity-[0.06] pointer-events-none" style={{
                         backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
@@ -310,7 +310,7 @@ export default function DashboardV2(props: Props) {
                                         {firstName.charAt(0).toUpperCase()}
                                     </div>
                                     {/* Online pulse */}
-                                    <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-400 border-[3px] border-[#003366]">
+                                    <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-400 border-[3px] border-brand-navy">
                                         <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-70" />
                                     </span>
                                 </div>
@@ -434,14 +434,14 @@ export default function DashboardV2(props: Props) {
                         comparison={monthOverMonth.revenue}
                         pctBaselineMin={500}
                         formatValue={(n) => `RM ${formatCurrency(n)}`}
-                        accent="from-amber-500 via-amber-400 to-amber-300"
+                        accent="from-brand-royal via-brand-royal to-brand"
                     />
                     <KpiCard
                         label="Registrations"
                         total={formatCompact(stats.registrations.total)}
                         comparison={monthOverMonth.registrations}
                         pctBaselineMin={10}
-                        accent="from-brand-navy-dark via-brand-navy to-brand"
+                        accent="from-brand-navy via-brand-royal to-brand"
                     />
                     <KpiCard
                         label="Events"
@@ -462,7 +462,7 @@ export default function DashboardV2(props: Props) {
                         <p className={cn(
                             'text-3xl font-bold tabular-nums tracking-tight',
                             analyticsSnapshot.active_visitors > 0
-                                ? 'text-emerald-600 dark:text-emerald-400'
+                                ? 'text-[#56B8C4] dark:text-[#56B8C4]'
                                 : 'text-foreground',
                         )}>
                             {formatCompact(analyticsSnapshot.active_visitors)}
@@ -834,7 +834,7 @@ export default function DashboardV2(props: Props) {
                                 {formatCompact(analyticsSnapshot.today_page_views)}
                             </p>
                         </Card>
-                        <Card accent="from-emerald-500 via-emerald-400 to-emerald-300">
+                    <Card accent="from-[#56B8C4] via-[#56B8C4] to-brand">
                             <div className="flex items-start justify-between gap-2 mb-3">
                                 <p className="text-sm font-medium text-muted-foreground">Active Now</p>
                             </div>

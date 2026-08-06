@@ -586,56 +586,12 @@ style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 1
             })()}
 
             {/* ─────────────────────────────────────────
-                EXPLORE BY CATEGORY
+                WHY JOIN
             ───────────────────────────────────────── */}
-            <section className="py-20 relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 100%)' }}>
+            <section className="py-16 sm:py-20 relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 100%)' }}>
                 {/* Subtle dot grid overlay */}
                 <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(28,124,147,0.07) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-6 sm:mb-10"
-                        style={{ color: '#334155', fontFamily: POPPINS, letterSpacing: '-0.02em' }}>
-                        Explore by Category
-                    </h2>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-3 sm:gap-4">
-                        {[
-                            { key: 'conference',    label: 'Conference',    Icon: Mic },
-                            { key: 'workshop',      label: 'Workshop',      Icon: Wrench },
-                            { key: 'sports',        label: 'Sports',        Icon: Trophy },
-                            { key: 'dinner',        label: 'Dinner',        Icon: UtensilsCrossed },
-                            { key: 'entertainment', label: 'Entertainment', Icon: Music },
-                            { key: 'exhibition',    label: 'Exhibition',    Icon: Globe2 },
-                            { key: '',              label: 'All Events',    Icon: LayoutGrid },
-                        ].map(({ key, label, Icon }) => (
-                            <Link
-                                key={label}
-                                href={key ? `/events?category=${key}` : '/events'}
-                                className="group flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-5 rounded-xl sm:rounded-2xl text-center transition-all hover:-translate-y-1"
-                                style={{ border: '1.5px solid rgba(51,65,85,0.10)', backgroundColor: 'rgba(51,65,85,0.03)' }}
-                                onMouseEnter={e => {
-                                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(28,124,147,0.5)';
-                                    (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(28,124,147,0.10)';
-                                }}
-                                onMouseLeave={e => {
-                                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(51,65,85,0.10)';
-                                    (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(51,65,85,0.03)';
-                                }}
-                            >
-                                <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center"
-                                    style={{ backgroundColor: 'rgba(28,124,147,0.18)', border: '1px solid rgba(28,124,147,0.30)' }}>
-                                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: '#1C7C93' }} strokeWidth={1.5} />
-                                </div>
-                                <span className="text-[11px] sm:text-xs font-semibold leading-tight" style={{ color: 'rgba(51,65,85,0.80)', fontFamily: INTER }}>{label}</span>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ─────────────────────────────────────────
-                WHY JOIN
-            ───────────────────────────────────────── */}
-            <section className="py-16 sm:py-20 bg-white dark:bg-background">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header */}
                     <div className="mb-8 sm:mb-12">
                         <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#071B2A] dark:text-foreground"

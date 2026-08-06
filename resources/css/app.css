@@ -72,14 +72,14 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    /* Sidebar — navy */
-    --sidebar-background: 208 54% 19%;
-    --sidebar-foreground: 197 67% 94%;
+    /* Sidebar — light */
+    --sidebar-background: 194 68% 95%;
+    --sidebar-foreground: 208 54% 19%;
     --sidebar-primary: 192 68% 34%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 208 54% 25%;
+    --sidebar-accent: 192 68% 34%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 208 54% 14%;
+    --sidebar-border: 191 66% 92%;
     --sidebar-ring: 192 68% 34%;
   }
 
@@ -137,6 +137,60 @@
 
 .animate-badge-pop {
   animation: badge-pop 0.35s ease-in-out;
+}
+
+/* ── Sidebar UI/UX enhancements ──────────────────────────────────────────── */
+
+/* Active item left accent bar (main items) */
+[data-sidebar="menu-button"][data-active="true"] {
+  box-shadow: inset 3px 0 0 hsl(var(--sidebar-primary));
+}
+
+/* Active item left accent bar (sub-items) */
+[data-sidebar="menu-sub-button"][data-active="true"] {
+  box-shadow: inset 2px 0 0 hsl(var(--sidebar-primary));
+  font-weight: 600;
+}
+
+/* Menu item hover — subtle slide right + light bg */
+[data-sidebar="menu-button"]:not([data-active="true"]):hover {
+  padding-left: 0.6rem;
+  background-color: #DDF3F8;
+  color: #16324A;
+}
+[data-sidebar="menu-sub-button"]:not([data-active="true"]):hover {
+  padding-left: 0.6rem;
+  background-color: #DDF3F8;
+  color: #16324A;
+}
+
+/* Smooth transitions */
+[data-sidebar="menu-button"],
+[data-sidebar="menu-sub-button"] {
+  transition: padding-left 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.2s ease;
+}
+
+/* Submenu icon color fix — navy on light bg (shadcn default was white = invisible) */
+[data-sidebar="menu-sub-button"] > svg {
+  color: hsl(var(--sidebar-foreground));
+}
+/* Active submenu icons — white on teal bg */
+[data-sidebar="menu-sub-button"][data-active="true"] > svg {
+  color: hsl(var(--sidebar-accent-foreground));
+}
+
+/* Section label improvement — better visibility */
+[data-sidebar="header"] + [data-sidebar="content"] > [data-sidebar="group"]:first-of-type [data-sidebar="group-label"] {
+  margin-top: 0.25rem;
+}
+
+/* Sidebar header brand accent gradient */
+[data-sidebar="header"] {
+  background: linear-gradient(180deg,
+    hsl(var(--sidebar-primary) / 0.08) 0%,
+    transparent 100%
+  );
+  padding-bottom: 0.75rem;
 }
 
 @layer utilities {

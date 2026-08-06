@@ -40,7 +40,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_COLORS: string[] = [
-    '#009FBB', '#003366', '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#1C7C93', '#16324A', '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
 ];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -158,7 +158,7 @@ export default function Dashboard(props: Props) {
         <AdminLayout>
             <div className="space-y-6">
                 {/* ── Option B — Hero Banner Header ── */}
-                <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#001830] via-[#003366] to-[#006e88] shadow-lg">
+                <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-brand-navy via-brand-royal to-brand shadow-lg">
                     {/* Decorative background dots */}
                     <div className="absolute inset-0 opacity-[0.06] pointer-events-none" style={{
                         backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
@@ -275,8 +275,8 @@ export default function Dashboard(props: Props) {
                                     label: 'new vs prior 30 days',
                                     pctBaselineMin: 5,
                                 }}
-                                colorClass="bg-brand/10 text-brand"
-                                gradientClass="bg-gradient-to-r from-brand via-brand to-brand-light"
+                                colorClass="bg-[#16324A]/10 text-[#16324A] dark:text-brand-light"
+                                gradientClass="bg-gradient-to-r from-brand-navy via-brand-navy to-brand"
                             />
                             <StatCard
                                 icon={Users}
@@ -288,8 +288,8 @@ export default function Dashboard(props: Props) {
                                     label: 'new vs prior 30 days',
                                     pctBaselineMin: 10,
                                 }}
-                                colorClass="bg-brand-navy/10 text-brand-navy dark:text-brand-light"
-                                gradientClass="bg-gradient-to-r from-brand-navy-dark via-brand-navy to-brand"
+                                colorClass="bg-brand/10 text-brand"
+                                gradientClass="bg-gradient-to-r from-brand via-brand to-brand-light"
                             />
                             <StatCard
                                 icon={DollarSign}
@@ -302,8 +302,8 @@ export default function Dashboard(props: Props) {
                                     pctBaselineMin: 500,
                                     formatDelta: (n) => `RM ${formatCurrency(n)}`,
                                 }}
-                                colorClass="bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                                gradientClass="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300"
+                                colorClass="bg-[#1B4F91]/10 text-[#1B4F91] dark:text-[#56B8C4]"
+                                gradientClass="bg-gradient-to-r from-brand-royal via-brand-royal to-brand"
                             />
                             <StatCard
                                 icon={PenSquare}
@@ -327,15 +327,15 @@ export default function Dashboard(props: Props) {
                                         <AreaChart data={regTrendData} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
                                             <defs>
                                                 <linearGradient id="regGrad" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#009FBB" stopOpacity={0.25} />
-                                                    <stop offset="100%" stopColor="#009FBB" stopOpacity={0} />
+                                                    <stop offset="0%" stopColor="#1C7C93" stopOpacity={0.25} />
+                                                    <stop offset="100%" stopColor="#1C7C93" stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
                                             <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
                                             <XAxis dataKey="date" interval={trendTickInterval} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
                                             <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
-                                            <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ stroke: '#009FBB', strokeWidth: 1, strokeDasharray: '4 4' }} />
-                                            <Area type="monotone" dataKey="Registrations" stroke="#009FBB" strokeWidth={2.5} fill="url(#regGrad)" dot={false} activeDot={{ r: 4, fill: '#009FBB', strokeWidth: 0 }} />
+                                            <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ stroke: '#1C7C93', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                                            <Area type="monotone" dataKey="Registrations" stroke="#1C7C93" strokeWidth={2.5} fill="url(#regGrad)" dot={false} activeDot={{ r: 4, fill: '#1C7C93', strokeWidth: 0 }} />
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 )}
@@ -510,22 +510,22 @@ export default function Dashboard(props: Props) {
                                 icon={Users}
                                 label="Today's Visitors"
                                 value={fmtNumber(analyticsSnapshot.today_visits)}
-                                colorClass="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
-                                gradientClass="bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-400"
+                                colorClass="bg-[#1B4F91]/10 text-[#1B4F91] dark:text-[#56B8C4]"
+                                gradientClass="bg-gradient-to-r from-brand-royal via-brand-royal to-brand"
                             />
                             <StatCard
                                 icon={MousePointerClick}
                                 label="Today's Page Views"
                                 value={fmtNumber(analyticsSnapshot.today_page_views)}
-                                colorClass="bg-slate-500/10 text-slate-600 dark:text-slate-400"
-                                gradientClass="bg-gradient-to-r from-slate-500 via-slate-400 to-slate-300"
+                                colorClass="bg-brand/10 text-brand"
+                                gradientClass="bg-gradient-to-r from-brand via-brand to-brand-light"
                             />
                             <StatCard
                                 icon={Activity}
                                 label="Active Now"
                                 value={String(analyticsSnapshot.active_visitors)}
-                                colorClass="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                gradientClass="bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300"
+                                colorClass="bg-[#56B8C4]/10 text-[#56B8C4] dark:text-[#56B8C4]"
+                                gradientClass="bg-gradient-to-r from-[#56B8C4] via-[#56B8C4] to-brand"
                             />
                         </div>
 

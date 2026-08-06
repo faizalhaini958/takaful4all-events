@@ -75,7 +75,7 @@ export default function AdminProfile({ mustVerifyEmail, status }: PageProps<{ mu
         <AdminLayout>
             <div className="space-y-6">
                 {/* ── Hero Cover Card ── */}
-                <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #001830 0%, #003366 40%, #006e88 100%)' }}>
+                <div className="relative rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #16324A 0%, #1B4F91 40%, #1C7C93 100%)' }}>
                     {/* Decorative background pattern */}
                     <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
                         style={{
@@ -109,7 +109,7 @@ export default function AdminProfile({ mustVerifyEmail, status }: PageProps<{ mu
                             <div className="relative flex-shrink-0">
                                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center text-3xl sm:text-4xl font-black text-white ring-4 shadow-2xl"
                                     style={{
-                                        background: 'linear-gradient(135deg, #009FBB 0%, #003366 100%)',
+                                        background: 'linear-gradient(135deg, #1C7C93 0%, #16324A 100%)',
                                         boxShadow: '0 0 0 4px rgba(255,255,255,0.15), 0 12px 40px rgba(0,0,0,0.3)',
                                     }}>
                                     {initials}

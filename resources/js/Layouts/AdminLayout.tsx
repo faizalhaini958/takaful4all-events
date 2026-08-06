@@ -56,6 +56,7 @@ import {
     SidebarMenuSubItem,
     SidebarProvider,
     SidebarRail,
+    SidebarSeparator,
     SidebarTrigger,
 } from '@/Components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/Components/ui/collapsible';
@@ -150,8 +151,8 @@ function SectionLabel({ label, icon: Icon, collapsed, onToggle }: { label: strin
             onClick={onToggle}
             className="flex w-full items-center gap-2 px-2 py-1.5 group cursor-pointer select-none group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-1"
         >
-            <Icon className="h-3.5 w-3.5 flex-shrink-0 text-sidebar-foreground/35 group-hover:text-sidebar-foreground/55 transition-colors" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60 transition-colors group-data-[collapsible=icon]:hidden">
+            <Icon className="h-3.5 w-3.5 flex-shrink-0 text-sidebar-primary/65 group-hover:text-sidebar-primary/85 transition-colors" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-sidebar-primary/75 group-hover:text-sidebar-primary/95 transition-colors group-data-[collapsible=icon]:hidden">
                 {label}
             </span>
             <ChevronRight className={`ml-auto h-3 w-3 flex-shrink-0 text-sidebar-foreground/25 transition-transform duration-200 group-data-[collapsible=icon]:hidden ${collapsed ? '' : 'rotate-90'}`} />
@@ -159,8 +160,16 @@ function SectionLabel({ label, icon: Icon, collapsed, onToggle }: { label: strin
     );
 }
 
-function AdminSidebar({ currentPath, userRole }: { currentPath: string; userRole?: string }) {
+function AdminSidebar({ currentPath, user }: { currentPath: string; user?: { name: string; role: string; id: number } | null }) {
+    const userRole = user?.role;
     const isCheckinStaff = userRole === 'checkin_staff';
+
+    const initials = (user?.name ?? 'U')
+        .split(' ')
+        .map((n: string) => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
 
     const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
         try {
@@ -245,12 +254,12 @@ function AdminSidebar({ currentPath, userRole }: { currentPath: string; userRole
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href={isCheckinStaff ? '/admin/events' : '/admin'}>
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                                    <LayoutDashboard className="size-4" />
+                                <div className="flex aspect-square size-9 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-md ring-1 ring-sidebar-primary/20">
+                                    <LayoutDashboard className="size-[18px]" />
                                 </div>
                                 <div className="flex flex-col gap-0.5 leading-none">
-                                    <span className="font-semibold text-sidebar-foreground">Takaful4All</span>
-                                    <span className="text-xs text-sidebar-foreground/60">Admin Panel</span>
+                                    <span className="font-bold text-sm text-sidebar-foreground tracking-tight">Takaful4All</span>
+                                    <span className="text-[10px] font-medium text-sidebar-primary/70 tracking-widest uppercase">Admin Panel</span>
                                 </div>
                             </Link>
                         </SidebarMenuButton>
@@ -292,6 +301,24 @@ function AdminSidebar({ currentPath, userRole }: { currentPath: string; userRole
             </SidebarContent>
 
             <SidebarFooter>
+                {user && (
+                    <>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <div className="flex items-center gap-3 px-2 py-1.5 group-data-[collapsible=icon]:hidden">
+                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary/15 text-sidebar-primary text-xs font-bold">
+                                        {initials}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</span>
+                                        <span className="text-[10px] text-sidebar-foreground/50 capitalize truncate">{user.role.replace('_', ' ')}</span>
+                                    </div>
+                                </div>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                        <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
+                    </>
+                )}
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild tooltip="View Site">
@@ -299,6 +326,15 @@ function AdminSidebar({ currentPath, userRole }: { currentPath: string; userRole
                                 <Globe />
                                 <span>View Site</span>
                             </a>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip="Logout"
+                            onClick={() => router.post('/logout')}
+                        >
+                            <LogOut />
+                            <span>Logout</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
@@ -378,10 +414,10 @@ export default function AdminLayout({ children }: PropsWithChildren) {
 
     return (
         <SidebarProvider>
-            <AdminSidebar currentPath={currentPath} userRole={auth.user?.role} />
+            <AdminSidebar currentPath={currentPath} user={auth.user} />
 
             <SidebarInset>
-                <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background px-4 sticky top-0 z-40 min-w-0">
+                <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-gradient-to-r from-sidebar-background via-sidebar-background to-background px-4 sticky top-0 z-40 min-w-0">
                     <SidebarTrigger className="-ml-1" />
                     <Separator orientation="vertical" className="mr-2 h-4" />
                     <div className="flex-1" />
