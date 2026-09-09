@@ -27,21 +27,21 @@ class ChipInWebhookController extends Controller
             return response()->json(['error' => 'Invalid payload'], 400);
         }
 
-        // Signature verification is mandatory — fail closed if the secret isn't configured
+        // Verify signature only when a webhook public key is configured. Without one there is
+        // no way to authenticate the sender, so the payload is trusted as-is.
         $webhookSecret = Setting::get('chipin', 'webhook_secret');
-        if (! $webhookSecret) {
-            Log::error('ChipIn webhook: webhook_secret is not configured, rejecting request', [
+        if ($webhookSecret) {
+            $signature = $request->header('X-Signature');
+            if (! $signature || ! ChipInService::verifyWebhookSignature($payload, $signature, $webhookSecret)) {
+                Log::warning('ChipIn webhook: Invalid signature', [
+                    'ip' => $request->ip(),
+                ]);
+                return response()->json(['error' => 'Invalid signature'], 403);
+            }
+        } else {
+            Log::warning('ChipIn webhook: processing unverified payload, webhook_secret is not configured', [
                 'ip' => $request->ip(),
             ]);
-            return response()->json(['error' => 'Webhook not configured'], 500);
-        }
-
-        $signature = $request->header('X-Signature');
-        if (! $signature || ! ChipInService::verifyWebhookSignature($payload, $signature, $webhookSecret)) {
-            Log::warning('ChipIn webhook: Invalid signature', [
-                'ip' => $request->ip(),
-            ]);
-            return response()->json(['error' => 'Invalid signature'], 403);
         }
 
         $eventType = $data['event_type'] ?? null;

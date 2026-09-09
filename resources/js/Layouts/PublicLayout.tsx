@@ -289,7 +289,7 @@ style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 1
                         {/* Brand */}
                         <div>
                             <Link href="/">
-                                <img src="/images/logo.png" alt="Takaful4All" className="h-10 w-auto brightness-0 invert mb-4" />
+                                <img src="/images/logo.png" alt="Takaful4All" className="h-10 w-auto mb-4" />
                             </Link>
                             <p className="text-sm text-white/40 leading-relaxed">
                                 {t('footer.tagline')}
