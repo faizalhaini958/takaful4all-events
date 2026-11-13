@@ -167,6 +167,7 @@ export interface EventTicket {
     currency: string;
     quantity: number | null;
     max_per_order: number;
+    min_per_order: number | null;
     sale_start_at: string | null;
     sale_end_at: string | null;
     is_active: boolean;

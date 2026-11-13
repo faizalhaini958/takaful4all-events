@@ -52,6 +52,7 @@ class EventRegistrationController extends Controller
                     'is_early_bird'    => $ticket->is_early_bird,
                     'currency'         => $ticket->currency,
                     'max_per_order'    => $ticket->max_per_order,
+                    'min_per_order'    => $ticket->min_per_order,
                     'is_on_sale'       => $ticket->is_on_sale,
                     'available_count'  => $ticket->available_count,
                     'event_zone_id'    => $ticket->event_zone_id,
@@ -104,6 +105,12 @@ class EventRegistrationController extends Controller
             // Verify ticket belongs to this event and is on sale
             if ($ticket->event_id !== $event->id || !$ticket->is_on_sale) {
                 return redirect()->back()->with('error', 'The selected ticket is not available.');
+            }
+
+            // Re-check minimum quantity under lock
+            $ticketMinPerOrder = $ticket->min_per_order ?? 1;
+            if ($validated['quantity'] < $ticketMinPerOrder) {
+                return redirect()->back()->with('error', "This ticket requires a minimum of {$ticketMinPerOrder} attendee(s) per order.");
             }
 
             // Re-check availability under lock

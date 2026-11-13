@@ -24,7 +24,12 @@ class StoreEventTicketRequest extends FormRequest
             'early_bird_qty'     => 'nullable|integer|min:1',
             'currency'           => 'nullable|string|max:10',
             'quantity'           => 'nullable|integer|min:1',
-            'max_per_order'      => 'nullable|integer|min:1|max:100',
+            'max_per_order'      => 'required|integer|min:1|max:100',
+            'min_per_order'      => ['nullable', 'integer', 'min:1', 'max:100', function ($attribute, $value, $fail) {
+                if ($value !== null && $this->max_per_order !== null && (int) $value > (int) $this->max_per_order) {
+                    $fail('The minimum per order cannot be greater than the maximum per order.');
+                }
+            }],
             'sale_start_at'      => 'nullable|date',
             'sale_end_at'        => 'nullable|date|after_or_equal:sale_start_at',
             'is_active'          => 'boolean',

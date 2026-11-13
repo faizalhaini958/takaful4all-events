@@ -489,7 +489,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
             {/* Gradient divider */}
             <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, transparent 0%, #1C7C93 30%, #1C7C93 50%, #1C7C93 70%, transparent 100%)' }} />
 
-            {/* Step Indicator � sticky below any nav */}
+            {/* Step Indicator - sticky below any nav */}
             <div ref={topRef} className="border-b dark:border-border bg-white dark:bg-card sticky top-0 z-10 shadow-sm" style={{ borderColor: '#c8dfe8' }}>
                 <div className="max-w-4xl mx-auto px-4 sm:px-6">
                     <div className="flex items-center">
@@ -641,7 +641,7 @@ export default function EventRegister({ event, tickets, products, zones }: Props
                 )}
             </div>
             </div>
-            {/* Auth gate � shown between Step 1 and Step 2 for unauthenticated users */}
+            {/* Auth gate - shown between Step 1 and Step 2 for unauthenticated users */}
             <RegistrationAuthGate
                 open={authGateOpen}
                 onOpenChange={setAuthGateOpen}
@@ -697,6 +697,15 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
     updateProductVariant, promoCodeDiscount, promoCodeLabel, promoCodeValidating, promoCodeError,
     promoCodeApplied, handleApplyPromoCode, handleClearPromoCode, onBack, onNext, t }: any) {
 
+    function selectTicket(ticket: any) {
+        const min = ticket.min_per_order ?? 1;
+        setData({
+            ...data,
+            ticket_id: String(ticket.id),
+            quantity: String(Math.max(min, Number(data.quantity) || 1)),
+        });
+    }
+
     return (
         <div className="space-y-6">
             <StepHeader title="Select Ticket" subtitle="Choose your category and quantity." />
@@ -743,7 +752,7 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
                                             {zt.map((ticket: any) => (
                                                 <TicketOption key={ticket.id} ticket={ticket}
                                                     selected={data.ticket_id === String(ticket.id)}
-                                                    onSelect={() => setData('ticket_id', String(ticket.id))} />
+                                                    onSelect={() => selectTicket(ticket)} />
                                             ))}
                                         </div>
                                     </div>
@@ -752,14 +761,14 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
                             {tickets.filter((tk: any) => !tk.event_zone_id && tk.is_on_sale).map((ticket: any) => (
                                 <TicketOption key={ticket.id} ticket={ticket}
                                     selected={data.ticket_id === String(ticket.id)}
-                                    onSelect={() => setData('ticket_id', String(ticket.id))} />
+                                    onSelect={() => selectTicket(ticket)} />
                             ))}
                         </div>
                     ) : tickets.filter((tk: any) => tk.is_on_sale).length > 0 ? (
                         tickets.filter((tk: any) => tk.is_on_sale).map((ticket: any) => (
                             <TicketOption key={ticket.id} ticket={ticket}
                                 selected={data.ticket_id === String(ticket.id)}
-                                onSelect={() => setData('ticket_id', String(ticket.id))} />
+                                onSelect={() => selectTicket(ticket)} />
                         ))
                     ) : (
                         <p className="text-center py-6 text-gray-400">{t('tickets.no_tickets')}</p>
@@ -772,8 +781,8 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
                             <span className="text-sm font-semibold text-gray-700 dark:text-foreground">{t('register.num_attendees')}</span>
                             <div className="flex items-center border border-gray-200 dark:border-border rounded-lg overflow-hidden">
                                 <button type="button"
-                                    onClick={() => setData('quantity', String(Math.max(1, qty - 1)))}
-                                    disabled={qty <= 1}
+                                    onClick={() => setData('quantity', String(Math.max(selectedTicket.min_per_order ?? 1, qty - 1)))}
+                                    disabled={qty <= (selectedTicket.min_per_order ?? 1)}
                                     className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                                     <Minus className="w-4 h-4" />
                                 </button>
@@ -784,7 +793,10 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
                                     <Plus className="w-4 h-4" />
                                 </button>
                             </div>
-                            <span className="text-xs text-gray-400 dark:text-muted-foreground">max {selectedTicket.max_per_order}</span>
+                            <span className="text-xs text-gray-400 dark:text-muted-foreground">
+                                {(selectedTicket.min_per_order ?? 1) > 1 && `min ${selectedTicket.min_per_order} · `}
+                                max {selectedTicket.max_per_order}
+                            </span>
                         </div>
                     )}
                 </div>
@@ -1093,7 +1105,7 @@ function Step2Info({ data, setData, qty, selectedTicket, grandTotal, errors, has
                 </div>
             ))}
 
-            {/* Terms & Conditions � shown in Step 2, below the attendee form */}
+            {/* Terms & Conditions - shown in Step 2, below the attendee form */}
             {hasTerms && (
                 <div className="rounded-xl border border-gray-200 dark:border-border bg-white dark:bg-card overflow-hidden">
                     <div className="bg-gray-50 dark:bg-muted/50 border-b border-gray-200 dark:border-border px-4 py-2.5 flex items-center gap-2">
@@ -1264,7 +1276,7 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                 </div>
                 <p className="text-center text-xs text-gray-500 dark:text-muted-foreground uppercase tracking-wider">Secure &amp; Instant Checkout</p>
                 <p className="text-center text-xs text-gray-400 dark:text-muted-foreground/60">
-                    Protected by reCAPTCHA �{' '}
+                    Protected by reCAPTCHA ·{' '}
                     <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600 dark:hover:text-muted-foreground">Privacy</a>{' '}&amp;{' '}
                     <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600 dark:hover:text-muted-foreground">Terms</a>
                 </p>
@@ -1376,7 +1388,7 @@ function ReviewField({ label, value }: { label: string; value: string }) {
     return (
         <div>
             <p className="text-[11px] uppercase tracking-wider text-gray-400 dark:text-muted-foreground font-semibold leading-tight break-words">{label}</p>
-            <p className="text-sm font-medium text-gray-900 dark:text-foreground mt-1 break-words">{value || '�'}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-foreground mt-1 break-words">{value || '—'}</p>
         </div>
     );
 }
@@ -1405,7 +1417,7 @@ function CustomFieldInput({ field, value, onChange, onIcParsedDob, locale, ticke
         let masked = digits;
         if (digits.length > 6) masked = digits.slice(0, 6) + '-' + digits.slice(6);
         if (digits.length > 8) masked = digits.slice(0, 6) + '-' + digits.slice(6, 8) + '-' + digits.slice(8);
-        // Auto-fill DOB when all 12 digits are present � one atomic update
+        // Auto-fill DOB when all 12 digits are present - one atomic update
         if (digits.length === 12 && onIcParsedDob) {
             const yy = parseInt(digits.slice(0, 2), 10);
             const mm = digits.slice(2, 4);
@@ -1440,7 +1452,7 @@ function CustomFieldInput({ field, value, onChange, onIcParsedDob, locale, ticke
             {field.type === 'select' && (
                 <Select value={value} onValueChange={onChange}>
                     <SelectTrigger className="mt-2 h-12 sm:h-9">
-                        <SelectValue placeholder={placeholder || `� ${label} �`} />
+                        <SelectValue placeholder={placeholder || label} />
                     </SelectTrigger>
                     <SelectContent>
                         {options.map((opt: string) => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
@@ -1533,8 +1545,14 @@ function TicketOption({ ticket, selected, onSelect }: {
                         )}
                     </div>
                     {/* Eligibility info */}
-                    {(ticket.min_age || ticket.max_age || ticket.allowed_gender) && (
+                    {(ticket.min_age || ticket.max_age || ticket.allowed_gender || (ticket.min_per_order ?? 1) > 1) && (
                         <div className="flex items-center gap-3 flex-wrap mt-1">
+                            {(ticket.min_per_order ?? 1) > 1 && (
+                                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                                    <Users className="w-3 h-3" />
+                                    Min {ticket.min_per_order} pax
+                                </span>
+                            )}
                             {(ticket.min_age || ticket.max_age) && (
                                 <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
                                     <CalendarDays className="w-3 h-3" />

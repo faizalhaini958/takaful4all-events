@@ -33,6 +33,7 @@ const emptyTicket = {
     currency: 'MYR',
     quantity: '',
     max_per_order: '5',
+    min_per_order: '',
     sale_start_at: '',
     sale_end_at: '',
     is_active: true,
@@ -76,6 +77,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
             currency: ticket.currency,
             quantity: ticket.quantity !== null ? String(ticket.quantity) : '',
             max_per_order: String(ticket.max_per_order),
+            min_per_order: ticket.min_per_order !== null && ticket.min_per_order !== undefined ? String(ticket.min_per_order) : '',
             sale_start_at: ticket.sale_start_at ? ticket.sale_start_at.slice(0, 16) : '',
             sale_end_at: ticket.sale_end_at ? ticket.sale_end_at.slice(0, 16) : '',
             is_active: ticket.is_active,
@@ -498,7 +500,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <Label htmlFor="quantity">Capacity <span className="text-xs text-muted-foreground">(blank = unlimited)</span></Label>
                                 <Input id="quantity" type="number" min="1" value={data.quantity} onChange={e => setData('quantity', e.target.value)} className="mt-1" placeholder="Unlimited" />
@@ -506,6 +508,11 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                             <div>
                                 <Label htmlFor="max_per_order">Max per Order</Label>
                                 <Input id="max_per_order" type="number" min="1" value={data.max_per_order} onChange={e => setData('max_per_order', e.target.value)} className="mt-1" />
+                            </div>
+                            <div>
+                                <Label htmlFor="min_per_order">Min per Order <span className="text-xs text-muted-foreground">(blank = 1)</span></Label>
+                                <Input id="min_per_order" type="number" min="1" value={data.min_per_order} onChange={e => setData('min_per_order', e.target.value)} className="mt-1" placeholder="e.g. 5 for group tickets" />
+                                {errors.min_per_order && <p className="text-sm text-red-600 mt-1">{errors.min_per_order}</p>}
                             </div>
                         </div>
 

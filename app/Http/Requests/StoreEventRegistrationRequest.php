@@ -117,6 +117,15 @@ class StoreEventRegistrationRequest extends FormRequest
 
             if (! $ticket) return;
 
+            // ── Minimum quantity per order ─────────────────────────────────────
+            $minPerOrder = $ticket->min_per_order ?? 1;
+            if ((int) $this->input('quantity') < $minPerOrder) {
+                $validator->errors()->add(
+                    'quantity',
+                    "This ticket requires a minimum of {$minPerOrder} attendee(s) per order."
+                );
+            }
+
             // No eligibility rules — nothing to check
             if (is_null($ticket->min_age) && is_null($ticket->max_age) && is_null($ticket->allowed_gender)) {
                 return;
