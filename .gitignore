@@ -22,3 +22,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Editor language-server cache files
+/storage/framework/lsp-*.php
