@@ -42,7 +42,7 @@ function Countdown({ target }: { target: Date }) {
         { v: t.s, l: 'sec' },
     ];
     return (
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/20">
+        <div className="flex items-center gap-4 mt-3">
             {parts.map(({ v, l }) => (
                 <div key={l} className="text-center">
                     <span className="block text-sm font-bold text-white tabular-nums leading-none">
@@ -103,7 +103,6 @@ export default function EventCard({ event }: Props) {
                 <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-3"
                     style={{ background: 'linear-gradient(135deg, #1B3A6B 0%, #17A2B0 100%)' }}>
                     {/* Subtle grid texture */}
-                    <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
                     {/* Icon container */}
                     <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center"
                         style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}>

@@ -283,8 +283,8 @@ style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 1
             <main className="flex-1">{children}</main>
 
             {/* ── Footer ── */}
-            <footer className="mt-0 text-white/60" style={{ backgroundColor: '#16324A', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+            <footer className="relative z-10 -mt-6 rounded-t-3xl text-white/60" style={{ backgroundColor: '#16324A' }}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-14">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                         {/* Brand */}
                         <div>
@@ -345,7 +345,7 @@ style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 1
                         </div>
                     </div>
 
-                    <div className="border-t border-white/5 mt-10 pt-6 text-xs text-white/25 text-center">
+                    <div className="mt-10 pt-6 text-xs text-white/25 text-center">
                         © {new Date().getFullYear()} Malaysian Takaful Association. All rights reserved.
                     </div>
                 </div>

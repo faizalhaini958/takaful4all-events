@@ -72,7 +72,6 @@ export default function PageShow({ page, canonicalUrl }: Props) {
             {/* ── Hero ── */}
             <section className="relative -mt-16 overflow-hidden" style={{ background: '#16324A' }}>
                 {/* Dot grid */}
-                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                 {/* Glow */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #1C7C93 0%, transparent 70%)' }} />
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 md:pb-28 text-center" style={{ paddingTop: '7rem' }}>
@@ -95,7 +94,6 @@ export default function PageShow({ page, canonicalUrl }: Props) {
             {/* ── About content ── */}
             {isAbout && (
                 <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
-                    <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                     <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20">
                         <div className="prose prose-lg max-w-none text-gray-600 dark:text-foreground text-center mb-12">
                             <p>
@@ -130,7 +128,6 @@ export default function PageShow({ page, canonicalUrl }: Props) {
             {/* ── Contact content ── */}
             {isContact && (
                 <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
-                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                 <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20 space-y-14">
 
                     {/* Contact cards */}
@@ -242,7 +239,6 @@ export default function PageShow({ page, canonicalUrl }: Props) {
             {/* ── Generic page content ── */}
             {!isAbout && !isContact && (
                 <section className="relative z-10 -mt-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
-                    <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                     <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-20">
                         {page.content_html ? (
                             <article

@@ -110,8 +110,6 @@ export default function EventsIndex({ events, currentStatus, currentCategory, ba
             {/* ── HERO ── */}
             <section className="relative overflow-hidden -mt-16" style={{ backgroundColor: '#16324A' }}>
                 {/* Dot grid */}
-                <div className="absolute inset-0 pointer-events-none"
-                    style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                 {/* Glow */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full opacity-20 pointer-events-none"
                     style={{ background: 'radial-gradient(ellipse at center, #1C7C93 0%, transparent 70%)' }} />
@@ -130,8 +128,6 @@ export default function EventsIndex({ events, currentStatus, currentCategory, ba
                 className="relative z-10 -mt-10 py-14 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background"
             >
                 {/* Subtle dot-grid depth */}
-                <div className="absolute inset-0 pointer-events-none"
-                    style={{ backgroundImage: 'radial-gradient(circle, rgba(0,159,187,0.05) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 

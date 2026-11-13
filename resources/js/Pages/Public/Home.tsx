@@ -8,7 +8,7 @@ import {
     ArrowRight, ArrowUp, MapPin, Globe2, Users,
     Mic, Lightbulb, TrendingUp, Heart, BookOpen,
     Trophy, Wrench, UtensilsCrossed, Music, LayoutGrid,
-    ChevronLeft, ChevronRight,
+    ChevronLeft, ChevronRight, CalendarClock,
 } from 'lucide-react';
 import { type Banner, type Event, type Page, type Post } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
@@ -57,7 +57,10 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
     const [subscribed, setSubscribed] = useState(false);
     const [slideIndex, setSlideIndex] = useState(0);
     const [search, setSearch] = useState('');
-    const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+    // Open on Past Events when nothing is upcoming, so visitors land on real content
+    const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>(
+        upcomingEvents.length === 0 && pastEvents.length > 0 ? 'past' : 'upcoming',
+    );
     const [heroSlide, setHeroSlide] = useState(0);
     const [heroFade, setHeroFade] = useState(true);
     const [mobileSlide, setMobileSlide] = useState(0);
@@ -194,11 +197,9 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                 HERO — split layout
             ───────────────────────────────────────── */}
             <section
-                className="relative overflow-hidden -mt-16 pb-10"
-style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 100%)' }}
+                className="relative overflow-hidden -mt-16 pb-16 bg-gradient-to-br from-[#EAF8FB] via-[#DDF3F8] to-[#EAF8FB] dark:from-[#071B2A] dark:via-[#0B2A3A] dark:to-[#071B2A]"
             >
                 {/* Dot grid */}
-                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(28,124,147,0.10) 1px, transparent 1px)', backgroundSize: '36px 36px' }} />
                 {/* Cyan glow top-left */}
                 <div className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(28,124,147,0.13) 0%, transparent 60%)' }} />
 
@@ -217,17 +218,17 @@ style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 1
                             </div>
 
                             {/* Headline */}
-                            <h1 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-[3.5rem] font-extrabold text-[#334155] leading-[1.1] mb-4 sm:mb-5"
+                            <h1 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-[3.5rem] font-extrabold text-[#334155] dark:text-white leading-[1.1] mb-4 sm:mb-5"
                                 style={{ fontFamily: POPPINS, letterSpacing: '-0.02em' }}>
                                 Connect. Inspire.{' '}
-                                <span className="block bg-gradient-to-r from-[#1B4F91] to-[#1C7C93] bg-clip-text text-transparent">
+                                <span className="block bg-gradient-to-r from-[#1B4F91] to-[#1C7C93] dark:from-[#5B9BE8] dark:to-[#3FC1D9] bg-clip-text text-transparent">
                                     Shape the Future.
                                 </span>
                             </h1>
 
                             {/* Subtitle */}
-                            <p className="text-sm sm:text-base mb-6 sm:mb-8 max-w-sm sm:max-w-md leading-relaxed"
-                                style={{ color: '#475569', fontFamily: INTER }}>
+                            <p className="text-sm sm:text-base mb-6 sm:mb-8 max-w-sm sm:max-w-md leading-relaxed text-[#475569] dark:text-slate-300"
+                                style={{ fontFamily: INTER }}>
                                 Discover conferences, workshops &amp; webinars curated for takaful professionals across Malaysia.
                             </p>
 
@@ -239,7 +240,7 @@ style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 1
                                     Browse all events <ArrowRight className="w-4 h-4" />
                                 </Link>
                                 {upcomingEvents.length > 0 && (
-                                    <span className="text-xs" style={{ color: 'rgba(51,65,85,0.35)', fontFamily: INTER }}>
+                                    <span className="text-xs text-[#334155]/35 dark:text-slate-400" style={{ fontFamily: INTER }}>
                                         · {upcomingEvents.length} upcoming event{upcomingEvents.length !== 1 ? 's' : ''}
                                     </span>
                                 )}
@@ -454,7 +455,6 @@ style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 1
                     <section
                         className="relative z-10 -mt-10 rounded-t-3xl overflow-hidden bg-white dark:bg-background"
                     >
-                        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,159,187,0.05) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-0">
                             {/* Search bar */}
@@ -575,6 +575,45 @@ style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 1
                                         <EventCard key={event.id} event={event} />
                                     ))}
                                 </div>
+                            ) : activeTab === 'upcoming' && upcomingEvents.length === 0 ? (
+                                <>
+                                    {/* Friendly empty state — nothing upcoming at all */}
+                                    <div className="text-center py-12 px-4 rounded-2xl bg-[#EAF8FB] border border-[#dde8ef]">
+                                        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                                            <CalendarClock className="w-7 h-7 text-[#1C7C93]" strokeWidth={1.5} />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-[#071B2A]" style={{ fontFamily: POPPINS }}>No upcoming events right now</h3>
+                                        <p className="mt-1 text-sm text-[#071B2A]/55 max-w-md mx-auto" style={{ fontFamily: INTER }}>
+                                            New events are announced soon. Follow us to be the first to know.
+                                        </p>
+                                        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                                            {pastEvents.length > 0 && (
+                                                <button onClick={() => { setActiveTab('past'); setSlideIndex(0); }}
+                                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                                                    style={{ backgroundColor: '#1C7C93', fontFamily: INTER }}>
+                                                    Browse past events <ArrowRight className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                            <a href="https://www.facebook.com/mtasocialmedia.mta" target="_blank" rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold bg-white border border-[#dde8ef] text-[#1C7C93] hover:bg-[#f4fafc] transition-colors"
+                                                style={{ fontFamily: INTER }}>
+                                                Follow us for updates
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    {/* Recent events so the page still feels active */}
+                                    {pastEvents.length > 0 && (
+                                        <div className="mt-10">
+                                            <h3 className="text-xl font-extrabold text-[#071B2A] mb-4" style={{ fontFamily: POPPINS, letterSpacing: '-0.02em' }}>Recent events</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                                                {pastEvents.slice(0, 4).map(event => (
+                                                    <EventCard key={event.id} event={event} />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             ) : (
                                 <div className="text-center py-16 rounded-2xl border border-dashed border-[#e2e8f0] dark:border-border">
                                     <p className="text-sm text-[#071B2A]/35 dark:text-muted-foreground" style={{ fontFamily: INTER }}>No events found.</p>
@@ -588,9 +627,10 @@ style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 1
             {/* ─────────────────────────────────────────
                 WHY JOIN
             ───────────────────────────────────────── */}
-            <section className="py-16 sm:py-20 relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 100%)' }}>
+            {/* White backdrop (events section) so the top corners curve into it */}
+            <div className="bg-white">
+            <section className="py-16 sm:py-20 relative overflow-hidden rounded-t-3xl bg-gradient-to-br from-[#EAF8FB] via-[#DDF3F8] to-[#EAF8FB] dark:from-[#071B2A] dark:via-[#0B2A3A] dark:to-[#071B2A]">
                 {/* Subtle dot grid overlay */}
-                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(28,124,147,0.07) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header */}
                     <div className="mb-8 sm:mb-12">
@@ -634,6 +674,7 @@ style={{ background: 'linear-gradient(145deg, #EAF8FB 0%, #DDF3F8 55%, #EAF8FB 1
                     </div>
                 </div>
             </section>
+            </div>
 
             {/* ── Back to top ── */}
             <button
