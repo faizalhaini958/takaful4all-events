@@ -15,16 +15,16 @@
     <!-- Open Graph defaults (overridden by page-level Inertia <Head> tags) -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ config('app.name', 'Takaful4all Events') }}">
-    <meta property="og:title" content="{{ config('app.name', 'Takaful4all Events') }} | Conferences, Webinars &amp; Workshops">
-    <meta property="og:description" content="Takaful4All Events is the official events platform of the Malaysian Takaful Association. Discover and register for upcoming conferences, webinars, workshops and takaful industry events.">
+    <meta property="og:title" content="{{ $metaTitle ?? config('app.name', 'Takaful4all Events') . ' | Conferences, Webinars & Workshops' }}">
+    <meta property="og:description" content="{{ $metaDescription ?? 'Takaful4All Events is the official events platform of the Malaysian Takaful Association. Discover and register for upcoming conferences, webinars, workshops and takaful industry events.' }}">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ config('app.url') }}/images/logo.png">
+    <meta property="og:image" content="{{ $ogImage ?? config('app.url') . '/images/logo.png' }}">
 
     <!-- Twitter Card defaults -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ config('app.name', 'Takaful4all Events') }} | Conferences, Webinars &amp; Workshops">
-    <meta name="twitter:description" content="Takaful4All Events is the official events platform of the Malaysian Takaful Association. Discover and register for upcoming conferences, webinars, workshops and takaful industry events.">
-    <meta name="twitter:image" content="{{ config('app.url') }}/images/logo.png">
+    <meta name="twitter:title" content="{{ $metaTitle ?? config('app.name', 'Takaful4all Events') . ' | Conferences, Webinars & Workshops' }}">
+    <meta name="twitter:description" content="{{ $metaDescription ?? 'Takaful4All Events is the official events platform of the Malaysian Takaful Association. Discover and register for upcoming conferences, webinars, workshops and takaful industry events.' }}">
+    <meta name="twitter:image" content="{{ $ogImage ?? config('app.url') . '/images/logo.png' }}">
 
     <!-- hreflang alternates -->
     <link rel="alternate" hreflang="en" href="{{ str_replace('/ms/', '/en/', url()->current()) }}">

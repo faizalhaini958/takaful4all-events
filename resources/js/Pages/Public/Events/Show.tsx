@@ -68,23 +68,18 @@ function RelatedEventsCarousel({ related, t }: { related: Event[]; t: (k: string
     };
 
     return (
-        <div className="mt-10 rounded-3xl px-6 sm:px-8 py-10" style={{ background: '#16324A' }}>
-            {/* Dot grid */}
-            <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-            {/* Header */}
-            <div className="flex items-end justify-between mb-8">
-                <div>
-                    <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#1C7C93' }}>Upcoming</p>
-                    <h2 className="text-2xl font-extrabold text-white">{t('event.more_events')}</h2>
-                    <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.55)' }}>Discover more exciting events curated for you.</p>
-                </div>
+        <div className="mt-8 rounded-xl overflow-hidden bg-white dark:bg-card shadow-md" style={{ border: '1px solid rgba(0,159,187,0.12)' }}>
+            {/* Header — same style as Event Sponsor / Location */}
+            <div className="flex items-center justify-between px-5 py-4 bg-gray-50 dark:bg-muted/50" style={{ borderBottom: '1px solid rgba(0,159,187,0.1)' }}>
+                <h2 className="text-sm font-bold text-gray-800 dark:text-foreground uppercase tracking-wider">{t('event.more_events')}</h2>
                 <Link
                     href="/events"
-                    className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full transition-all"
-                    style={{ color: '#1C7C93', border: '1px solid rgba(28,124,147,0.3)', background: 'rgba(28,124,147,0.08)' }}>
+                    className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#1C7C93] hover:underline">
                     {t('event.view_all')} <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
             </div>
+
+            <div className="p-4 sm:p-6">
 
             {/* Cards + side arrows */}
             {isMobile ? (
@@ -106,23 +101,31 @@ function RelatedEventsCarousel({ related, t }: { related: Event[]; t: (k: string
                             type="button"
                             onClick={() => setPage(p => Math.max(0, p - 1))}
                             disabled={!hasPrev}
-                            className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border shadow-md items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed"
-                            style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}>
+                            className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border shadow-md items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed bg-white border-[#dde8ef] text-[#071B2A]/70 hover:text-[#1C7C93]">
                             <ChevronLeft className="w-5 h-5" />
                         </button>
                     )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {visible.map(e => <EventCard key={e.id} event={e} />)}
-                    </div>
+                    {visible.length < 3 ? (
+                        <div className="flex flex-wrap justify-center gap-6">
+                            {visible.map(e => (
+                                <div key={e.id} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]">
+                                    <EventCard event={e} />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {visible.map(e => <EventCard key={e.id} event={e} />)}
+                        </div>
+                    )}
 
                     {totalPages > 1 && (
                         <button
                             type="button"
                             onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                             disabled={!hasNext}
-                            className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border shadow-md items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed"
-                            style={{ background: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}>
+                            className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border shadow-md items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed bg-white border-[#dde8ef] text-[#071B2A]/70 hover:text-[#1C7C93]">
                             <ChevronRight className="w-5 h-5" />
                         </button>
                     )}
@@ -147,13 +150,14 @@ function RelatedEventsCarousel({ related, t }: { related: Event[]; t: (k: string
                                 className={`h-2.5 rounded-full transition-all duration-300 ${
                                     i === page
                                         ? 'w-7'
-                                        : 'w-2.5 hover:bg-white/40'
+                                        : 'w-2.5 hover:bg-[#1C7C93]/40'
                                 }`}
-                                style={{ background: i === page ? '#1C7C93' : 'rgba(255,255,255,0.2)' }}
+                                style={{ background: i === page ? '#1C7C93' : 'rgba(7,27,42,0.15)' }}
                             />
                         ))}
                     </div>
                 ) : <span />}
+            </div>
             </div>
         </div>
     );
@@ -287,7 +291,7 @@ export default function EventShow({ event, related, ogUrl }: Props) {
             startDate: event.start_at,
             ...(event.end_at ? { endDate: event.end_at } : {}),
             url: ogUrl,
-            ...(event.media?.url ? { image: event.media.url } : {}),
+            ...(event.media?.url ? { image: new URL(event.media.url, window.location.origin).href } : {}),
             location: event.venue ? {
                 '@type': 'Place',
                 name: event.venue,
@@ -331,20 +335,17 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                 <meta property="og:url" content={ogUrl} />
                 <meta property="og:title" content={`${event.title} | Takaful4All Events`} />
                 <meta property="og:description" content={event.meta_description ?? event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
-                {event.media?.url ? <meta property="og:image" content={event.media.url} /> : null}
                 <meta property="og:site_name" content="Takaful4All Events" />
                 {/* Twitter Card */}
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content={`${event.title} | Takaful4All Events`} />
                 <meta name="twitter:description" content={event.meta_description ?? event.excerpt ?? `Join us for ${event.title}. Register now on Takaful4All Events.`} />
-                {event.media?.url ? <meta name="twitter:image" content={event.media.url} /> : null}
                 {/* Structured Data */}
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(eventSchema) }} />
             </Head>
 
             <div className="relative z-10 rounded-t-3xl rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#EBF5FA] dark:from-background to-[#ddeef6] dark:to-background">
-            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,100,140,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-            <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+            <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12 sm:pt-8 sm:pb-14">
 
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-2 text-xs text-gray-400 dark:text-muted-foreground mb-4" aria-label="Breadcrumb">
@@ -880,12 +881,14 @@ function TicketPurchaseCard({ event, onSaleTickets }: { event: Event; onSaleTick
                                 ))
                             )}
                         </>
-                    ) : event.status !== 'past' ? (
+                    ) : (
                         <div className="text-center py-8">
                             <Ticket className="w-12 h-12 text-gray-200 dark:text-muted-foreground/20 mx-auto mb-4" />
-                            <p className="text-gray-500 dark:text-muted-foreground font-medium">{t('event.no_tickets_available')}</p>
+                            <p className="text-gray-500 dark:text-muted-foreground font-medium">
+                                {event.status === 'past' ? t('event.ticket_sales_ended') : t('event.no_tickets_available')}
+                            </p>
                         </div>
-                    ) : null}
+                    )}
                 </div>
 
 

@@ -147,6 +147,13 @@ class EventController extends Controller
             'event'   => $event,
             'related' => $related,
             'ogUrl'   => route('events.show', $slug),
-        ])->withViewData('heroImage', $event->media?->url);
+        ])->withViewData([
+            'heroImage'       => $event->media?->url,
+            'metaTitle'       => $event->title . ' | Takaful4All Events',
+            'metaDescription' => $event->meta_description
+                ?? $event->excerpt
+                ?? "Join us for {$event->title}. Register now on Takaful4All Events.",
+            'ogImage'         => $event->media?->url ? url($event->media->url) : null,
+        ]);
     }
 }

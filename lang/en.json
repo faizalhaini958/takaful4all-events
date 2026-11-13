@@ -52,6 +52,7 @@
     "event.breadcrumb_events": "Events",
     "event.register_now": "Register Now",
     "event.no_tickets_available": "Tickets are not available for this event.",
+    "event.ticket_sales_ended": "Ticket sales have ended for this event.",
     "event.registration_closed": "Registration Closed",
     "event.registration_coming_soon": "Registration link coming soon",
     "event.venue_info": "Venue Info",

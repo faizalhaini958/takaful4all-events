@@ -9,14 +9,14 @@ Allow: /agent360
 Allow: /content
 Allow: /about
 Allow: /contact
+Allow: /storage/media/
 
 # Block private / transactional pages
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /payment/
-Disallow: /register
+Disallow: /events/*/register
 Disallow: /events/*/register/confirmation/
-Disallow: /storage/
 Disallow: /track
 Disallow: /locale/
 Disallow: /invoices/
