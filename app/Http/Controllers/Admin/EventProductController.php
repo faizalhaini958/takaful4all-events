@@ -8,42 +8,46 @@ use App\Models\Event;
 use App\Models\EventProduct;
 use App\Models\Media;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class EventProductController extends Controller
 {
     /**
-     * Global view — all products with event selector.
+     * Overview of add-on products across events. Products are created and edited on each
+     * event's own page; old ?event=slug links are sent straight there.
      */
-    public function all(): Response
+    public function all(Request $request): Response|RedirectResponse
     {
-        $eventSlug = request('event', '');
+        if ($slug = $request->query('event')) {
+            $event = Event::where('slug', $slug)->first();
 
-        $events = Event::where('rsvp_enabled', true)
-            ->orderBy('title')
-            ->get(['id', 'title', 'slug']);
-
-        $event = null;
-        $products = collect();
-
-        if ($eventSlug) {
-            $event = Event::where('slug', $eventSlug)->first();
             if ($event) {
-                $products = $event->products()
-                    ->with('media')
-                    ->orderBy('sort_order')
-                    ->get();
-                $event->load('media');
+                return redirect()->route('admin.events.products.index', $event);
             }
         }
 
+        $events = Event::where('rsvp_enabled', true)
+            ->with('products')
+            ->orderByDesc('start_at')
+            ->get()
+            ->map(function (Event $event) {
+                $products = $event->products;
+
+                return [
+                    'id'             => $event->id,
+                    'title'          => $event->title,
+                    'slug'           => $event->slug,
+                    'start_at'       => $event->start_at?->toIso8601String(),
+                    'products_count' => $products->count(),
+                    'active_count'   => $products->where('is_active', true)->count(),
+                    'currencies'     => $products->pluck('currency')->filter()->unique()->values(),
+                ];
+            });
+
         return Inertia::render('Admin/Products/Index', [
-            'events'       => $events,
-            'currentEvent' => $eventSlug,
-            'event'        => $event,
-            'products'     => $products,
-            'mediaList'    => Media::latest()->get(['id', 'url', 'title']),
+            'events' => $events,
         ]);
     }
 

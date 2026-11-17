@@ -14,37 +14,49 @@ use Inertia\Response;
 class EventTicketController extends Controller
 {
     /**
-     * Global view — all tickets with event selector.
+     * Overview of ticket sales across events. Tickets are created and edited on each
+     * event's own page; old ?event=slug links are sent straight there.
      */
-    public function all(): Response
+    public function all(Request $request): Response|RedirectResponse
     {
-        $eventSlug = request('event', '');
+        if ($slug = $request->query('event')) {
+            $event = Event::where('slug', $slug)->first();
 
-        $events = Event::where('rsvp_enabled', true)
-            ->orderBy('title')
-            ->get(['id', 'title', 'slug']);
-
-        $event = null;
-        $tickets = collect();
-
-        if ($eventSlug) {
-            $event = Event::where('slug', $eventSlug)->first();
             if ($event) {
-                $tickets = $event->tickets()
-                    ->withCount(['registrations as sold_count' => function ($q) {
-                        $q->whereNotIn('status', ['cancelled']);
-                    }])
-                    ->orderBy('sort_order')
-                    ->get();
-                $event->load('media');
+                return redirect()->route('admin.events.tickets.index', $event);
             }
         }
 
+        $events = Event::where('rsvp_enabled', true)
+            ->with(['tickets' => function ($q) {
+                $q->withCount(['registrations as sold_count' => function ($q) {
+                    $q->whereNotIn('status', ['cancelled']);
+                }]);
+            }])
+            ->orderByDesc('start_at')
+            ->get()
+            ->map(function (Event $event) {
+                $tickets = $event->tickets;
+
+                return [
+                    'id'            => $event->id,
+                    'title'         => $event->title,
+                    'slug'          => $event->slug,
+                    'start_at'      => $event->start_at?->toIso8601String(),
+                    'status'        => $event->status,
+                    'tickets_count' => $tickets->count(),
+                    'on_sale_count' => $tickets->filter(fn (EventTicket $t) => $t->is_on_sale)->count(),
+                    'sold'          => (int) $tickets->sum('sold_count'),
+                    // null means at least one ticket has no cap
+                    'capacity'      => $tickets->contains(fn (EventTicket $t) => $t->quantity === null)
+                        ? null
+                        : (int) $tickets->sum('quantity'),
+                    'currencies'    => $tickets->pluck('currency')->filter()->unique()->values(),
+                ];
+            });
+
         return Inertia::render('Admin/Tickets/Index', [
-            'events'       => $events,
-            'currentEvent' => $eventSlug,
-            'event'        => $event,
-            'tickets'      => $tickets,
+            'events' => $events,
         ]);
     }
 
