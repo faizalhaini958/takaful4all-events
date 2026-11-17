@@ -6,6 +6,7 @@ import { CheckCircle2, Calendar, MapPin, Ticket, Mail, Hash, ArrowRight, Home, P
 import { type EventRegistration, type SharedProps } from '@/types';
 import { useState } from 'react';
 import RegisterModal from '@/Components/RegisterModal';
+import { formatMoney } from '@/lib/money';
 
 const POPPINS = "'Poppins', sans-serif";
 const INTER   = "'Inter', sans-serif";
@@ -116,7 +117,7 @@ export default function PaymentSuccess({ registration }: Props) {
                                     <div>
                                         <p className="text-muted-foreground">Amount Paid</p>
                                         <p className="font-medium text-emerald-700">
-                                            RM {Number(registration.total_amount).toFixed(2)}
+                                            {formatMoney(registration.total_amount, registration.ticket?.currency)}
                                         </p>
                                     </div>
                                 )}
@@ -163,7 +164,7 @@ export default function PaymentSuccess({ registration }: Props) {
                                                         <span className="text-gray-400 ml-1">× {p.quantity}</span>
                                                     </span>
                                                     <span className="font-medium text-gray-900 dark:text-foreground">
-                                                        RM {(Number(p.unit_price) * p.quantity).toFixed(2)}
+                                                        {formatMoney(Number(p.unit_price) * p.quantity, registration.ticket?.currency)}
                                                     </span>
                                                 </div>
                                             );

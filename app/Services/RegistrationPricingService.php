@@ -31,7 +31,7 @@ class RegistrationPricingService
 
         // Apply promo code discount
         if ($promoCodeInput && $discountAmount === 0.0) {
-            $promoResult = $this->applyPromoCode($promoCodeInput, $subtotal, $user, $ticket->event_id);
+            $promoResult = $this->applyPromoCode($promoCodeInput, $subtotal, $user, $ticket->event_id, $ticket->currency ?? 'MYR');
 
             if ($promoResult['success']) {
                 $promoCodeDiscount = $promoResult['discount'];
@@ -69,7 +69,7 @@ class RegistrationPricingService
      *
      * @return array{success: bool, discount?: float, promo_code_id?: int, label?: string, error?: string}
      */
-    public function applyPromoCode(string $code, float $subtotal, ?User $user, ?int $eventId): array
+    public function applyPromoCode(string $code, float $subtotal, ?User $user, ?int $eventId, string $currency = 'MYR'): array
     {
         $promoCode = PromoCode::where('code', strtoupper(trim($code)))->lockForUpdate()->first();
 
@@ -99,6 +99,11 @@ class RegistrationPricingService
 
         if (! $promoCode->canBeUsedByUser($user?->id)) {
             return ['success' => false, 'error' => 'You have already used this promo code the maximum number of times.'];
+        }
+
+        // Fixed amounts and minimum order values are defined in MYR, so only percentage codes can apply to other currencies
+        if ($currency !== 'MYR' && ($promoCode->discount_type !== 'percentage' || $promoCode->min_order_amount !== null)) {
+            return ['success' => false, 'error' => 'This promo code can only be used with MYR tickets.'];
         }
 
         if ($promoCode->min_order_amount !== null && $subtotal < $promoCode->min_order_amount) {

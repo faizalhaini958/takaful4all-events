@@ -7,6 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useEffect } from 'react';
 import { type EventRegistration, type EventRegistrationAttendee } from '@/types';
 import { useAnalytics } from '@/hooks/use-analytics';
+import { formatMoney } from '@/lib/money';
 
 const POPPINS = "'Poppins', sans-serif";
 const INTER   = "'Inter', sans-serif";
@@ -120,7 +121,7 @@ export default function RegistrationConfirmation({ registration }: Props) {
                                 <div className="space-y-1 text-sm">
                                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                                         <span className="min-w-0 break-words">Ticket ({registration.ticket?.name} x {registration.quantity})</span>
-                                        <span className="font-semibold whitespace-nowrap text-right">RM {Number(registration.subtotal).toFixed(2)}</span>
+                                        <span className="font-semibold whitespace-nowrap text-right">{formatMoney(registration.subtotal, registration.ticket?.currency)}</span>
                                     </div>
                                     {registration.products?.map(p => (
                                         <div key={p.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
@@ -129,12 +130,12 @@ export default function RegistrationConfirmation({ registration }: Props) {
                                                 {p.variant && ` (${p.variant})`}
                                                 {' '} x {p.quantity}
                                             </span>
-                                            <span className="font-semibold whitespace-nowrap text-right">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</span>
+                                            <span className="font-semibold whitespace-nowrap text-right">{formatMoney(Number(p.unit_price) * p.quantity, registration.ticket?.currency)}</span>
                                         </div>
                                     ))}
                                     <div className="flex justify-between font-bold text-base pt-2 border-t mt-2">
                                         <span>Total</span>
-                                        <span>RM {Number(registration.total_amount).toFixed(2)}</span>
+                                        <span>{formatMoney(registration.total_amount, registration.ticket?.currency)}</span>
                                     </div>
                                 </div>
                             </div>

@@ -5,6 +5,7 @@ import { Link, router } from '@inertiajs/react';
 import { ShoppingBag, Search, Eye, Calendar, MapPin, Hash, Ticket, Package, User, Mail, Phone, Building2, ArrowRight, CheckCircle2, Clock, XCircle, RefreshCw } from 'lucide-react';
 import { type EventRegistration, type PaginatedData } from '@/types';
 import { useState } from 'react';
+import { formatMoney } from '@/lib/money';
 
 interface Props {
     orders: PaginatedData<EventRegistration>;
@@ -173,7 +174,7 @@ export default function Orders({ orders, filters }: Props) {
 
                                     <div className="flex-shrink-0 text-right">
                                         <p className="text-base font-bold text-brand-navy">
-                                            {Number(order.total_amount) > 0 ? `RM ${Number(order.total_amount).toFixed(2)}` : 'Free'}
+                                            {Number(order.total_amount) > 0 ? formatMoney(Number(order.total_amount), order?.ticket?.currency) : 'Free'}
                                         </p>
                                         <button
                                             onClick={() => setSelectedOrder(order)}
@@ -288,12 +289,12 @@ export default function Orders({ orders, filters }: Props) {
                                     <p className="text-xs text-gray-400 dark:text-muted-foreground flex items-center gap-1 mb-2"><Ticket className="w-3 h-3" /> Ticket</p>
                                     <div className="flex items-center justify-between rounded-xl border border-gray-100 dark:border-border bg-gray-50 dark:bg-muted/50 px-3 py-2.5">
                                         <span className="dark:text-foreground">{o.ticket?.name ?? '—'} &times; {o.quantity}</span>
-                                        <span className="font-semibold dark:text-foreground">RM {Number(o.subtotal).toFixed(2)}</span>
+                                        <span className="font-semibold dark:text-foreground">{formatMoney(Number(o.subtotal), o?.ticket?.currency)}</span>
                                     </div>
                                     {Number(o.discount_amount) > 0 && (
                                         <div className="flex justify-between text-xs text-emerald-600 px-3 mt-1">
                                             <span>Discount</span>
-                                            <span>&minus; RM {Number(o.discount_amount).toFixed(2)}</span>
+                                            <span>&minus; {formatMoney(Number(o.discount_amount), o?.ticket?.currency)}</span>
                                         </div>
                                     )}
                                 </div>
@@ -318,7 +319,7 @@ export default function Orders({ orders, filters }: Props) {
                                                             {variants.length > 0 && <span className="text-gray-400 dark:text-muted-foreground ml-1">({variants.join(', ')})</span>}
                                                             <span className="text-gray-400 dark:text-muted-foreground ml-1">&times; {p.quantity}</span>
                                                         </span>
-                                                        <span className="font-semibold">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</span>
+                                                        <span className="font-semibold">{formatMoney((Number(p.unit_price) * p.quantity), o?.ticket?.currency)}</span>
                                                     </div>
                                                 );
                                             })}
@@ -332,7 +333,7 @@ export default function Orders({ orders, filters }: Props) {
                                 <div className="space-y-1.5">
                                     <div className="flex justify-between font-bold text-base text-brand-navy">
                                         <span>Total</span>
-                                        <span>{Number(o.total_amount) > 0 ? `RM ${Number(o.total_amount).toFixed(2)}` : 'Free'}</span>
+                                        <span>{Number(o.total_amount) > 0 ? formatMoney(Number(o.total_amount), o?.ticket?.currency) : 'Free'}</span>
                                     </div>
                                     <div className="flex justify-between text-xs text-gray-500 dark:text-muted-foreground">
                                         <span>Payment</span>

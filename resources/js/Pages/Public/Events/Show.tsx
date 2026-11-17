@@ -6,6 +6,7 @@ import { Calendar, Clock, MapPin, ExternalLink, ChevronRight, ChevronLeft, Ticke
 import { type Event, type EventTicket, type EventZone } from '@/types';
 import { useTranslation } from '@/hooks/use-translation';
 import { useAnalytics } from '@/hooks/use-analytics';
+import { formatMoney, formatPriceRange } from '@/lib/money';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Tab } from '@headlessui/react';
 
@@ -265,6 +266,10 @@ export default function EventShow({ event, related, ogUrl }: Props) {
     const maxPrice = onSaleTickets.length > 0
         ? Math.max(...onSaleTickets.map(t => Number(t.current_price)))
         : null;
+    // Grouped per currency so MYR and USD prices are never mixed in one range
+    const priceLabel = minPrice === null || minPrice === 0
+        ? 'Free'
+        : formatPriceRange(onSaleTickets.map(t => ({ amount: Number(t.current_price), currency: t.currency })));
 
     const eventSchema = useMemo(() => {
         const regUrl = `${window.location.origin}/events/${event.slug}/register`;
@@ -391,8 +396,7 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                         <EventInfoCard
                             event={event}
                             onSaleTickets={onSaleTickets}
-                            minPrice={minPrice}
-                            maxPrice={maxPrice}
+                            priceLabel={priceLabel}
                             startDate={startDate}
                             endDate={endDate}
                             formatLongDate={formatLongDate}
@@ -622,11 +626,7 @@ export default function EventShow({ event, related, ogUrl }: Props) {
                     <div>
                         <p className="text-[10px] text-gray-500 dark:text-muted-foreground uppercase font-bold tracking-wider">Price</p>
                         <p className="text-lg font-bold text-brand-navy dark:text-foreground">
-                            {minPrice === null ? 'Free'
-                                : minPrice === 0 ? 'Free'
-                                : (maxPrice !== null && maxPrice > minPrice)
-                                    ? `RM ${minPrice.toFixed(2)} – RM ${maxPrice.toFixed(2)}`
-                                    : `RM ${minPrice.toFixed(2)}`}
+                            {priceLabel}
                         </p>
                     </div>
                     {event.is_registration_open ? (
@@ -648,11 +648,10 @@ export default function EventShow({ event, related, ogUrl }: Props) {
     );
 }
 
-function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, endDate, formatLongDate, formatTime, t }: {
+function EventInfoCard({ event, onSaleTickets, priceLabel, startDate, endDate, formatLongDate, formatTime, t }: {
     event: Event;
     onSaleTickets: EventTicket[];
-    minPrice: number | null;
-    maxPrice: number | null;
+    priceLabel: string;
     startDate: Date;
     endDate: Date | null;
     formatLongDate: (d: Date) => string;
@@ -794,11 +793,7 @@ function EventInfoCard({ event, onSaleTickets, minPrice, maxPrice, startDate, en
                         <div>
                             <p className="text-[10px] text-gray-400 dark:text-muted-foreground uppercase font-bold tracking-widest mb-0.5">Price</p>
                             <p className="text-sm font-semibold text-gray-900 dark:text-foreground">
-                                {minPrice === 0 ? 'Free' : minPrice !== null
-                                    ? (maxPrice !== null && maxPrice > minPrice
-                                        ? `RM ${minPrice.toFixed(2)} – RM ${maxPrice.toFixed(2)}`
-                                        : `RM ${minPrice.toFixed(2)}`)
-                                    : 'Free'}
+                                {priceLabel}
                             </p>
                         </div>
                     </div>
@@ -972,15 +967,15 @@ function TicketCardItem({ ticket }: { ticket: EventTicket }) {
                                 "text-lg font-extrabold",
                                 isSoldOut ? "text-gray-400 dark:text-muted-foreground" : "text-brand-navy dark:text-brand"
                             )}>
-                                RM {Number(ticket.current_price).toFixed(2)}
+                                {formatMoney(ticket.current_price, ticket.currency)}
                             </p>
                             {ticket.is_early_bird && ticket.price > ticket.current_price && (
-                                <p className="text-xs text-gray-400 dark:text-muted-foreground line-through">RM {Number(ticket.price).toFixed(2)}</p>
+                                <p className="text-xs text-gray-400 dark:text-muted-foreground line-through">{formatMoney(ticket.price, ticket.currency)}</p>
                             )}
                         </div>
                     )}
                     {savings > 0 && (
-                        <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">Save RM {savings.toFixed(2)}</p>
+                        <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">Save {formatMoney(savings, ticket.currency)}</p>
                     )}
                 </div>
                 {!isSoldOut && (

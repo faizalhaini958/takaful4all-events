@@ -87,6 +87,18 @@ class EventRegistration extends Model
         return $this->belongsTo(EventTicket::class, 'ticket_id');
     }
 
+    /** The order is charged in its ticket's currency. */
+    public function getCurrencyAttribute(): string
+    {
+        return $this->ticket?->currency ?? 'MYR';
+    }
+
+    /** Display symbol for the order currency, e.g. RM or US$. */
+    public function getCurrencySymbolAttribute(): string
+    {
+        return EventTicket::CURRENCIES[$this->currency] ?? $this->currency;
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -144,6 +144,11 @@ class EventRegistrationController extends Controller
                         continue;
                     }
 
+                    // A single order is charged in one currency, so add-ons must match the ticket's currency
+                    if (($product->currency ?? 'MYR') !== ($ticket->currency ?? 'MYR')) {
+                        return redirect()->back()->with('error', "{$product->name} is not available with {$ticket->currency} tickets.");
+                    }
+
                     if ($product->stock !== null && $productData['quantity'] > $product->stock) {
                         return redirect()->back()->with('error', "Not enough stock for {$product->name}. Only {$product->stock} remaining.");
                     }

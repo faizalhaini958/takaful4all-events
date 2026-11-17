@@ -13,6 +13,7 @@ import { Link, router, useForm } from '@inertiajs/react';
 import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2, Ticket, MoreHorizontal, Zap, Tag, MapPin, Eye, Image as ImageIcon, X } from 'lucide-react';
 import { type Event, type EventTicket, type EventZone, type Media } from '@/types';
+import { CURRENCIES } from '@/lib/money';
 
 interface Props {
     event: Event;
@@ -428,7 +429,7 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className={`grid grid-cols-1 gap-4 ${data.type === 'paid' ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
                             <div>
                                 <Label>Type</Label>
                                 <Select value={data.type} onValueChange={v => setData('type', v as 'free' | 'paid')}>
@@ -439,6 +440,20 @@ export default function EventTickets({ event, tickets, zones, venueMapMedia }: P
                                     </SelectContent>
                                 </Select>
                             </div>
+                            {data.type === 'paid' && (
+                                <div>
+                                    <Label>Currency</Label>
+                                    <Select value={data.currency} onValueChange={v => setData('currency', v)}>
+                                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(CURRENCIES).map(([code, { label }]) => (
+                                                <SelectItem key={code} value={code}>{label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.currency && <p className="text-sm text-red-600 mt-1">{errors.currency}</p>}
+                                </div>
+                            )}
                             {data.type === 'paid' && (
                                 <div>
                                     <Label htmlFor="price">Price ({data.currency})</Label>

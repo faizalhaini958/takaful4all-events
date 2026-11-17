@@ -10,6 +10,12 @@ use Illuminate\Database\Eloquent\Builder;
 
 class EventTicket extends Model
 {
+    /** Currencies a ticket can be priced in: code => display symbol. */
+    public const CURRENCIES = [
+        'MYR' => 'RM',
+        'USD' => 'US$',
+    ];
+
     protected $fillable = [
         'event_id',
         'event_zone_id',

@@ -268,7 +268,7 @@
                         <div style="margin-top:12px; display:flex; justify-content:flex-end;">
                             <div style="text-align:right;">
                                 <div style="font-size:12px; color:#6b7280;">Unit Price</div>
-                                <div style="font-size:13px; font-weight:600; margin-top:6px;">RM
+                                <div style="font-size:13px; font-weight:600; margin-top:6px;">{{ $registration->currency_symbol }}
                                     {{ number_format($registration->ticket?->price ?? 0, 2) }}</div>
                             </div>
                         </div>
@@ -277,7 +277,7 @@
                             <div></div>
                             <div style="text-align:right;">
                                 <div style="font-size:12px; color:#6b7280;">Subtotal</div>
-                                <div style="font-size:16px; font-weight:700; color:#172033; margin-top:6px;">RM
+                                <div style="font-size:16px; font-weight:700; color:#172033; margin-top:6px;">{{ $registration->currency_symbol }}
                                     {{ number_format($registration->subtotal, 2) }}</div>
                             </div>
                         </div>

@@ -4,6 +4,7 @@ import { Ticket, ShoppingBag, Calendar, MapPin, Clock, ArrowRight, Wallet } from
 import { useState, useEffect } from 'react';
 import { type EventRegistration, type PageProps } from '@/types';
 import { getRegistrationStatusLabel } from '@/lib/status-colors';
+import { formatMoney } from '@/lib/money';
 
 interface DashboardStats {
     totalTickets: number;
@@ -317,7 +318,7 @@ export default function Dashboard({ upcomingRegistrations, recentOrders }: Props
                                                             'bg-gray-100 dark:bg-muted text-gray-500 dark:text-muted-foreground'
                                                         }`}>{order.payment_status === 'na' ? 'Free' : order.payment_status}</span>
                                                         <span className="text-xs font-bold text-brand-navy">
-                                                            {Number(order.total_amount) > 0 ? `RM ${Number(order.total_amount).toFixed(2)}` : 'Free'}
+                                                            {Number(order.total_amount) > 0 ? formatMoney(Number(order.total_amount), order?.ticket?.currency) : 'Free'}
                                                         </span>
                                                     </div>
                                                 </div>

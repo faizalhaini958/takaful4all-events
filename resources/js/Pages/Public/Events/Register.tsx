@@ -20,6 +20,7 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import RegistrationAuthGate from '@/Components/RegistrationAuthGate';
 import LoginModal from '@/Components/LoginModal';
 import RegisterModal from '@/Components/RegisterModal';
+import { formatMoney } from '@/lib/money';
 
 const POPPINS = "'Poppins', sans-serif";
 const INTER   = "'Inter', sans-serif";
@@ -172,6 +173,15 @@ export default function EventRegister({ event, tickets, products, zones }: Props
     const qty = Number(data.quantity) || 1;
     const selectedTicket = tickets.find(tk => tk.id === Number(data.ticket_id));
     const ticketSubtotal = selectedTicket ? Number(selectedTicket.current_price) * qty : 0;
+    const ticketCurrency = selectedTicket?.currency ?? 'MYR';
+
+    // One order is charged in a single currency: remove add-ons priced in a different currency when the ticket changes
+    useEffect(() => {
+        setSelectedProducts(prev => {
+            const kept = prev.filter(sp => (products.find(pr => pr.id === sp.product_id)?.currency ?? 'MYR') === ticketCurrency);
+            return kept.length === prev.length ? prev : kept;
+        });
+    }, [ticketCurrency]);
     const productsTotal = selectedProducts.reduce((sum, p) => {
         const product = products.find(pr => pr.id === p.product_id);
         return sum + (product ? product.price * p.quantity : 0);
@@ -697,6 +707,9 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
     updateProductVariant, promoCodeDiscount, promoCodeLabel, promoCodeValidating, promoCodeError,
     promoCodeApplied, handleApplyPromoCode, handleClearPromoCode, onBack, onNext, t }: any) {
 
+    // Only add-ons priced in the selected ticket's currency can go in the same order
+    const addOns = products.filter((pr: any) => (pr.currency ?? 'MYR') === (selectedTicket?.currency ?? 'MYR'));
+
     function selectTicket(ticket: any) {
         const min = ticket.min_per_order ?? 1;
         setData({
@@ -803,14 +816,14 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
             </div>
 
             {/* Add-ons */}
-            {products.length > 0 && (
+            {addOns.length > 0 && (
                 <div className="bg-white dark:bg-card rounded-2xl border border-gray-200 dark:border-border overflow-hidden">
                     <div className="px-5 py-4 border-b border-gray-100 dark:border-border flex items-center gap-2">
                         <ShoppingBag className="w-4 h-4 text-brand" />
                         <h3 className="font-bold text-gray-900 dark:text-foreground">{t('register.addon_products')}</h3>
                     </div>
                     <div className="p-5 space-y-4">
-                        {products.map((product: any) => {
+                        {addOns.map((product: any) => {
                             const sel = selectedProducts.find((p: any) => p.product_id === product.id);
                             const isSelected = !!sel;
                             return (
@@ -827,7 +840,7 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
                                                     <p className="font-semibold text-sm">{product.name}</p>
                                                     {product.description && <p className="text-xs text-gray-500 mt-0.5">{product.description}</p>}
                                                 </div>
-                                                <p className="font-bold text-sm flex-shrink-0">RM {Number(product.price).toFixed(2)}</p>
+                                                <p className="font-bold text-sm flex-shrink-0">{formatMoney(product.price, product.currency)}</p>
                                             </div>
                                             <div className="mt-3 flex items-center gap-2 flex-wrap">
                                                 <button type="button" onClick={() => toggleProduct(product.id)}
@@ -923,7 +936,7 @@ function Step1Tickets({ event, tickets, zones, products, data, setData, qty, sel
                         )}
                         {promoCodeApplied && promoCodeLabel && (
                             <p className="text-sm text-emerald-600 mt-2 flex items-center gap-1">
-                                <Check className="w-3.5 h-3.5" /> {promoCodeLabel} — RM {promoCodeDiscount.toFixed(2)} off
+                                <Check className="w-3.5 h-3.5" /> {promoCodeLabel} — {formatMoney(promoCodeDiscount, selectedTicket?.currency)} off
                             </p>
                         )}
                     </div>
@@ -1162,7 +1175,7 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                                 <p className="font-semibold text-gray-900 dark:text-foreground">{selectedTicket.name}</p>
                                 <p className="text-xs text-gray-500 dark:text-muted-foreground">Quantity: {qty}</p>
                             </div>
-                            <p className="font-bold text-gray-900 dark:text-foreground">RM {ticketSubtotal.toFixed(2)}</p>
+                            <p className="font-bold text-gray-900 dark:text-foreground">{formatMoney(ticketSubtotal, selectedTicket?.currency)}</p>
                         </div>
                     ) : (
                         <p className="text-sm text-gray-400 dark:text-muted-foreground">No ticket selected</p>
@@ -1178,7 +1191,7 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                                         <p className="text-xs text-gray-400 dark:text-muted-foreground">{sp.variants.filter(Boolean).join(', ')}</p>
                                     )}
                                 </div>
-                                <p className="font-semibold">RM {(product.price * sp.quantity).toFixed(2)}</p>
+                                <p className="font-semibold">{formatMoney(product.price * sp.quantity, selectedTicket?.currency)}</p>
                             </div>
                         );
                     })}
@@ -1187,12 +1200,12 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                             <span className="flex items-center gap-1">
                                 <Check className="w-3.5 h-3.5" /> {promoCodeLabel ?? 'Promo Code'}
                             </span>
-                            <span className="font-semibold">-RM {promoCodeDiscount.toFixed(2)}</span>
+                            <span className="font-semibold">-{formatMoney(promoCodeDiscount, selectedTicket?.currency)}</span>
                         </div>
                     )}
                     <div className="border-t border-gray-100 dark:border-border pt-3 flex items-center justify-between font-bold">
                         <span>Total</span>
-                        <span className="text-brand text-lg">{grandTotal > 0 ? `RM ${grandTotal.toFixed(2)}` : 'Free'}</span>
+                        <span className="text-brand text-lg">{grandTotal > 0 ? formatMoney(grandTotal, selectedTicket?.currency) : 'Free'}</span>
                     </div>
                 </div>
             </div>
@@ -1271,7 +1284,7 @@ function Step3Review({ event, data, selectedTicket, selectedProducts, products, 
                         disabled={processing || !selectedTicket}
                         className="w-full sm:w-auto sm:min-w-[220px] bg-brand hover:bg-brand-dark text-white font-bold py-4 rounded-xl text-base disabled:opacity-50"
                         size="lg">
-                        {processing ? 'Submitting...' : grandTotal > 0 ? `Register - RM ${grandTotal.toFixed(2)}` : 'Register - Free'}
+                        {processing ? 'Submitting...' : grandTotal > 0 ? `Register - ${formatMoney(grandTotal, selectedTicket?.currency)}` : 'Register - Free'}
                     </Button>
                 </div>
                 <p className="text-center text-xs text-gray-500 dark:text-muted-foreground uppercase tracking-wider">Secure &amp; Instant Checkout</p>
@@ -1354,15 +1367,15 @@ function OrderSummaryBar({ selectedTicket, qty, ticketSubtotal, selectedProducts
                 {hasPromoDiscount ? (
                     <>
                         <p className="text-lg font-extrabold text-brand">
-                            RM {grandTotal.toFixed(2)}
+                            {formatMoney(grandTotal, selectedTicket?.currency)}
                         </p>
                         <p className="text-[10px] text-gray-400 line-through">
-                            RM {(ticketSubtotal + selectedProducts.reduce((sum, p) => { const pr = products.find(pr => pr.id === p.product_id); return sum + (pr ? pr.price * p.quantity : 0); }, 0)).toFixed(2)}
+                            {formatMoney(ticketSubtotal + selectedProducts.reduce((sum, p) => { const pr = products.find(pr => pr.id === p.product_id); return sum + (pr ? pr.price * p.quantity : 0); }, 0), selectedTicket?.currency)}
                         </p>
                     </>
                 ) : (
                     <p className="text-lg font-extrabold text-brand">
-                        {grandTotal > 0 ? `RM ${grandTotal.toFixed(2)}` : 'Free'}
+                        {grandTotal > 0 ? formatMoney(grandTotal, selectedTicket?.currency) : 'Free'}
                     </p>
                 )}
             </div>
@@ -1585,11 +1598,11 @@ function TicketOption({ ticket, selected, onSelect }: {
                     <p className="font-extrabold text-emerald-600">Free</p>
                 ) : ticket.is_early_bird ? (
                     <>
-                        <p className="font-extrabold text-emerald-600">RM {Number(ticket.current_price).toFixed(2)}</p>
-                        <p className="text-xs text-gray-400 line-through">RM {Number(ticket.price).toFixed(2)}</p>
+                        <p className="font-extrabold text-emerald-600">{formatMoney(ticket.current_price, ticket.currency)}</p>
+                        <p className="text-xs text-gray-400 line-through">{formatMoney(ticket.price, ticket.currency)}</p>
                     </>
                 ) : (
-                    <p className="font-extrabold text-gray-900 dark:text-foreground">RM {Number(ticket.current_price).toFixed(2)}</p>
+                    <p className="font-extrabold text-gray-900 dark:text-foreground">{formatMoney(ticket.current_price, ticket.currency)}</p>
                 )}
             </div>
         </label>

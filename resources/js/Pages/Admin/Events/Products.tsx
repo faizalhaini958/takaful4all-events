@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
+import { CURRENCIES } from '@/lib/money';
 import { Switch } from '@/Components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
@@ -270,7 +272,19 @@ export default function EventProducts({ event, products }: Props) {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <Label>Currency</Label>
+                                <Select value={data.currency} onValueChange={v => setData('currency', v)}>
+                                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        {Object.entries(CURRENCIES).map(([code, { label }]) => (
+                                            <SelectItem key={code} value={code}>{label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {errors.currency && <p className="text-sm text-red-600 mt-1">{errors.currency}</p>}
+                            </div>
                             <div>
                                 <Label htmlFor="product_price">Price ({data.currency})</Label>
                                 <Input id="product_price" type="number" step="0.01" min="0" value={data.price} onChange={e => setData('price', e.target.value)} className="mt-1" />

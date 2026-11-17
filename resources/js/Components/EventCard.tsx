@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { type Event } from '@/types';
 import { useAnalytics } from '@/hooks/use-analytics';
+import { currencySymbol, DEFAULT_CURRENCY } from '@/lib/money';
 
 interface Props {
     event: Event;
@@ -53,6 +54,19 @@ function Countdown({ target }: { target: Date }) {
             ))}
         </div>
     );
+}
+
+// Lowest price per currency, MYR first: "RM 75 · US$ 20"
+function fromPrices(tickets: Array<{ current_price: number; currency?: string | null }>): string {
+    const mins = new Map<string, number>();
+    tickets.forEach(t => {
+        const code = t.currency ?? DEFAULT_CURRENCY;
+        mins.set(code, Math.min(mins.get(code) ?? Infinity, Number(t.current_price)));
+    });
+    return [...mins.entries()]
+        .sort(([a], [b]) => (a === DEFAULT_CURRENCY ? -1 : b === DEFAULT_CURRENCY ? 1 : a.localeCompare(b)))
+        .map(([code, min]) => `${currencySymbol(code)} ${min.toLocaleString('en-MY', { minimumFractionDigits: 0 })}`)
+        .join(' · ');
 }
 
 export default function EventCard({ event }: Props) {
@@ -151,7 +165,7 @@ export default function EventCard({ event }: Props) {
                             </span>
                         ) : (
                             <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(28,124,147,0.25)', color: '#1C7C93' }}>
-                                From RM {Math.min(...event.tickets.map(t => t.current_price)).toLocaleString('en-MY', { minimumFractionDigits: 0 })}
+                                From {fromPrices(event.tickets)}
                             </span>
                         )}
                     </div>

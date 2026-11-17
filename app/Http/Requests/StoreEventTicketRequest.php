@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\EventTicket;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreEventTicketRequest extends FormRequest
 {
@@ -22,7 +24,7 @@ class StoreEventTicketRequest extends FormRequest
             'early_bird_price'   => 'nullable|numeric|min:0',
             'early_bird_end_at'  => 'nullable|date|required_with:early_bird_price',
             'early_bird_qty'     => 'nullable|integer|min:1',
-            'currency'           => 'nullable|string|max:10',
+            'currency'           => ['nullable', 'string', Rule::in(array_keys(EventTicket::CURRENCIES))],
             'quantity'           => 'nullable|integer|min:1',
             'max_per_order'      => 'required|integer|min:1|max:100',
             'min_per_order'      => ['nullable', 'integer', 'min:1', 'max:100', function ($attribute, $value, $fail) {

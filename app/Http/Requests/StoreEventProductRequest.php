@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\EventTicket;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreEventProductRequest extends FormRequest
 {
@@ -17,7 +19,7 @@ class StoreEventProductRequest extends FormRequest
             'name'            => 'required|string|max:255',
             'description'     => 'nullable|string',
             'price'           => 'required|numeric|min:0',
-            'currency'        => 'nullable|string|max:10',
+            'currency'        => ['nullable', 'string', Rule::in(array_keys(EventTicket::CURRENCIES))],
             'variants_json'   => 'nullable|array',
             'variants_json.*.label'   => 'required_with:variants_json|string',
             'variants_json.*.options' => 'required_with:variants_json|array|min:1',

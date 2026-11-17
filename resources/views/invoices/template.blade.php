@@ -293,7 +293,7 @@
                     <th style="width: 50%">Description</th>
                     <th style="width: 15%; text-align: center">Qty</th>
                     <th style="width: 15%; text-align: right">Unit Price</th>
-                    <th style="width: 20%; text-align: right">Amount (MYR)</th>
+                    <th style="width: 20%; text-align: right">Amount ({{ $registration->currency }})</th>
                 </tr>
             </thead>
             <tbody>
@@ -344,7 +344,7 @@
             <div class="totals-table">
                 <div class="total-row">
                     <div class="total-label">Subtotal</div>
-                    <div class="total-value">MYR {{ number_format($invoice->subtotal, 2) }}</div>
+                    <div class="total-value">{{ $registration->currency }} {{ number_format($invoice->subtotal, 2) }}</div>
                 </div>
                 @if ($invoice->discount_amount > 0)
                     <div class="total-row">
@@ -354,19 +354,19 @@
                                 ({{ $registration->meta_json['discount_label'] }})
                             @endif
                         </div>
-                        <div class="total-value" style="color: #dc2626;">- MYR
+                        <div class="total-value" style="color: #dc2626;">- {{ $registration->currency }}
                             {{ number_format($invoice->discount_amount, 2) }}</div>
                     </div>
                 @endif
                 @if ($registration->products_total > 0)
                     <div class="total-row">
                         <div class="total-label">Products</div>
-                        <div class="total-value">MYR {{ number_format($registration->products_total, 2) }}</div>
+                        <div class="total-value">{{ $registration->currency }} {{ number_format($registration->products_total, 2) }}</div>
                     </div>
                 @endif
                 <div class="total-row grand">
                     <div class="total-label">Total</div>
-                    <div class="total-value">MYR {{ number_format($invoice->total_amount, 2) }}</div>
+                    <div class="total-value">{{ $registration->currency }} {{ number_format($invoice->total_amount, 2) }}</div>
                 </div>
             </div>
         </div>

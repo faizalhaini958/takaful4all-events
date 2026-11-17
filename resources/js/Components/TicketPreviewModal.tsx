@@ -14,6 +14,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { type EventRegistration, type SharedProps } from '@/types';
 import { useState } from 'react';
 import { usePage } from '@inertiajs/react';
+import { formatMoney } from '@/lib/money';
 
 interface Attendee {
     id?: number;
@@ -344,18 +345,18 @@ export default function TicketPreviewModal({ registration, open, onOpenChange }:
                                         <div className="text-sm space-y-1">
                                             <div className="flex justify-between text-gray-500 dark:text-muted-foreground">
                                                 <span>{registration.ticket?.name} × {registration.quantity}</span>
-                                                <span>RM {Number(registration.subtotal).toFixed(2)}</span>
+                                                <span>{formatMoney(registration.subtotal, registration.ticket?.currency)}</span>
                                             </div>
                                             {Number(registration.products_total) > 0 && (
                                                 <div className="flex justify-between text-gray-500 dark:text-muted-foreground">
                                                     <span>Add-ons</span>
-                                                    <span>RM {Number(registration.products_total).toFixed(2)}</span>
+                                                    <span>{formatMoney(registration.products_total, registration.ticket?.currency)}</span>
                                                 </div>
                                             )}
                                             <Separator />
                                             <div className="flex justify-between font-bold text-gray-900 dark:text-foreground">
                                                 <span>Total</span>
-                                                <span>RM {Number(registration.total_amount).toFixed(2)}</span>
+                                                <span>{formatMoney(registration.total_amount, registration.ticket?.currency)}</span>
                                             </div>
                                         </div>
                                     </div>

@@ -32,6 +32,7 @@ class PromoCodeController extends Controller
             (float) $ticket->current_price * (int) $validated['quantity'],
             $user,
             $ticket->event_id,
+            $ticket->currency ?? 'MYR',
         );
 
         if (! $result['success']) {

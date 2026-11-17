@@ -5,6 +5,7 @@ import { Button } from '@/Components/ui/button';
 import { Link } from '@inertiajs/react';
 import { Eye, Calendar, MapPin, Receipt, Package, ArrowLeft, Download } from 'lucide-react';
 import { type EventRegistration } from '@/types';
+import { formatMoney } from '@/lib/money';
 
 interface Props {
     order: EventRegistration;
@@ -155,8 +156,8 @@ export default function OrderDetail({ order }: Props) {
                                                         )}
                                                     </div>
                                                     <div className="text-right ml-4 flex-shrink-0">
-                                                        <p className="font-medium">RM {Number(p.unit_price).toFixed(2)} × {p.quantity}</p>
-                                                        <p className="text-sm text-gray-500 dark:text-muted-foreground">RM {(Number(p.unit_price) * p.quantity).toFixed(2)}</p>
+                                                        <p className="font-medium">{formatMoney(Number(p.unit_price), order?.ticket?.currency)} × {p.quantity}</p>
+                                                        <p className="text-sm text-gray-500 dark:text-muted-foreground">{formatMoney((Number(p.unit_price) * p.quantity), order?.ticket?.currency)}</p>
                                                     </div>
                                                 </div>
                                             );
@@ -192,7 +193,7 @@ export default function OrderDetail({ order }: Props) {
                                 <div className="border-t pt-4 space-y-2">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-500 dark:text-muted-foreground">Ticket ({order.ticket?.name})</span>
-                                        <span>RM {Number(order.subtotal).toFixed(2)}</span>
+                                        <span>{formatMoney(Number(order.subtotal), order?.ticket?.currency)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-500 dark:text-muted-foreground">Qty</span>
@@ -201,12 +202,12 @@ export default function OrderDetail({ order }: Props) {
                                     {Number(order.products_total) > 0 && (
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-500 dark:text-muted-foreground">Products</span>
-                                            <span>RM {Number(order.products_total).toFixed(2)}</span>
+                                            <span>{formatMoney(Number(order.products_total), order?.ticket?.currency)}</span>
                                         </div>
                                     )}
                                     <div className="border-t pt-2 flex justify-between font-semibold text-gray-900 dark:text-foreground">
                                         <span>Total</span>
-                                        <span>RM {Number(order.total_amount).toFixed(2)}</span>
+                                        <span>{formatMoney(Number(order.total_amount), order?.ticket?.currency)}</span>
                                     </div>
                                 </div>
 

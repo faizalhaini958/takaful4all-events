@@ -6,6 +6,7 @@ import { getRegistrationStatusLabel } from '@/lib/status-colors';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import TicketPreviewModal from '@/Components/TicketPreviewModal';
+import { formatMoney } from '@/lib/money';
 
 interface Props {
     registrations: PaginatedData<EventRegistration>;
@@ -242,7 +243,7 @@ export default function Tickets({ registrations, filters }: Props) {
                                     <div className="border-t sm:border-t-0 sm:border-l border-dashed border-gray-200 dark:border-border flex sm:flex-col items-center justify-between sm:justify-center gap-3 sm:gap-4 px-5 py-4 sm:w-36 sm:flex-shrink-0">
                                         <div className="text-center">
                                             <p className="text-lg font-bold text-brand-navy">
-                                                {Number(reg.total_amount) > 0 ? `RM ${Number(reg.total_amount).toFixed(2)}` : 'Free'}
+                                                {Number(reg.total_amount) > 0 ? formatMoney(Number(reg.total_amount), reg?.ticket?.currency) : 'Free'}
                                             </p>
                                             <p className="text-[11px] text-gray-400 dark:text-muted-foreground font-mono">{reg.reference_no}</p>
                                         </div>
