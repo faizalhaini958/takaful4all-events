@@ -49,6 +49,17 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 const POPPINS = "'Poppins', sans-serif";
 const INTER   = "'Inter', sans-serif";
 
+/**
+ * Card width-to-height ratio that matches a poster's own shape (so it shows whole),
+ * kept within [min, max]. Falls back when the poster's size isn't known.
+ */
+function posterRatio(media: { width?: number | null; height?: number | null } | null | undefined, min: number, max: number, fallback: number): number {
+    const w = media?.width;
+    const h = media?.height;
+    if (!w || !h) return fallback;
+    return Math.min(max, Math.max(min, w / h));
+}
+
 export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, agent360, canonicalUrl }: Props) {
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [activePost, setActivePost] = useState<Post | null>(null);
@@ -254,16 +265,16 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                         {/* Card */}
                                         <Link href={`/events/${ev.slug}`}
                                             className="block relative rounded-2xl overflow-hidden w-full"
-                                            style={{ height: 'clamp(300px, 55vh, 480px)', transition: 'opacity 0.3s ease', opacity: mobileFade ? 1 : 0 }}>
+                                            style={{ aspectRatio: posterRatio(ev.mobile_media ?? ev.media, 0.7, 1.4, 0.8), maxHeight: '480px', background: '#071B2A', transition: 'opacity 0.3s ease', opacity: mobileFade ? 1 : 0 }}>
                                         {ev.media ? (
                                             <picture>
                                                 {ev.mobile_media?.url && <source media="(max-width: 767px)" srcSet={ev.mobile_media.url} />}
                                                 <img src={ev.media.url} alt={ev.title}
                                                     fetchPriority="high" loading="eager" width={ev.media.width ?? undefined} height={ev.media.height ?? undefined}
-                                                    className="w-full h-full object-cover" />
+                                                    className="absolute inset-0 w-full h-full object-contain" />
                                             </picture>
                                         ) : (
-                                                <div className="w-full h-full flex items-center justify-center"
+                                                <div className="absolute inset-0 flex items-center justify-center"
                                                     style={{ background: 'linear-gradient(145deg, #0d3352, #071B2A)' }}>
                                                     <LayoutGrid className="w-10 h-10" style={{ color: 'rgba(28,124,147,0.3)' }} />
                                                 </div>
@@ -345,17 +356,17 @@ export default function Home({ upcomingEvents, pastEvents, podcasts, webinars, a
                                     const ev = upcomingEvents[heroSlide % upcomingEvents.length];
                                     return (
                                         <Link href={ev ? `/events/${ev.slug}` : '/events'}
-                                            className="absolute left-0 top-6 bottom-6 rounded-2xl overflow-hidden shadow-2xl group"
-                                            style={{ width: '60%', opacity: heroFade ? 1 : 0, transition: 'opacity 0.3s ease' }}>
+                                            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-2xl overflow-hidden shadow-2xl group"
+                                            style={{ width: '60%', aspectRatio: posterRatio(ev?.media, 0.85, 1.4, 0.85), maxHeight: '412px', background: '#071B2A', opacity: heroFade ? 1 : 0, transition: 'opacity 0.3s ease' }}>
                                             {ev?.media ? (
                                                 <picture>
                                                     {ev.mobile_media?.url && <source media="(max-width: 767px)" srcSet={ev.mobile_media.url} />}
                                                     <img src={ev.media.url} alt={ev.title}
                                                         fetchPriority="high" loading="eager" width={ev.media.width ?? undefined} height={ev.media.height ?? undefined}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                        className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                                                 </picture>
                                             ) : (
-                                                <div className="w-full h-full" style={{ background: 'linear-gradient(145deg, #0d3352, #071B2A)' }} />
+                                                <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, #0d3352, #071B2A)' }} />
                                             )}
                                             <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(7,27,42,0.9) 0%, transparent 55%)' }} />
                                             <div className="absolute bottom-5 left-5 right-5">
